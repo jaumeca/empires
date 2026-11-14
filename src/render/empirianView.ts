@@ -4,6 +4,7 @@ import {
 import type { Activity, Appearance } from '../sim/model/state';
 import { drawFace, type Expression } from './face';
 import { buildEmpirianParts, partColors, SKELETON, type PartDef } from './models/empirian';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { meshVoxels, VOXEL } from './voxel';
 
 export const EMPIRIAN_SCALE = 0.78;
@@ -75,7 +76,16 @@ export class EmpirianView {
       }
     }
     const parts = buildEmpirianParts(a);
-    this.head.add(partMesh(parts.head, 'part:head'), partMesh(parts.hair, 'part:hair'));
+    // Head and hair share a bone: one merged mesh = one draw call less per Empirian.
+    const headGeo = meshVoxels(parts.head.grid, { origin: parts.head.origin, jitter: 0.02 });
+    const hairGeo = meshVoxels(parts.hair.grid, { origin: parts.hair.origin, jitter: 0.02 });
+    const merged = mergeGeometries([headGeo, hairGeo]) ?? headGeo;
+    if (merged !== headGeo) headGeo.dispose();
+    hairGeo.dispose();
+    const headMesh = new Mesh(merged, VOXEL_MATERIAL);
+    headMesh.name = 'part:head';
+    headMesh.castShadow = headMesh.receiveShadow = true;
+    this.head.add(headMesh);
     this.torso.add(partMesh(parts.torso, 'part:torso'));
     this.armL.add(partMesh(parts.armL, 'part:armL'));
     this.armR.add(partMesh(parts.armR, 'part:armR'));

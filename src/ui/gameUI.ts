@@ -178,7 +178,8 @@ export class GameUI {
   setSpeed(v: Speed): void {
     if (this.modal && v !== 0) this.closeModal();
     this.game.clock.setSpeed(v);
-    if (v !== 0) this.resumeSpeed = v;
+    // Remember the player's choice, including a manual pause: closing a menu must not unpause.
+    this.resumeSpeed = v;
     this.renderHud(true);
   }
 
@@ -278,7 +279,7 @@ export class GameUI {
     this.modal.remove();
     this.modal = null;
     this.modalKind = '';
-    if (resume && this.state.setupComplete && !this.state.pendingDecision) this.game.clock.setSpeed(this.resumeSpeed || 1);
+    if (resume && this.state.setupComplete && !this.state.pendingDecision) this.game.clock.setSpeed(this.resumeSpeed);
     this.renderHud(true);
   }
 
@@ -530,6 +531,7 @@ export class GameUI {
         h('button.option', { dataset: { option: o.id }, disabled: !!o.disabledReason, onclick: () => {
           const r = this.game.dispatch({ type: 'choose_option', decisionId: d.id, optionId: o.id });
           if (!r.ok) return this.toast(r.error);
+          if (this.resumeSpeed === 0) this.resumeSpeed = 1;
           this.closeModal(o.id !== 'release');
           this.services.save();
         } },

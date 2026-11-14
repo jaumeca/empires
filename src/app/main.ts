@@ -78,6 +78,13 @@ function switchGame(g: Game): void {
 scene.sync(game.state);
 ui.start();
 
+// F1.10 stress scene: extra cosmetic Empirians (render only, not in the simulation).
+const stress = Math.min(30, Number(params.get('stress') ?? 0));
+for (let i = 0; i < stress; i++) {
+  const r = (n: number) => Math.floor(Math.random() * n);
+  scene.ensureEmpirian(`stress-${i}`, { skin: r(8), hairStyle: r(8), hairColor: r(12), top: r(5), topColor: r(10), pantsColor: r(6), accessory: r(6) });
+}
+
 // Pause + save when the app goes to background or closes (D-013).
 onAppHidden(() => {
   if (game.clock.speed !== 0) game.clock.setSpeed(0);

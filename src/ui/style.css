@@ -173,7 +173,13 @@ input[type=range] { width: 100%; accent-color: var(--mint-dark); height: 28px; }
 .title-screen p { margin: 0; font-weight: 800; color: var(--ink-soft); }
 
 @media (max-height: 500px) {
-  .card { padding: 12px 16px; }
+  .card { padding: 12px 16px; width: min(760px, 100%); }
+  .card.narrow, .card.decision { width: min(560px, 100%); }
+  .tiles { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .tile { padding: 6px 8px; }
+  .tile .d { display: none; }
+  .card .sub { margin-bottom: 6px; }
+  .option { padding: 6px 10px; margin-top: 6px; }
   .card h2 { font-size: 19px; }
   .section { margin: 8px 0; }
   .creator .card { width: min(420px, 60%); }

@@ -123,10 +123,31 @@ const check = (name, ok, detail = '') => { checks.push({ name, ok, detail }); co
   check('collectible persists after reload', (await page.evaluate(() => window.__empires.scene.productBoxes.size)) === 1);
   await shot('09-after-reload.png');
 
+  // Export + import through the real UI (file download / file chooser)
+  await page.click('button[aria-label="Menú"]');
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('text=Exportar partida')]);
+  const exportPath = path.join(outDir, '_export.empires');
+  await download.saveAs(exportPath);
+  const exported = JSON.parse(require('fs').readFileSync(exportPath, 'utf8'));
+  check('export produces a versioned save file', exported.format === 'empires-save' && exported.state.tick === after.tick);
+  await page.click('.card .close');
+  await page.evaluate(() => { for (let i = 0; i < 80; i++) window.__empires.game.tick(); });
+  await page.click('button[aria-label="Menú"]');
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.click('text=Importar partida')]);
+  await Promise.all([page.waitForNavigation(), chooser.setFiles(exportPath)]);
+  await page.waitForTimeout(2500);
+  const imported = await st();
+  check('import restores the exported game', imported.tick === after.tick && JSON.stringify(imported) === JSON.stringify(after), `tick ${imported.tick}`);
+  require('fs').unlinkSync(exportPath);
+
   // Portrait/phone sizes
   await page.setViewportSize({ width: 844, height: 390 });
   await page.waitForTimeout(1200);
   await shot('10-phone-landscape.png');
+  await page.click('#hud-new-project');
+  await page.waitForTimeout(600);
+  await shot('12-phone-new-project.png');
+  await page.click('.card .close');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(1200);
   await shot('11-phone-portrait.png');

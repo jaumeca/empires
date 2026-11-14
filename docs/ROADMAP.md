@@ -56,7 +56,7 @@
 | F1.7 | Animaciones reposo, caminar, trabajar, celebrar (+ levantar la mano, pensar, descansar) | ✅ | Capturas 04, 06; navegación por celdas sin atravesar muebles |
 | F1.8 | Burbujas ligadas a eventos + toque sobre Empirian y objetos | ✅ | e2e "bubbles appear from simulation events"; toque en ordenador/estantería/cajas/Empirian |
 | F1.9 | Controles de tiempo | ✅ | e2e "pause stops simulated time", "4x speed advances time" |
-| F1.10 | Panel de diagnóstico (`?debug`) | ✅ | FPS, draw calls, triángulos, geometrías, texturas. Escena de estrés con 10 Empirians: **pendiente** (solo hay 1 Empirian en la simulación) |
+| F1.10 | Panel de diagnóstico (`?debug`) y escena de estrés (`?stress=10`) | ✅ | 1 Empirian: 22 draw calls / 42 k triángulos; 11 Empirians: 91 draw calls / 81 k triángulos (dentro de presupuesto). `tools/e2e/stress.cjs`, captura 13 |
 | F1.11 | Build Capacitor y medición en dispositivos | ⏸ Bloqueada | Sin Android SDK/Xcode ni dispositivos en el entorno. `capacitor.config.ts` listo; pasos en `ARCHITECTURE.md` §13. **No se declara validación móvil.** |
 | F1.12 | Revisión de dirección artística y orientación | ⬜ Pendiente del propietario | Capturas en `docs/screenshots/` |
 
@@ -73,17 +73,17 @@ Medido en el entorno (Chromium headless con renderizado por software SwiftShader
 | F2.2 | Mercado mínimo, críticas y ventas semanales; precio con óptimo | ✅ | idem + `npm run sim` |
 | F2.3 | Simulador de balance sin render | ✅ | `tools/sim-runner/balance.report.ts` (`npm run sim`) |
 | F2.4 | Creación del fundador (nombre, estudio, piel, peinado, pelo, ropa, color, pantalón, accesorio) | ✅ | e2e "founder customized via command" |
-| F2.5 | Tarjeta de nuevo proyecto: nombre, tema, tamaño, precio, enfoque, presupuesto, plazo con estimaciones | ✅ | Captura 03. Mejora pendiente: es larga en móvil horizontal |
+| F2.5 | Tarjeta de nuevo proyecto: nombre, tema, tamaño, precio, enfoque, presupuesto, plazo con estimaciones | ✅ | Capturas 03 y 12 (versión compacta en móvil horizontal; aún requiere desplazamiento para los deslizadores) |
 | F2.6 | Desarrollo visible: actividades → animaciones, eventos → burbujas, pantalla del monitor | ✅ | Captura 04 |
 | F2.7 | Momento Decisivo con consecuencias reales (gran idea; fecha límite) | ✅ | e2e + pruebas "decisions have real consequences" |
 | F2.8 | Pulido, pruebas y lanzamiento con celebración | ✅ | Captura 06 |
 | F2.9 | Resultados: críticas, ventas, dinero, "¿Por qué esta nota?" desde el registro causal | ✅ | Captura 07; prueba "every release has an explanation linked to the causal ledger" |
 | F2.10 | Caja coleccionable en la estantería | ✅ | e2e "collectible box on the shelf" y "persists after reload" |
-| F2.11 | Guardado en UI: autoguardado, guardar, exportar/importar, pausa al ir a segundo plano | ✅ | e2e "save + reload restores the exact state". Exportar/importar: implementado, **no probado automáticamente** (diálogo de archivos) |
+| F2.11 | Guardado en UI: autoguardado, guardar, exportar/importar, pausa al ir a segundo plano | ✅ | e2e "save + reload restores the exact state", "export produces a versioned save file", "import restores the exported game" |
 | F2.12 | Pruebas de juego con el propietario y ajustes | ⬜ | — |
 
 **Criterios de aceptación de v0.1:**
-- [x] Ciclo completo de desarrollo y lanzamiento a través de la interfaz (e2e 16/16).
+- [x] Ciclo completo de desarrollo y lanzamiento a través de la interfaz (e2e 18/18).
 - [x] Presupuesto y plazo con consecuencias coherentes; más tiempo ≠ mejor resultado (óptimo interior demostrado en pruebas y en `npm run sim`).
 - [x] Al menos una decisión con consecuencias reales y explicables.
 - [x] Guardar y recuperar conserva el estado exacto.

@@ -4,6 +4,16 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-14 — Bloque 2 de la sesión autónoma: estrés, exportar/importar, pausa manual
+
+- **F1.10 escena de estrés** (`?stress=10`, `tools/e2e/stress.cjs`): 11 Empirians → 91 draw calls, 81 k triángulos (antes de fusionar cabeza+pelo: 102). Captura `13-stress-10.png`. Los Empirians extra son solo visuales y se solapan entre sí: la evitación entre personajes se hará con la contratación (F4).
+- **Exportar/importar** probados de extremo a extremo (descarga real del archivo `.empires` y selector de archivos): e2e ahora **18/18**.
+- **Bug corregido:** si el jugador pausaba y abría el menú, al cerrarlo el juego se reanudaba. Ahora la pausa manual se respeta; tras un Momento Decisivo el juego sí continúa.
+- **Tarjetas compactas** en pantallas bajas (móvil horizontal): captura `12-phone-new-project.png`.
+- Pruebas: `npm test` 40/40, `npm run build` ✅, e2e 18/18.
+
+---
+
 ## 2026-11-14 — Sesión autónoma F1–F2 (Claude Code)
 
 ### Resumen
@@ -36,7 +46,7 @@ EMPIRES se puede jugar de principio a fin en el navegador: crear al Empirian fun
 | `npm run sim` — balance con 30–40 semillas | ✅ ver tabla abajo |
 | `tools/e2e/play.cjs` contra la build de producción (Chromium headless) | ✅ 16/16 |
 
-Comprobaciones e2e: creación del fundador, personalización aplicada por comando, inicio de proyecto, **la pausa detiene el tiempo**, 4x avanza el tiempo, burbujas generadas por eventos, decisión tomada desde la UI y registrada en el registro causal, publicación con 4 críticas, tarjeta de resultados con explicación, ventas que generan dinero, caja en la estantería, **guardar + recargar restaura el estado exacto** (comparación JSON completa), la caja persiste tras recargar, sin errores de página.
+Comprobaciones e2e (16 en este bloque; 18 tras el bloque 2): creación del fundador, personalización aplicada por comando, inicio de proyecto, **la pausa detiene el tiempo**, 4x avanza el tiempo, burbujas generadas por eventos, decisión tomada desde la UI y registrada en el registro causal, publicación con 4 críticas, tarjeta de resultados con explicación, ventas que generan dinero, caja en la estantería, **guardar + recargar restaura el estado exacto** (comparación JSON completa), la caja persiste tras recargar, sin errores de página.
 
 Requisitos específicos pedidos por el propietario:
 
@@ -52,7 +62,7 @@ Requisitos específicos pedidos por el propietario:
 | La compilación funciona | `npm run build` | ✅ |
 | La interfaz permite completar el ciclo | e2e 16/16 | ✅ |
 | **Rendimiento en móviles reales** | — | ⏸ **No probado** (sin dispositivos) |
-| Exportar/importar partida desde la UI | Implementado; no automatizado (diálogo de archivos del sistema) | ⚠️ Pendiente de prueba manual |
+| Exportar/importar partida desde la UI | e2e (bloque 2) | ✅ |
 
 ### Balance (npm run sim, 40 semillas, juego pequeño, enfoque ideal)
 
@@ -86,7 +96,6 @@ Más tiempo mejora la nota cada vez menos y, pasado el óptimo, reduce el benefi
 ### Limitaciones y deuda técnica conocidas
 
 - Rendimiento móvil sin medir (R-001 sigue abierto). Las cifras de FPS de este entorno (render por software) no son representativas.
-- Escala de 10 Empirians para pruebas de estrés no implementada.
 - Textos de la UI en español incrustados en el código (sin sistema de localización todavía).
 - La tarjeta de "Nuevo videojuego" es larga en móvil horizontal (hay que desplazarse).
 - El registro causal no se compacta todavía (R-004); en partidas largas crecerá.
