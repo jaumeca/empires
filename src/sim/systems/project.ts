@@ -1,0 +1,181 @@
+import { SIM_CONFIG } from '../config';
+import type { EventSink } from '../core/events';
+import { nextFloat, sampleCount } from '../core/rng';
+import type { Empirian, GameState, Project } from '../model/state';
+import { getTopic } from '../../content/topics';
+import { record } from '../core/ledger';
+import { maybeOfferBigIdea } from './decisions';
+
+const C = SIM_CONFIG;
+
+// ---------------------------------------------------------------------------
+// Derived values (pure functions, also used by UI for estimates)
+// ---------------------------------------------------------------------------
+
+export function productionProgress(p: Project): number {
+  return Math.min(1, (p.workDone.design + p.workDone.tech) / p.requiredPoints);
+}
+
+export function plannedDays(p: Project): number {
+  return Math.max(1, p.originalDeadlineDay - p.startDay);
+}
+
+/** Fit between the chosen focus and the topic's ideal focus: about -1.3 .. +1.0. */
+export function fitModifier(p: Project): number {
+  const topic = getTopic(p.topicId);
+  return 1.0 - 2.5 * Math.abs(p.focus - topic.idealFocus);
+}
+
+export function skillFor(e: Empirian, focus: number): number {
+  return e.skills.design * (1 - focus) + e.skills.tech * focus;
+}
+
+export function qualityCeiling(p: Project, founder: Empirian): number {
+  const skill = skillFor(founder, p.focus);
+  const mods = p.ceilingMods.reduce((a, m) => a + m.amount, 0);
+  return Math.max(1, C.quality.baseCeiling + (skill - 5) * 0.35 + fitModifier(p) + mods);
+}
+
+/** Ratio of quality-earning investment to required work (> 1 means extra polish). */
+export function investmentRatio(p: Project): number {
+  return (p.workDone.design + p.workDone.tech + C.quality.polishWeight * p.polishDone) / p.requiredPoints;
+}
+
+/** True quality 0-10 with diminishing returns: ceiling * (1 - e^(-k * ratio)). */
+export function trueQuality(p: Project, founder: Empirian): number {
+  const q = qualityCeiling(p, founder) * (1 - Math.exp(-C.quality.k * investmentRatio(p)));
+  return Math.min(10, q);
+}
+
+export function budgetMultiplier(p: Project): number {
+  const daily = p.budget / plannedDays(p);
+  const devDaily = daily * (1 - C.work.marketingShare);
+  const funded = p.spent < p.budget;
+  if (!funded) return 1;
+  return 1 + C.work.budgetMaxBoost * (1 - Math.exp(-devDaily / C.work.budgetSpendScale));
+}
+
+export function efficiency(e: Empirian): number {
+  const t = C.energy.tiredThreshold;
+  const energyEff = e.energy >= t ? 1 : 0.55 + (0.45 * e.energy) / t;
+  const moraleEff = 0.85 + (0.3 * e.morale) / 100;
+  return energyEff * moraleEff;
+}
+
+export function pointsPerTick(p: Project, e: Empirian): number {
+  return (
+    C.work.basePointsPerTick *
+    (skillFor(e, p.focus) / 5) *
+    (C.pace.workMultiplier[p.pace] ?? 1) *
+    budgetMultiplier(p) *
+    efficiency(e)
+  );
+}
+
+function bugRate(p: Project, e: Empirian): number {
+  const t = C.energy.tiredThreshold;
+  const fatigue = e.energy >= t ? 0 : (t - e.energy) / t;
+  const mods = p.bugRateMods.reduce((a, m) => a * m.factor, 1);
+  const skillMod = 1.25 - e.skills.tech * 0.05; // tech skill 5 => 1.0
+  return C.bugs.ratePerTechPoint * (C.pace.bugMultiplier[p.pace] ?? 1) * (1 + fatigue) * mods * skillMod;
+}
+
+// ---------------------------------------------------------------------------
+// Per-tick work
+// ---------------------------------------------------------------------------
+
+export function workTick(state: GameState, p: Project, founder: Empirian, emit: EventSink): void {
+  if (p.phase === 'released' || state.pendingDecision) return;
+  const pts = pointsPerTick(p, founder);
+  const rngW = state.rng.work;
+
+  if (p.phase === 'concept' || p.phase === 'production') {
+    const isTech = nextFloat(rngW) < p.focus;
+    if (isTech) p.workDone.tech += pts;
+    else p.workDone.design += pts;
+    founder.activity = p.phase === 'concept' && nextFloat(rngW) < 0.4 ? 'thinking' : isTech ? 'coding' : 'designing';
+    emit({ type: 'work', empirianId: founder.id, kind: isTech ? 'tech' : 'design', amount: pts, severity: 'info' });
+
+    // Bugs come from building things (less while prototyping).
+    const techPts = isTech ? pts : pts * 0.3;
+    const conceptMod = p.phase === 'concept' ? 0.3 : 1;
+    const newBugs = sampleCount(state.rng.bugs, techPts * bugRate(p, founder) * conceptMod);
+    if (newBugs > 0) {
+      let hidden = 0;
+      for (let i = 0; i < newBugs; i++) if (nextFloat(state.rng.bugs) < C.bugs.hiddenShare) hidden++;
+      p.bugs.hidden += hidden;
+      p.bugs.known += newBugs - hidden;
+      emit({ type: 'bug_created', empirianId: founder.id, count: newBugs, severity: 'info' });
+    }
+    if (p.phase === 'concept' && nextFloat(rngW) < 0.08) {
+      emit({ type: 'idea', empirianId: founder.id, severity: 'info' });
+    }
+
+    const prog = productionProgress(p);
+    if (p.phase === 'concept' && prog >= C.work.conceptFraction) {
+      p.phase = 'production';
+      emit({ type: 'phase_changed', projectId: p.id, phase: p.phase, severity: 'important' });
+    } else if (p.phase === 'production' && prog >= 1) {
+      p.phase = 'polish';
+      record(state, {
+        kind: 'production_done',
+        text: `Producción de "${p.name}" terminada el día ${state.day}.`,
+        causes: [],
+        tone: 0,
+        projectId: p.id,
+      });
+      emit({ type: 'phase_changed', projectId: p.id, phase: p.phase, severity: 'important' });
+    }
+    maybeOfferBigIdea(state, p, founder, emit);
+    return;
+  }
+
+  // Polish phase: split between testing/fixing and polishing.
+  let testPts = pts * p.testFocus;
+  const polishPts = pts - testPts;
+  if (p.bugs.known > 0 && testPts > 0) {
+    const fixed = Math.min(p.bugs.known, sampleCount(state.rng.bugs, testPts / C.bugs.fixCost));
+    if (fixed > 0) {
+      p.bugs.known -= fixed;
+      p.bugs.fixed += fixed;
+      emit({ type: 'bug_fixed', empirianId: founder.id, count: fixed, severity: 'info' });
+    }
+    testPts *= 0.5; // half of the effort went into fixing
+  }
+  if (testPts > 0) {
+    p.testingDone += testPts;
+    const pFind = 1 - Math.pow(1 - C.bugs.discoverPerTestPoint, testPts);
+    const found = Math.min(p.bugs.hidden, sampleCount(state.rng.bugs, p.bugs.hidden * pFind));
+    if (found > 0) {
+      p.bugs.hidden -= found;
+      p.bugs.known += found;
+      emit({ type: 'bug_found', empirianId: founder.id, count: found, severity: 'info' });
+    }
+  }
+  const qBefore = trueQuality(p, founder);
+  p.polishDone += polishPts;
+  if (Math.floor(trueQuality(p, founder) * 2) > Math.floor(qBefore * 2)) {
+    emit({ type: 'quality_up', empirianId: founder.id, severity: 'info' });
+  }
+  founder.activity = testPts >= polishPts ? 'testing' : nextFloat(rngW) < p.focus ? 'coding' : 'designing';
+  emit({ type: 'work', empirianId: founder.id, kind: testPts >= polishPts ? 'test' : 'polish', amount: pts, severity: 'info' });
+}
+
+// ---------------------------------------------------------------------------
+// Daily step for the active project
+// ---------------------------------------------------------------------------
+
+export function projectDay(state: GameState, p: Project): void {
+  if (p.phase === 'released') return;
+  // Budget spend (development + marketing), spread evenly over the planned days.
+  const daily = p.budget / plannedDays(p);
+  const spend = Math.max(0, Math.min(daily, p.budget - p.spent));
+  if (spend > 0) {
+    p.spent += spend;
+    state.company.money -= spend;
+    p.hype += spend * C.work.marketingShare * C.market.hypePerMarketingMoney;
+  }
+  // Attention fades over time, faster once the announced date has passed.
+  const late = state.day > p.originalDeadlineDay;
+  p.hype *= late ? C.market.lateHypeDecayPerDay : C.market.hypeDecayPerDay;
+}

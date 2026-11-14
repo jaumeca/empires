@@ -1,0 +1,123 @@
+import { SIM_CONFIG } from '../config';
+import type { EventSink } from '../core/events';
+import { entriesFor, record } from '../core/ledger';
+import { nextRange } from '../core/rng';
+import type { Empirian, GameState, Project, Review } from '../model/state';
+import { getTopic, TOPICS } from '../../content/topics';
+import { fitModifier, investmentRatio, productionProgress, qualityCeiling, trueQuality } from './project';
+
+const C = SIM_CONFIG;
+
+const OUTLETS = ['PixelPost', 'Tecla Crítica', 'Bitácora Lúdica', 'Modo Arcade'] as const;
+
+function quoteFor(score: number): string {
+  if (score >= 8.5) return '¡Una pequeña joya!';
+  if (score >= 7) return 'Muy recomendable.';
+  if (score >= 5.5) return 'Correcto, pero le falta algo.';
+  if (score >= 4) return 'Tiene ideas, pero muchos problemas.';
+  return 'Difícil de recomendar.';
+}
+
+interface Factor {
+  amount: number; // effect on score, signed
+  text: string;
+  causes: string[];
+}
+
+/** Scores the product, records explanatory ledger entries and starts sales. */
+export function releaseProject(state: GameState, p: Project, founder: Empirian, emit: EventSink): void {
+  if (p.phase === 'released') return;
+  const quality = trueQuality(p, founder);
+  const prog = productionProgress(p);
+  const shippedBugs = p.bugs.hidden + p.bugs.known;
+  const bugPenalty = 2.4 * (1 - Math.exp(-shippedBugs / 12));
+  const incompletePenalty = (1 - prog) * 6;
+  const repMod = (state.company.reputation - 50) / 100;
+  const base = quality - bugPenalty - incompletePenalty + repMod;
+
+  const reviews: Review[] = OUTLETS.map((outlet) => {
+    const s = Math.max(1, Math.min(10, base + nextRange(state.rng.market, -0.7, 0.7)));
+    const score = Math.round(s * 10) / 10;
+    return { outlet, score, quote: quoteFor(score) };
+  });
+  const averageScore = Math.round((reviews.reduce((a, r) => a + r.score, 0) / reviews.length) * 10) / 10;
+
+  // --- Explanation: build factors with links to their causes ----------------
+  const started = entriesFor(state, p.id, ['project_started']).map((e) => e.id);
+  const timeCauses = entriesFor(state, p.id, ['delay', 'deadline_changed', 'budget_changed', 'decision']).map((e) => e.id);
+  const bugCauses = entriesFor(state, p.id, ['pace_changed', 'testing_changed', 'decision']).map((e) => e.id);
+  const factors: Factor[] = [];
+  const fit = fitModifier(p);
+  factors.push({
+    amount: fit * 0.9,
+    text: fit >= 0.4 ? `El enfoque del juego encaja muy bien con el tema "${getTopic(p.topicId).name}".` : fit >= -0.2 ? `El enfoque encaja regular con el tema "${getTopic(p.topicId).name}".` : `El enfoque elegido no encaja con lo que el público espera de "${getTopic(p.topicId).name}".`,
+    causes: started,
+  });
+  const ratio = investmentRatio(p);
+  const timeEffect = quality - qualityCeiling(p, founder) * (1 - Math.exp(-C.quality.k * 1));
+  factors.push({
+    amount: timeEffect,
+    text: ratio >= 1.3 ? 'Hubo tiempo de sobra para pulir el juego (aunque cada semana extra aportó menos que la anterior).' : ratio >= 1.05 ? 'Hubo algo de tiempo para pulir el juego.' : 'Apenas hubo tiempo de pulido.',
+    causes: timeCauses,
+  });
+  if (shippedBugs > 0) {
+    factors.push({
+      amount: -bugPenalty,
+      text: `El juego salió con ${shippedBugs} bugs (${p.bugs.hidden} que nadie había detectado). Probar ${p.testingDone < 20 ? 'muy poco' : 'más'} y el ritmo de trabajo influyeron.`,
+      causes: bugCauses,
+    });
+  }
+  if (prog < 1) {
+    factors.push({ amount: -incompletePenalty, text: `Se publicó con solo el ${Math.round(prog * 100)} % del contenido terminado.`, causes: entriesFor(state, p.id, ['delay']).map((e) => e.id) });
+  }
+  for (const m of p.ceilingMods) {
+    factors.push({ amount: m.amount * 0.85, text: 'La gran idea aprobada durante el desarrollo se nota en el resultado.', causes: [m.causeId] });
+  }
+  const promise = entriesFor(state, p.id, ['promise'])[0];
+  if (promise) factors.push({ amount: 0.05, text: 'Los jugadores esperan la mecánica prometida en una actualización.', causes: [promise.id] });
+
+  factors.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+  const explanation = factors.slice(0, 3).map((f) =>
+    record(state, { kind: 'score_factor', text: f.text, causes: f.causes, tone: f.amount > 0.15 ? 1 : f.amount < -0.15 ? -1 : 0, projectId: p.id }),
+  );
+
+  p.phase = 'released';
+  p.result = { releasedDay: state.day, price: p.price, reviews, averageScore, weeklySales: [], totalUnits: 0, revenue: 0, explanation };
+  state.company.reputation = Math.max(0, Math.min(100, state.company.reputation + (averageScore - 5) * 4));
+  founder.activity = 'celebrating';
+  state.activeProjectId = null;
+  record(state, { kind: 'released', text: `"${p.name}" se publicó con una nota media de ${averageScore}.`, causes: explanation, tone: averageScore >= 6 ? 1 : -1, projectId: p.id });
+  emit({ type: 'project_released', projectId: p.id, severity: 'decisive' });
+}
+
+/** Called at the start of each new week. */
+export function marketWeek(state: GameState, emit: EventSink): void {
+  // Topic trends drift a little each week (contemporary market, D-021).
+  for (const t of TOPICS) {
+    const cur = state.topicTrends[t.id] ?? 1;
+    const next = cur * nextRange(state.rng.market, 0.94, 1.06);
+    state.topicTrends[t.id] = Math.max(0.6, Math.min(1.5, next * 0.9 + 0.1));
+  }
+  // Released products keep selling for a few weeks.
+  for (const p of state.projects) {
+    const r = p.result;
+    if (!r || r.weeklySales.length >= C.market.salesWeeks) continue;
+    const w = r.weeklySales.length;
+    const topic = getTopic(p.topicId);
+    const appeal = Math.pow(r.averageScore / 10, 2.2) * 1.6;
+    const visibility = 0.8 + 0.6 * (1 - Math.exp(-p.hype / 1.6)) + (state.company.reputation / 100) * 0.5;
+    // Players accept higher prices for better games: optimum price ~ expected / 1.1.
+    const expectedPrice = 4 + r.averageScore * 1.2;
+    const priceFactor = Math.min(2.2, Math.exp(-1.1 * (r.price / expectedPrice - 1)));
+    const noise = nextRange(state.rng.market, 0.9, 1.1);
+    const units = Math.round(
+      C.market.baseAudience * topic.interest * (state.topicTrends[topic.id] ?? 1) * appeal * visibility * priceFactor * Math.pow(C.market.weeklySalesDecay, w) * noise,
+    );
+    const revenue = Math.round(units * r.price * 0.7 * 100) / 100; // 30 % store fee
+    r.weeklySales.push(units);
+    r.totalUnits += units;
+    r.revenue += revenue;
+    state.company.money += revenue;
+    emit({ type: 'sales_week', projectId: p.id, units, revenue, severity: 'info' });
+  }
+}

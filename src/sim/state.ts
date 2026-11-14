@@ -1,0 +1,62 @@
+import { SIM_CONFIG } from './config';
+import { createRngStreams } from './core/rng';
+import type { Appearance, Empirian, GameState, Project } from './model/state';
+import { TOPICS } from '../content/topics';
+
+export const SCHEMA_VERSION = 1;
+
+export const DEFAULT_APPEARANCE: Appearance = {
+  skin: 2,
+  hairStyle: 0,
+  hairColor: 1,
+  top: 0,
+  topColor: 0,
+  pantsColor: 0,
+  accessory: 0,
+};
+
+export function createNewGame(seed: number): GameState {
+  const founder: Empirian = {
+    id: 'E-founder',
+    name: 'Alex',
+    appearance: { ...DEFAULT_APPEARANCE },
+    skills: { tech: 5, design: 5 },
+    energy: SIM_CONFIG.energy.max,
+    morale: 70,
+    activity: 'idle',
+  };
+  const topicTrends: Record<string, number> = {};
+  for (const t of TOPICS) topicTrends[t.id] = 1;
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    seed,
+    rng: createRngStreams(seed),
+    tick: 0,
+    day: 1,
+    nextId: 1,
+    company: { name: 'Mi Estudio', money: SIM_CONFIG.economy.startingMoney, reputation: 30 },
+    founderId: founder.id,
+    empirians: [founder],
+    projects: [],
+    activeProjectId: null,
+    pendingDecision: null,
+    ledger: [],
+    topicTrends,
+    setupComplete: false,
+  };
+}
+
+export function getFounder(state: GameState): Empirian {
+  const f = state.empirians.find((e) => e.id === state.founderId);
+  if (!f) throw new Error('Founder missing');
+  return f;
+}
+
+export function getActiveProject(state: GameState): Project | null {
+  if (!state.activeProjectId) return null;
+  return state.projects.find((p) => p.id === state.activeProjectId) ?? null;
+}
+
+export function getProject(state: GameState, id: string): Project | undefined {
+  return state.projects.find((p) => p.id === id);
+}
