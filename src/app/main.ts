@@ -5,11 +5,18 @@ import type { SimEvent } from '../sim/core/events';
 import { OfficeScene, type CameraMode } from '../render/officeScene';
 import { GameUI } from '../ui/gameUI';
 import { downloadText, LocalSaveStorage, onAppHidden, pickTextFile } from '../platform/storage';
+import { CATALOGS, setLocale, t, type Locale } from '../i18n/i18n';
 
 const GAME_VERSION = '0.1.0-dev';
 const params = new URLSearchParams(location.search);
 const debug = params.has('debug');
 const storage = new LocalSaveStorage();
+
+// Language: ?lang=en > saved preference > Spanish (default).
+const savedLocale = (() => { try { return localStorage.getItem('empires.locale'); } catch { return null; } })();
+const wantedLocale = params.get('lang') ?? savedLocale ?? 'es';
+setLocale((wantedLocale in CATALOGS ? wantedLocale : 'es') as Locale);
+document.documentElement.lang = wantedLocale in CATALOGS ? wantedLocale : 'es';
 
 function loadOrCreate(): Game {
   if (!params.has('fresh')) {
@@ -46,14 +53,18 @@ const services = {
     try {
       switchGame(new Game(deserialize(text)));
       services.save();
-      ui.toast('Partida importada', 'check');
+      ui.toast(t('toast.imported'), 'check');
     } catch (e) {
-      ui.toast(e instanceof SaveError ? e.message : 'No se pudo importar la partida', 'alert');
+      ui.toast(e instanceof SaveError ? t(`save.error.${e.code}`) : t('toast.import_failed'), 'alert');
     }
   },
   newGame(): void {
     storage.remove('auto');
     switchGame(new Game(createNewGame(Date.now() % 2147483647)));
+  },
+  setLocale(l: Locale): void {
+    try { localStorage.setItem('empires.locale', l); } catch { /* ignore */ }
+    document.documentElement.lang = l;
   },
   setCamera(mode: CameraMode): void {
     scene.setCameraMode(mode);

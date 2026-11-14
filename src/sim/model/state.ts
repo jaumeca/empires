@@ -1,6 +1,15 @@
 import type { RngStreams } from '../core/rng';
 import type { Pace } from '../config';
 
+/**
+ * Reference to player-facing text. The simulation never stores sentences, only
+ * translation keys + parameters; the UI translates them (src/i18n).
+ */
+export interface TextRef {
+  key: string;
+  params?: Record<string, string | number>;
+}
+
 /** Visual appearance of an Empirian. Indices refer to catalogs in content/appearance. */
 export interface Appearance {
   skin: number;
@@ -37,17 +46,17 @@ export type ProjectSize = 'small' | 'medium';
 
 export interface DecisionOption {
   id: string;
-  label: string;
+  label: TextRef;
   /** Short, uncertain hints shown to the player (estimates, not exact values). */
-  hints: string[];
-  disabledReason?: string;
+  hints: TextRef[];
+  disabledReason?: TextRef;
 }
 
 export interface PendingDecision {
   id: string;
   kind: 'big_idea' | 'deadline';
   speakerId: string;
-  text: string;
+  text: TextRef;
   options: DecisionOption[];
   createdTick: number;
 }
@@ -55,7 +64,7 @@ export interface PendingDecision {
 export interface Review {
   outlet: string;
   score: number; // 1-10, one decimal
-  quote: string;
+  quote: TextRef;
 }
 
 export interface ProjectResult {
@@ -110,7 +119,7 @@ export interface LedgerEntry {
   tick: number;
   day: number;
   kind: string;
-  text: string;
+  text: TextRef;
   causes: string[];
   /** Sign of the effect on product outcome: +1 good, -1 bad, 0 neutral. */
   tone: -1 | 0 | 1;

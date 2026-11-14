@@ -15,7 +15,12 @@ export interface SaveFile {
   state: GameState;
 }
 
-export class SaveError extends Error {}
+/** `code` is stable; the UI translates it as `save.error.<code>`. */
+export class SaveError extends Error {
+  constructor(readonly code: string, detail = '') {
+    super(detail ? `${code}: ${detail}` : code);
+  }
+}
 
 export function checksum(text: string): string {
   let h = 0x811c9dc5;
@@ -45,22 +50,22 @@ export function deserialize(text: string): GameState {
   try {
     raw = JSON.parse(text);
   } catch {
-    throw new SaveError('El archivo de partida no es JSON válido.');
+    throw new SaveError('not_json');
   }
-  if (!raw || typeof raw !== 'object') throw new SaveError('Archivo de partida vacío o inválido.');
+  if (!raw || typeof raw !== 'object') throw new SaveError('empty');
   const file = raw as Partial<SaveFile> & { state?: Record<string, unknown> };
-  if (file.format !== 'empires-save') throw new SaveError('No es una partida de EMPIRES.');
-  if (typeof file.schemaVersion !== 'number' || !file.state) throw new SaveError('Partida sin versión o sin estado.');
+  if (file.format !== 'empires-save') throw new SaveError('not_empires');
+  if (typeof file.schemaVersion !== 'number' || !file.state) throw new SaveError('no_version');
   if (file.schemaVersion > SCHEMA_VERSION) {
-    throw new SaveError(`La partida es de una versión más nueva del juego (v${file.schemaVersion}).`);
+    throw new SaveError('too_new', `v${file.schemaVersion}`);
   }
   if (file.checksum !== checksum(JSON.stringify(file.state))) {
-    throw new SaveError('La partida está dañada (checksum incorrecto).');
+    throw new SaveError('corrupted');
   }
   let state = file.state as Record<string, unknown>;
   for (let v = file.schemaVersion; v < SCHEMA_VERSION; v++) {
     const m = MIGRATIONS[v];
-    if (!m) throw new SaveError(`No hay migración desde la versión ${v}.`);
+    if (!m) throw new SaveError('no_migration', `v${v}`);
     state = m(state);
   }
   validateState(state);
@@ -69,6 +74,6 @@ export function deserialize(text: string): GameState {
 
 function validateState(s: Record<string, unknown>): void {
   const required = ['schemaVersion', 'seed', 'rng', 'tick', 'day', 'company', 'empirians', 'projects', 'ledger'];
-  for (const k of required) if (!(k in s)) throw new SaveError(`Falta el campo "${k}" en la partida.`);
-  if (s.schemaVersion !== SCHEMA_VERSION) throw new SaveError('Migración incompleta.');
+  for (const k of required) if (!(k in s)) throw new SaveError('missing_field', k);
+  if (s.schemaVersion !== SCHEMA_VERSION) throw new SaveError('incomplete_migration');
 }

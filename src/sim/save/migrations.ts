@@ -21,4 +21,28 @@ export const MIGRATIONS: Record<number, (s: AnyState) => AnyState> = {
       activeProjectId: rest.activeProjectId ?? null,
     };
   },
+  /**
+   * 1 → 2 (i18n): player-facing sentences became TextRefs. Old Spanish sentences
+   * are kept verbatim through the `legacy.text` key; review outlets become ids.
+   */
+  1: (s) => {
+    const legacy = (v: unknown) => (typeof v === 'string' ? { key: 'legacy.text', params: { text: v } } : v);
+    const outletIds: Record<string, string> = { PixelPost: 'pixelpost', 'Tecla Crítica': 'tecla', 'Bitácora Lúdica': 'bitacora', 'Modo Arcade': 'arcade' };
+    const ledger = ((s.ledger as AnyState[] | undefined) ?? []).map((e) => ({ ...e, text: legacy(e.text) }));
+    const projects = ((s.projects as AnyState[] | undefined) ?? []).map((p) => {
+      const r = p.result as AnyState | undefined;
+      if (!r) return p;
+      const reviews = ((r.reviews as AnyState[] | undefined) ?? []).map((rv) => ({ ...rv, outlet: outletIds[rv.outlet as string] ?? rv.outlet, quote: legacy(rv.quote) }));
+      return { ...p, result: { ...r, reviews } };
+    });
+    let pendingDecision = s.pendingDecision as AnyState | null;
+    if (pendingDecision) {
+      pendingDecision = {
+        ...pendingDecision,
+        text: legacy(pendingDecision.text),
+        options: ((pendingDecision.options as AnyState[]) ?? []).map((o) => ({ ...o, label: legacy(o.label), hints: ((o.hints as unknown[]) ?? []).map(legacy) })),
+      };
+    }
+    return { ...s, schemaVersion: 2, ledger, projects, pendingDecision };
+  },
 };

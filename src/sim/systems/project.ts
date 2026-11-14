@@ -119,7 +119,7 @@ export function workTick(state: GameState, p: Project, founder: Empirian, emit: 
       p.phase = 'polish';
       record(state, {
         kind: 'production_done',
-        text: `Producción de "${p.name}" terminada el día ${state.day}.`,
+        text: { key: 'ledger.production_done', params: { project: p.name, day: state.day } },
         causes: [],
         tone: 0,
         projectId: p.id,

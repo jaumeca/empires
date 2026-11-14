@@ -25,6 +25,7 @@ export type Command =
   | { type: 'choose_option'; decisionId: string; optionId: string }
   | { type: 'release' };
 
+/** `error` is a stable code; the UI translates it as `error.<code>`. */
 export type CommandResult = { ok: true } | { ok: false; error: string };
 
 const fail = (error: string): CommandResult => ({ ok: false, error });
@@ -40,7 +41,7 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
     case 'setup_founder': {
       const f = getFounder(state);
       const name = cmd.name.trim().slice(0, 24);
-      if (!name) return fail('Name required');
+      if (!name) return fail('name_required');
       f.name = name;
       f.appearance = { ...cmd.appearance };
       state.company.name = cmd.companyName.trim().slice(0, 32) || `${name} Studio`;
@@ -49,20 +50,20 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
     }
 
     case 'start_project': {
-      if (getActiveProject(state)) return fail('A project is already in progress');
+      if (getActiveProject(state)) return fail('project_in_progress');
       try {
         getTopic(cmd.topicId);
       } catch {
-        return fail('Unknown topic');
+        return fail('unknown_topic');
       }
-      if (cmd.days < PROJECT_LIMITS.minDays || cmd.days > PROJECT_LIMITS.maxDays) return fail('Invalid duration');
-      if (cmd.budget < 0 || cmd.budget > Math.max(0, state.company.money)) return fail('Budget exceeds available money');
-      if (cmd.price <= 0) return fail('Invalid price');
+      if (cmd.days < PROJECT_LIMITS.minDays || cmd.days > PROJECT_LIMITS.maxDays) return fail('invalid_duration');
+      if (cmd.budget < 0 || cmd.budget > Math.max(0, state.company.money)) return fail('budget_exceeds_money');
+      if (cmd.price <= 0) return fail('invalid_price');
       const required = SIM_CONFIG.work.requiredPoints[cmd.size];
-      if (!required) return fail('Invalid size');
+      if (!required) return fail('invalid_size');
       const p: Project = {
         id: newId(state, 'P'),
-        name: cmd.name.trim().slice(0, 32) || 'Proyecto sin nombre',
+        name: cmd.name.trim().slice(0, 32), // '' = untitled (UI shows project.unnamed)
         topicId: cmd.topicId,
         size: cmd.size,
         focus: Math.max(0, Math.min(1, cmd.focus)),
@@ -90,7 +91,7 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       state.activeProjectId = p.id;
       record(state, {
         kind: 'project_started',
-        text: `Empezaste "${p.name}" (${getTopic(p.topicId).name}, ${p.size === 'small' ? 'pequeño' : 'mediano'}) con ${cmd.budget} € de presupuesto y ${cmd.days} días de plazo.`,
+        text: { key: 'ledger.project_started', params: { project: p.name, topic: p.topicId, size: p.size, budget: cmd.budget, days: cmd.days } },
         causes: [],
         tone: 0,
         projectId: p.id,
@@ -101,20 +102,20 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
 
     case 'adjust_project': {
       const p = getActiveProject(state);
-      if (!p || p.phase === 'released') return fail('No active project');
+      if (!p || p.phase === 'released') return fail('no_active_project');
       if (cmd.budget !== undefined && cmd.budget !== p.budget) {
-        if (cmd.budget < p.spent) return fail('Budget below money already spent');
-        if (cmd.budget - p.spent > Math.max(0, state.company.money)) return fail('Not enough money');
-        record(state, { kind: 'budget_changed', text: `Cambiaste el presupuesto de ${Math.round(p.budget)} € a ${Math.round(cmd.budget)} €.`, causes: [], tone: 0, projectId: p.id });
+        if (cmd.budget < p.spent) return fail('budget_below_spent');
+        if (cmd.budget - p.spent > Math.max(0, state.company.money)) return fail('not_enough_money');
+        record(state, { kind: 'budget_changed', text: { key: 'ledger.budget_changed', params: { from: Math.round(p.budget), to: Math.round(cmd.budget) } }, causes: [], tone: 0, projectId: p.id });
         p.budget = cmd.budget;
       }
       if (cmd.deadlineDay !== undefined && cmd.deadlineDay !== p.deadlineDay) {
-        if (cmd.deadlineDay <= state.day) return fail('Deadline must be in the future');
-        if (cmd.deadlineDay - p.startDay > PROJECT_LIMITS.maxDays * 1.5) return fail('Deadline too far');
+        if (cmd.deadlineDay <= state.day) return fail('deadline_past');
+        if (cmd.deadlineDay - p.startDay > PROJECT_LIMITS.maxDays * 1.5) return fail('deadline_too_far');
         const later = cmd.deadlineDay > p.deadlineDay;
         record(state, {
           kind: 'deadline_changed',
-          text: later ? `Retrasaste la fecha de lanzamiento al día ${cmd.deadlineDay}.` : `Adelantaste la fecha de lanzamiento al día ${cmd.deadlineDay}.`,
+          text: { key: later ? 'ledger.deadline_later' : 'ledger.deadline_earlier', params: { day: cmd.deadlineDay } },
           causes: [],
           tone: later ? 0 : -1,
           projectId: p.id,
@@ -122,21 +123,16 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
         p.deadlineDay = cmd.deadlineDay;
       }
       if (cmd.pace !== undefined && cmd.pace !== p.pace) {
-        const texts: Record<Pace, string> = {
-          relaxed: 'Pusiste un ritmo tranquilo: menos avance, menos cansancio y menos errores.',
-          normal: 'Volviste a un ritmo de trabajo normal.',
-          crunch: 'Activaste el modo crunch: más avance a corto plazo, más cansancio y más bugs.',
-        };
-        record(state, { kind: 'pace_changed', text: texts[cmd.pace], causes: [], tone: cmd.pace === 'crunch' ? -1 : 0, projectId: p.id });
+        record(state, { kind: 'pace_changed', text: { key: `ledger.pace.${cmd.pace}` }, causes: [], tone: cmd.pace === 'crunch' ? -1 : 0, projectId: p.id });
         p.pace = cmd.pace;
       }
       if (cmd.testFocus !== undefined && cmd.testFocus !== p.testFocus) {
         const tf = Math.max(0, Math.min(1, cmd.testFocus));
-        record(state, { kind: 'testing_changed', text: tf < p.testFocus ? 'Redujiste el tiempo dedicado a pruebas.' : 'Aumentaste el tiempo dedicado a pruebas.', causes: [], tone: tf < 0.3 ? -1 : 0, projectId: p.id });
+        record(state, { kind: 'testing_changed', text: { key: tf < p.testFocus ? 'ledger.testing_less' : 'ledger.testing_more' }, causes: [], tone: tf < 0.3 ? -1 : 0, projectId: p.id });
         p.testFocus = tf;
       }
       if (cmd.price !== undefined) {
-        if (cmd.price <= 0) return fail('Invalid price');
+        if (cmd.price <= 0) return fail('invalid_price');
         p.price = cmd.price;
       }
       return { ok: true };
@@ -148,10 +144,10 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
 
     case 'release': {
       const p = getActiveProject(state);
-      if (!p || p.phase === 'released') return fail('No active project');
-      if (state.pendingDecision) return fail('Resolve the pending decision first');
+      if (!p || p.phase === 'released') return fail('no_active_project');
+      if (state.pendingDecision) return fail('resolve_decision_first');
       if (productionProgress(p) < 1 && p.phase !== 'polish') {
-        record(state, { kind: 'delay', text: 'Publicaste antes de terminar la producción.', causes: [], tone: -1, projectId: p.id });
+        record(state, { kind: 'delay', text: { key: 'ledger.released_early' }, causes: [], tone: -1, projectId: p.id });
       }
       releaseProject(state, p, getFounder(state), emit);
       return { ok: true };

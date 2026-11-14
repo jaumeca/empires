@@ -3,7 +3,7 @@ import { createRngStreams } from './core/rng';
 import type { Appearance, Empirian, GameState, Project } from './model/state';
 import { TOPICS } from '../content/topics';
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const DEFAULT_APPEARANCE: Appearance = {
   skin: 2,

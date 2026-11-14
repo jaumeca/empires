@@ -76,9 +76,10 @@ export const CLOTH_SHADES = [
 ].map((h, i) => add(`clothShade${i}`, h));
 export const PANTS_COLORS = [0x3f4a6b, 0x5b5f66, 0x8c5a3c, 0x2e2e33, 0x6a87b8, 0xc9b28f].map((h, i) => add(`pants${i}`, h));
 
-export const HAIR_STYLE_NAMES = ['Corto', 'Flequillo', 'Pinchos', 'Melena', 'Moño', 'Afro', 'Rapado', 'Coleta'];
-export const TOP_NAMES = ['Camiseta', 'Sudadera', 'Camisa', 'Jersey a rayas', 'Chaqueta'];
-export const ACCESSORY_NAMES = ['Nada', 'Gafas', 'Auriculares', 'Gorra', 'Barba', 'Gafas y barba'];
+/** Catalog sizes; display names are i18n keys `hair.<i>`, `top.<i>`, `acc.<i>`. */
+export const HAIR_STYLE_COUNT = 8;
+export const TOP_COUNT = 5;
+export const ACCESSORY_COUNT = 6;
 
 export function paletteIndex(name: string): number {
   const i = byName.get(name);

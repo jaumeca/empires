@@ -2,25 +2,26 @@ import { SIM_CONFIG } from '../config';
 import type { EventSink } from '../core/events';
 import { entriesFor, record } from '../core/ledger';
 import { nextRange } from '../core/rng';
-import type { Empirian, GameState, Project, Review } from '../model/state';
+import type { Empirian, GameState, Project, Review, TextRef } from '../model/state';
 import { getTopic, TOPICS } from '../../content/topics';
 import { fitModifier, investmentRatio, productionProgress, qualityCeiling, trueQuality } from './project';
 
 const C = SIM_CONFIG;
 
-const OUTLETS = ['PixelPost', 'Tecla Crítica', 'Bitácora Lúdica', 'Modo Arcade'] as const;
+/** Fictional review outlets (ids; display names in i18n `outlet.<id>`). */
+export const OUTLETS = ['pixelpost', 'tecla', 'bitacora', 'arcade'] as const;
 
-function quoteFor(score: number): string {
-  if (score >= 8.5) return '¡Una pequeña joya!';
-  if (score >= 7) return 'Muy recomendable.';
-  if (score >= 5.5) return 'Correcto, pero le falta algo.';
-  if (score >= 4) return 'Tiene ideas, pero muchos problemas.';
-  return 'Difícil de recomendar.';
+function quoteFor(score: number): TextRef {
+  if (score >= 8.5) return { key: 'review.q5' };
+  if (score >= 7) return { key: 'review.q4' };
+  if (score >= 5.5) return { key: 'review.q3' };
+  if (score >= 4) return { key: 'review.q2' };
+  return { key: 'review.q1' };
 }
 
 interface Factor {
   amount: number; // effect on score, signed
-  text: string;
+  text: TextRef;
   causes: string[];
 }
 
@@ -50,31 +51,31 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
   const fit = fitModifier(p);
   factors.push({
     amount: fit * 0.9,
-    text: fit >= 0.4 ? `El enfoque del juego encaja muy bien con el tema "${getTopic(p.topicId).name}".` : fit >= -0.2 ? `El enfoque encaja regular con el tema "${getTopic(p.topicId).name}".` : `El enfoque elegido no encaja con lo que el público espera de "${getTopic(p.topicId).name}".`,
+    text: { key: fit >= 0.4 ? 'factor.fit_good' : fit >= -0.2 ? 'factor.fit_ok' : 'factor.fit_bad', params: { topic: p.topicId } },
     causes: started,
   });
   const ratio = investmentRatio(p);
   const timeEffect = quality - qualityCeiling(p, founder) * (1 - Math.exp(-C.quality.k * 1));
   factors.push({
     amount: timeEffect,
-    text: ratio >= 1.3 ? 'Hubo tiempo de sobra para pulir el juego (aunque cada semana extra aportó menos que la anterior).' : ratio >= 1.05 ? 'Hubo algo de tiempo para pulir el juego.' : 'Apenas hubo tiempo de pulido.',
+    text: { key: ratio >= 1.3 ? 'factor.time_lots' : ratio >= 1.05 ? 'factor.time_some' : 'factor.time_little' },
     causes: timeCauses,
   });
   if (shippedBugs > 0) {
     factors.push({
       amount: -bugPenalty,
-      text: `El juego salió con ${shippedBugs} bugs (${p.bugs.hidden} que nadie había detectado). Probar ${p.testingDone < 20 ? 'muy poco' : 'más'} y el ritmo de trabajo influyeron.`,
+      text: { key: p.testingDone < 20 ? 'factor.bugs_little_testing' : 'factor.bugs_more_testing', params: { total: shippedBugs, hidden: p.bugs.hidden } },
       causes: bugCauses,
     });
   }
   if (prog < 1) {
-    factors.push({ amount: -incompletePenalty, text: `Se publicó con solo el ${Math.round(prog * 100)} % del contenido terminado.`, causes: entriesFor(state, p.id, ['delay']).map((e) => e.id) });
+    factors.push({ amount: -incompletePenalty, text: { key: 'factor.incomplete', params: { pct: Math.round(prog * 100) / 100 } }, causes: entriesFor(state, p.id, ['delay']).map((e) => e.id) });
   }
   for (const m of p.ceilingMods) {
-    factors.push({ amount: m.amount * 0.85, text: 'La gran idea aprobada durante el desarrollo se nota en el resultado.', causes: [m.causeId] });
+    factors.push({ amount: m.amount * 0.85, text: { key: 'factor.big_idea' }, causes: [m.causeId] });
   }
   const promise = entriesFor(state, p.id, ['promise'])[0];
-  if (promise) factors.push({ amount: 0.05, text: 'Los jugadores esperan la mecánica prometida en una actualización.', causes: [promise.id] });
+  if (promise) factors.push({ amount: 0.05, text: { key: 'factor.promise' }, causes: [promise.id] });
 
   factors.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
   const explanation = factors.slice(0, 3).map((f) =>
@@ -86,7 +87,7 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
   state.company.reputation = Math.max(0, Math.min(100, state.company.reputation + (averageScore - 5) * 4));
   founder.activity = 'celebrating';
   state.activeProjectId = null;
-  record(state, { kind: 'released', text: `"${p.name}" se publicó con una nota media de ${averageScore}.`, causes: explanation, tone: averageScore >= 6 ? 1 : -1, projectId: p.id });
+  record(state, { kind: 'released', text: { key: 'ledger.released', params: { project: p.name, score: averageScore } }, causes: explanation, tone: averageScore >= 6 ? 1 : -1, projectId: p.id });
   emit({ type: 'project_released', projectId: p.id, severity: 'decisive' });
 }
 
