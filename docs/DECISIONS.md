@@ -137,8 +137,10 @@ Tomadas por el propietario en el documento fundador (2026-11-14).
 
 ## Propuestas pendientes de aprobación
 
+_(Ninguna abierta tras la 3.ª sesión salvo las marcadas como provisionales más abajo; D-020 se conserva aquí por trazabilidad.)_
+
 ### D-020 — Ubicación de los documentos
-- **Fecha:** 2026-11-14 · **Estado:** Propuesta (aplicada de forma reversible)
+- **Fecha:** 2026-11-14 · **Estado:** Confirmada (propietario, 2026-11-14 — 3.ª sesión): documentos en `docs/`, `CLAUDE.md` en la raíz.
 - **Decisión propuesta:** `CLAUDE.md` en la raíz (lo lee Claude Code automáticamente); el resto de documentos maestros en `docs/`.
 - **Nota (2026-11-14):** el propietario indica que no se explicó en el informe; **no está aprobada**. Contenido: `CLAUDE.md` en la raíz (Claude Code lo carga automáticamente) y el resto de documentos maestros en `docs/`. Es una organización de archivos reversible; se mantiene así hasta que el propietario decida.
 
@@ -149,18 +151,18 @@ Tomadas por el propietario en el documento fundador (2026-11-14).
 Autorizadas por el propietario como "decisiones pequeñas, reversibles y coherentes con lo aprobado". Pueden revertirse sin coste relevante.
 
 ### D-009a — Cámara dimétrica como predeterminada (provisional)
-- **Estado:** Provisional (revisable en F1.12)
+- **Estado:** Confirmada como provisional por el propietario (3.ª sesión): se mantiene la dimétrica y la alternativa isométrica hasta F1.12.
 - **Decisión:** Dimétrica (elevación 30°) por defecto; isométrica (35,26°) disponible en el menú y con `?cam=iso`.
 - **Motivo:** Muestra más las paredes (póster, ventana, estantería: personalidad de la habitación), menos suelo vacío y encaja mejor en horizontal. Comparativa: `docs/screenshots/cam-dimetric.png` vs `cam-isometric.png`.
 
 ### D-022 — Escala de los Empirians: 0,78 respecto al vóxel del escenario
-- **Estado:** Provisional (revisable en F1.12)
+- **Estado:** Mantener provisionalmente (propietario, 3.ª sesión) hasta su revisión visual (F1.12).
 - **Decisión:** El Empirian conserva sus proporciones en vóxeles (cabeza 10×10×9, ≈ 45 % de la altura) pero se dibuja a escala 0,78.
 - **Motivo:** A escala 1 el personaje parecía gigante frente a un escritorio de 10 vóxeles de alto. Alternativa descartada por ahora: reducir la resolución del personaje (perdía detalle facial) o agrandar todos los muebles (rehacer la escala de la cuadrícula).
 - **Consecuencias:** Los vóxeles del personaje son algo más pequeños que los del escenario. Si se considera un problema estético, la alternativa es rehacer los muebles a mayor tamaño.
 
 ### D-023 — Guardado web en localStorage (en lugar de IndexedDB)
-- **Estado:** Provisional
+- **Estado:** Aceptada para el prototipo (propietario, 3.ª sesión). **Revisar la estrategia de almacenamiento antes de cualquier versión comercial.**
 - **Decisión:** `LocalSaveStorage` con autoguardado + copia de seguridad (`auto.bak`). La interfaz `SaveStorage` permite cambiar a IndexedDB o al sistema de archivos de Capacitor sin tocar el juego.
 - **Motivo:** Las partidas pesan pocos KB; localStorage es síncrono y más simple. Revisar cuando el registro causal crezca (R-004) o al añadir el adaptador nativo.
 
@@ -169,19 +171,28 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Decisión:** Constantes en `src/sim/config.ts`, ajustadas con `npm run sim` para que: el plazo óptimo sea interior (~8 semanas para un juego pequeño), el presupuesto tenga rendimientos decrecientes (a partir de ~4000 € deja de compensar), el precio tenga un óptimo que sube con la calidad, y el crunch y las pocas pruebas empeoren el resultado en promedio.
 
 ### D-025 — Pinchar dependencias de desarrollo a versiones actuales sin vulnerabilidades
-- **Estado:** Aplicada
+- **Estado:** Aplicada; **sustituida en parte por D-028** (ya no hace falta `--legacy-peer-deps`).
 - **Decisión:** Vite 8.3.5, Vitest 5.0.5, Three.js 0.170, TypeScript 5.6, Capacitor 8.5.3. Instalación con `npm install --legacy-peer-deps` (fallo interno de npm al resolver *peer dependencies* opcionales de Vitest 5).
 - **Licencias:** todas permisivas (MIT, ISC, BlueOak-1.0.0, BSD-3-Clause, Apache-2.0, 0BSD, Unlicense). Ver `ASSET_REGISTRY.md`.
 
 ### D-026 — Identificador de aplicación provisional `top.expires.empires`
-- **Estado:** **Pendiente de aprobación del propietario**
+- **Estado:** Provisional (propietario, 3.ª sesión). **No es definitivo para publicación**; decidir antes de F10.
 - **Motivo:** Capacitor necesita un identificador; se ha usado el dominio disponible. **Una vez publicada la app no puede cambiarse**, así que debe confirmarse antes de F10.
 
 ### D-027 — Límites de arquitectura comprobados por prueba en lugar de ESLint
-- **Estado:** Provisional
+- **Estado:** Confirmada (propietario, 3.ª sesión).
 - **Decisión:** `tests/architecture.test.ts` comprueba que `src/sim/` no importa render/UI/plataforma/Three.js ni usa `Math.random`, `Date.now`, DOM o `localStorage`. Evita añadir ESLint y su árbol de dependencias por ahora.
 
 ---
+
+### D-028 — npm ≥ 11 obligatorio; versiones exactas; override de `uuid`
+- **Fecha:** 2026-11-14 (3.ª sesión) · **Estado:** Aplicada (reversible)
+- **Causa exacta del `--legacy-peer-deps`:** fallo interno de **npm 10.9.x** (`TypeError: Cannot read properties of null (reading 'edgesOut')` en `@npmcli/arborist` → `build-ideal-tree.js #loadPeerSet`). Se reproduce instalando **solo `vitest`** (4.1.12 o 5.0.5) en un directorio vacío con npm 10.9.9; no es un conflicto real entre nuestras dependencias. Las *peer dependencies* opcionales de Vitest (`@vitest/browser-*`, `@vitest/ui`, `@vitest/coverage-*` que a su vez declaran `vitest` como *peer*) forman, probablemente, un ciclo de *peers* que esa versión de npm no resuelve (hipótesis; el síntoma y la solución sí están verificados).
+- **Comprobado:** npm 11.21.1 y 12.2.1 instalan el proyecto desde cero sin errores y sin indicadores especiales.
+- **Decisión:** `package.json` declara `"engines": {"npm": ">=11.0.0", "node": ">=22.12.0"}` y `"packageManager": "npm@11.21.1"`; lockfile regenerado con npm 11. Con npm 10 instalado, usar `npx npm@11 install`.
+- **Versiones exactas** (sin `^`) para evitar que una instalación nueva traiga versiones publicadas hace días: three 0.170.0, @capacitor/* 8.5.3, vite 8.3.5, vitest 5.0.5, typescript 5.9.3, @types/node 22.20.5, @types/three 0.170.0.
+- **Override:** `@capacitor/cli 8.5.3 → xcode 3.0.1 → uuid 7.0.3` tiene un aviso moderado (GHSA-w5hq-g745-h8pq, afecta a v3/v5/v6 con `buf`). `xcode` solo usa `uuid.v4()`; se fuerza `uuid 11.1.1` (compatible CJS, `v4` verificado). Herramienta de desarrollo, no se distribuye en el juego. Retirar el override al actualizar a una CLI de Capacitor que ya lo incluya (8.6.2+).
+- **Resultado:** `npm audit` 0 vulnerabilidades; 40/40 pruebas; build correcta.
 
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 

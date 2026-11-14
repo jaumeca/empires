@@ -14,15 +14,25 @@
     "e2e": "node tools/e2e/play.cjs http://localhost:5173 docs/screenshots"
   },
   "dependencies": {
-    "@capacitor/core": "^8.5.3",
-    "three": "^0.170.0"
+    "@capacitor/core": "8.5.3",
+    "three": "0.170.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.5.3",
-    "@types/node": "^22.20.5",
-    "@types/three": "^0.170.0",
-    "typescript": "^5.6.3",
+    "@capacitor/cli": "8.5.3",
+    "@types/node": "22.20.5",
+    "@types/three": "0.170.0",
+    "typescript": "5.9.3",
     "vite": "8.3.5",
     "vitest": "5.0.5"
+  },
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=11.0.0"
+  },
+  "packageManager": "npm@11.21.1",
+  "overrides": {
+    "xcode": {
+      "uuid": "11.1.1"
+    }
   }
 }

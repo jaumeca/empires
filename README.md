@@ -8,8 +8,10 @@ Videojuego premium de simulación y gestión en el que pequeños personajes voxe
 
 ## Probarlo
 
+Requiere Node ≥ 22.12 y **npm ≥ 11** (con npm 10, usa `npx npm@11 install`; ver D-028).
+
 ```bash
-npm install --legacy-peer-deps
+npm install
 ```
 
 ```bash

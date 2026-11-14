@@ -348,7 +348,7 @@ tools/e2e/          playthrough Playwright (16 comprobaciones) y capturas
 
 | Comando | Qué hace |
 |---|---|
-| `npm install --legacy-peer-deps` | Instala dependencias (ver D-025) |
+| `npm install` | Instala dependencias (npm ≥ 11, ver D-028) |
 | `npm run dev` | Servidor de desarrollo (http://localhost:5173) |
 | `npm test` | 40 pruebas automatizadas |
 | `npm run typecheck` / `npm run build` | Comprobación de tipos / build de producción en `dist/` |
