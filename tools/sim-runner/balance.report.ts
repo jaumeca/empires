@@ -1,10 +1,12 @@
 /**
  * Headless balance runner: plays many projects with different plans and prints
- * averages. Usage: npm run sim [-- seeds]
+ * averages. Usage: npm run sim   (EMPIRES_SEEDS=100 npm run sim for more seeds)
+ * Runs through Vitest so TypeScript works without extra tooling.
  */
+import { it } from 'vitest';
 import { autoplay, type AutoplayPlan } from '../../src/sim/autoplay';
 
-const N = Number(process.argv[2] ?? 40);
+const N = Number(process.env.EMPIRES_SEEDS ?? 40);
 const seeds = Array.from({ length: N }, (_, i) => 5000 + i);
 
 function row(label: string, plan: Omit<AutoplayPlan, 'seed'>) {
@@ -20,6 +22,7 @@ function row(label: string, plan: Omit<AutoplayPlan, 'seed'>) {
   );
 }
 
+it('balance report', () => {
 console.log(`--- duration (budget 1200), ${N} seeds`);
 for (const days of [14, 28, 42, 56, 84, 112]) row(`days ${days}`, { days, budget: 1200 });
 console.log('--- budget (42 days)');
@@ -33,3 +36,4 @@ console.log('--- focus fit (space-farm ideal 0.35)');
 for (const focus of [0, 0.35, 0.7, 1]) row(`focus ${focus}`, { days: 42, focus });
 console.log('--- price');
 for (const price of [4.99, 9.99, 14.99, 19.99]) row(`price ${price}`, { days: 42, price });
+});

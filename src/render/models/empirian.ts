@@ -96,9 +96,10 @@ export function buildEmpirianParts(a: Appearance): EmpirianParts {
 
   const leg = (): VoxelGrid => {
     const g = new VoxelGrid(3, 5, 4);
-    g.box(0, 0, 0, 3, 1, 4, P.ink); // shoe, sticks out to the front (+z)
-    g.box(0, 0, 3, 3, 1, 4, P.white);
-    g.box(0, 1, 0, 3, 5, 3, c.pants);
+    g.box(0, 0, 0, 3, 2, 4, P.woodDeep); // shoe (2 voxels), sticks out to the front (+z)
+    g.box(0, 0, 0, 3, 1, 4, P.ink); // sole
+    g.box(0, 1, 1, 3, 2, 2, P.cream); // side stripe
+    g.box(0, 2, 0, 3, 5, 3, c.pants);
     return g;
   };
 
