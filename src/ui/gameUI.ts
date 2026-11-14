@@ -163,7 +163,7 @@ export class GameUI {
       const pos = this.scene.empirianScreenPos(founder.id);
       if (pos) {
         this.speechEl.style.left = `${pos.x}px`;
-        this.speechEl.style.top = `${pos.y - 46}px`;
+        this.speechEl.style.top = `${pos.y - 8}px`;
       }
     } else if (this.speechEl) {
       this.speechEl.remove();
@@ -252,7 +252,7 @@ export class GameUI {
         this.toast('Tu planta te mira con orgullo.', 'heart');
         break;
       case 'beanbag':
-        this.toast('El puf de las grandes ideas.', 'idea');
+        this.toast('El sillón de las grandes ideas.', 'idea');
         break;
     }
   }

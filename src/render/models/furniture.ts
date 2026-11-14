@@ -103,18 +103,31 @@ export function buildChair(): VoxelGrid {
 }
 
 export function buildPlant(): VoxelGrid {
-  const g = new VoxelGrid(9, 20, 9);
-  g.box(2, 0, 2, 7, 6, 7, P.terracotta);
-  g.box(1, 5, 1, 8, 7, 8, P.terracottaDark);
-  g.box(2, 6, 2, 7, 7, 7, P.woodDeep);
-  // Leaf clusters (hand-placed, slightly irregular)
-  const leaves: [number, number, number, number, number, number][] = [
-    [3, 7, 3, 6, 13, 6], [1, 10, 2, 4, 14, 5], [5, 11, 4, 8, 16, 7], [2, 13, 4, 6, 18, 8],
-    [4, 15, 1, 7, 19, 4], [0, 12, 4, 3, 15, 7], [3, 17, 3, 5, 20, 5],
-  ];
-  leaves.forEach(([x0, y0, z0, x1, y1, z1], i) =>
-    g.box(x0, y0, z0, x1, y1, z1, (x, y, z) => ((x + y + z + i) % 3 === 0 ? P.leafDark : (x * y + z) % 5 === 0 ? P.leafLight : P.leaf)),
-  );
+  const g = new VoxelGrid(13, 22, 13);
+  // Pot (offset so leaves can spill over the rim)
+  g.box(4, 0, 4, 9, 6, 9, P.terracotta);
+  g.box(3, 5, 3, 10, 7, 10, P.terracottaDark);
+  g.box(4, 6, 4, 9, 7, 9, P.woodDeep);
+  // Stems
+  g.box(6, 7, 6, 7, 15, 7, P.leafDark);
+  // Broad leaves radiating outwards at different heights (monstera-like plates).
+  const leaf = (x0: number, y: number, z0: number, w: number, d: number, droop: [number, number]) => {
+    for (let dz = 0; dz < d; dz++)
+      for (let dx = 0; dx < w; dx++) {
+        const edge = (dx === 0 || dx === w - 1) && (dz === 0 || dz === d - 1);
+        if (edge) continue; // rounded corners
+        const tipDrop = Math.round((droop[0] * dx) / Math.max(1, w - 1) + (droop[1] * dz) / Math.max(1, d - 1));
+        const mid = w > d ? dz === Math.floor(d / 2) : dx === Math.floor(w / 2);
+        g.set(x0 + dx, y - tipDrop, z0 + dz, mid ? P.leafDark : (dx + dz) % 4 === 0 ? P.leafLight : P.leaf);
+      }
+  };
+  leaf(7, 12, 5, 6, 3, [2, 0]);   // +x
+  leaf(0, 13, 5, 6, 3, [-2, 0]);  // -x (droop handled by sign below)
+  leaf(5, 15, 7, 3, 6, [0, 2]);   // +z
+  leaf(5, 11, 0, 3, 6, [0, -1]);  // -z
+  leaf(4, 18, 4, 5, 5, [0, 0]);   // crown
+  leaf(8, 16, 8, 4, 4, [1, 1]);
+  leaf(1, 17, 1, 4, 4, [0, 0]);
   return g;
 }
 
@@ -201,13 +214,23 @@ export function buildRug(): VoxelGrid {
   return g;
 }
 
-export function buildBeanbag(): VoxelGrid {
-  const g = new VoxelGrid(11, 7, 11);
-  g.box(1, 0, 1, 10, 4, 10, P.mustard);
-  g.box(0, 1, 0, 11, 3, 11, P.mustard);
-  g.box(2, 4, 2, 9, 6, 9, P.mustard);
-  g.box(2, 4, 7, 9, 7, 10, P.coral); // backrest bump
-  g.box(3, 3, 3, 8, 4, 7, P.woodPale);
+export function buildArmchair(): VoxelGrid {
+  // Small cozy armchair facing +z (towards the viewer). Backrest at low z, armrests on x sides.
+  const g = new VoxelGrid(13, 11, 11);
+  g.box(1, 0, 1, 2, 2, 2, P.woodDeep); // feet
+  g.box(11, 0, 1, 12, 2, 2, P.woodDeep);
+  g.box(1, 0, 9, 2, 2, 10, P.woodDeep);
+  g.box(11, 0, 9, 12, 2, 10, P.woodDeep);
+  g.box(0, 2, 0, 13, 5, 11, P.coralDark); // base
+  g.box(2, 5, 3, 11, 6, 11, P.coral); // seat cushion
+  g.box(2, 5, 10, 11, 6, 11, P.coralDark); // cushion piping
+  g.box(0, 2, 0, 13, 11, 3, P.coral); // backrest
+  g.box(1, 10, 0, 12, 11, 2, P.coralDark);
+  g.box(0, 2, 0, 2, 8, 11, P.coral); // armrests
+  g.box(11, 2, 0, 13, 8, 11, P.coral);
+  g.box(0, 8, 1, 2, 8, 11, P.coralDark);
+  g.box(4, 6, 3, 9, 9, 4, P.mustard); // throw pillow
+  g.box(5, 7, 3, 8, 8, 4, P.cream);
   return g;
 }
 

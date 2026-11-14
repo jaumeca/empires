@@ -212,7 +212,7 @@ export class EmpirianView {
       }
       case 'lounge': {
         target.legL = target.legR = -1.35;
-        target.bodyY = 2.4 * VOXEL; // sunk into the beanbag
+        target.bodyY = 2.2 * VOXEL; // sitting in the armchair
         target.armLz = 0.6;
         target.armRz = -0.6;
         target.headX = -0.25;

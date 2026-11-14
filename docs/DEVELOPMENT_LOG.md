@@ -4,6 +4,16 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-14 — Bloque 3: pulido visual
+
+- Planta rediseñada con hojas anchas (antes se leía como un cactus).
+- El puf (se veía como una caja o un pastel escalonado) se sustituye por un **sillón** acogedor; el Empirian se sienta mirando al jugador.
+- Peinados con las esquinas superiores recortadas (silueta menos "caja").
+- La burbuja de diálogo se ancla sobre el pelo, no en el cuello.
+- Comprobado: `npm test` 40/40, build ✅, e2e 18/18, estrés 91 draw calls. Capturas regeneradas.
+
+---
+
 ## 2026-11-14 — Bloque 2 de la sesión autónoma: estrés, exportar/importar, pausa manual
 
 - **F1.10 escena de estrés** (`?stress=10`, `tools/e2e/stress.cjs`): 11 Empirians → 91 draw calls, 81 k triángulos (antes de fusionar cabeza+pelo: 102). Captura `13-stress-10.png`. Los Empirians extra son solo visuales y se solapan entre sí: la evitación entre personajes se hará con la contratación (F4).

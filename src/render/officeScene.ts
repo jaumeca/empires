@@ -8,7 +8,7 @@ import type { Activity, Appearance, GameState, Project } from '../sim/model/stat
 import { EmpirianView, VOXEL_MATERIAL, type Pose } from './empirianView';
 import { BubbleSystem } from './bubbles';
 import {
-  buildBeanbag, buildBookshelf, buildChair, buildCorkBoard, buildDesk, buildDeskLamp, buildKeyboard, buildMonitor, buildMug,
+  buildArmchair, buildBookshelf, buildChair, buildCorkBoard, buildDesk, buildDeskLamp, buildKeyboard, buildMonitor, buildMug,
   buildPlant, buildPoster, buildProductBox, buildRoomShell, buildRug, ROOM,
 } from './models/furniture';
 import { CLOTH_COLORS, P, PALETTE_HEX } from './palette';
@@ -36,7 +36,7 @@ const POIS: Record<string, Poi> = {
   seat: { x: 24.5, z: 17.5, heading: Math.PI, pose: 'sit' },
   window: { x: 46, z: 17, heading: Math.PI, pose: 'think' },
   shelf: { x: 13, z: 28, heading: -Math.PI / 2, pose: 'think' },
-  beanbag: { x: 51.5, z: 37.5, heading: Math.PI * 0.25, pose: 'lounge' },
+  beanbag: { x: 51.5, z: 39, heading: 0, pose: 'lounge' },
   center: { x: 30, z: 31, heading: Math.PI * 0.25, pose: 'stand' },
   plant: { x: 44, z: 13, heading: Math.atan2(10, -7), pose: 'stand' },
   side: { x: 38, z: 22, heading: Math.PI * 0.25, pose: 'raise' },
@@ -243,11 +243,11 @@ export class OfficeScene {
     this.place(buildMug(), 31, 10, 6);
     this.place(buildDeskLamp(), 13, 10, 2);
     this.place(buildChair(), 20, 0, 13);
-    this.place(buildPlant(), 50, 0, 2, 'plant');
+    this.place(buildPlant(), 47, 0, 0, 'plant');
     this.place(buildBookshelf(), 0, 0, 20, 'shelf');
     this.place(buildPoster(), 2, 18, 0, 'poster', 0.01);
     this.place(buildCorkBoard(), 0, 16, 5, 'poster', 0.01);
-    this.place(buildBeanbag(), 46, 0, 32, 'beanbag');
+    this.place(buildArmchair(), 45, 0, 33, 'beanbag');
   }
 
   // ------------------------------------------------------------------ camera
@@ -629,6 +629,7 @@ export class OfficeScene {
     if (!a) return null;
     const p = new Vector3();
     a.view.head.getWorldPosition(p);
+    p.y += 0.95; // above the hair, not at the neck pivot
     return this.project(p);
   }
 

@@ -287,7 +287,7 @@ Todo generado por código a partir de definiciones voxel originales (D-014, D-01
 | Paleta maestra + catálogos de piel (8), pelo (12), ropa (10), pantalón (6) | `src/render/palette.ts` | ✅ |
 | Mallador voxel con oclusión ambiental por vértice y variación sutil de color | `src/render/voxel.ts` | ✅ |
 | Habitación (suelo de tarima, 2 paredes con zócalo y remate, ventana con nubes) | `models/furniture.ts` | ✅ |
-| Escritorio, monitor (pantalla animada), teclado, taza, lámpara, silla, planta, estantería con libros, póster original (cohete), corcho, alfombra, puf | `models/furniture.ts` | ✅ |
+| Escritorio, monitor (pantalla animada), teclado, taza, lámpara, silla, planta de hojas anchas, estantería con libros, póster original (cohete), corcho, alfombra, sillón | `models/furniture.ts` | ✅ |
 | Caja coleccionable de producto (color y "logo" derivados del nombre) | `models/furniture.ts` | ✅ |
 | Empirian modular: 8 peinados, 5 prendas, 6 accesorios (gafas, auriculares, gorra, barba…) | `models/empirian.ts` | ✅ |
 | Caras: 9 expresiones + parpadeo | `src/render/face.ts` | ✅ |
@@ -297,4 +297,4 @@ Todo generado por código a partir de definiciones voxel originales (D-014, D-01
 
 **Lista de originalidad (§7):** revisada para todos los recursos anteriores. Proporciones propias (cabeza ≈ 45 %), sin manos en pinza ni cabezas cilíndricas, sin texturas pixeladas sobre cubos al estilo Minecraft (los cubos son de color liso con AO), sin marcas ni productos reconocibles. **Pendiente:** revisión visual del propietario (F1.12).
 
-**Mejoras artísticas identificadas:** el puf aún parece una caja; la planta se lee como cactus; los peinados "Corto" y "Flequillo" forman un bloque muy cuadrado; las burbujas pueden solaparse con el texto anclado al Empirian; falta un retrato del Empirian renderizado desde el modelo 3D (hoy es la cara 2D).
+**Mejoras artísticas identificadas:** (resuelto: el puf se sustituyó por un sillón, la planta ya no parece un cactus, el pelo tiene las esquinas recortadas) los peinados siguen siendo bastante cúbicos; las burbujas pueden solaparse con el texto anclado al Empirian; falta un retrato del Empirian renderizado desde el modelo 3D (hoy es la cara 2D).

@@ -8,7 +8,7 @@ Todo recurso que entre en el repositorio (modelos, texturas, animaciones, fuente
 |---|---|---|---|---|---|---|---|
 | A-001 | Paleta maestra y catálogos de color | `src/render/palette.ts` | Claude Code para el propietario | Código | Todos los derechos reservados (D-016) | Original | 2026-11-14 |
 | A-002 | Habitación inicial (suelo, paredes, ventana) | `src/render/models/furniture.ts` | Claude Code | Código (definición voxel) | Todos los derechos reservados | Original | 2026-11-14 |
-| A-003 | Mobiliario: escritorio, monitor, teclado, taza, lámpara, silla, planta, estantería, corcho, alfombra, puf | `src/render/models/furniture.ts` | Claude Code | Código | Todos los derechos reservados | Original | 2026-11-14 |
+| A-003 | Mobiliario: escritorio, monitor, teclado, taza, lámpara, silla, planta, estantería, corcho, alfombra, sillón | `src/render/models/furniture.ts` | Claude Code | Código | Todos los derechos reservados | Original | 2026-11-14 |
 | A-004 | Póster "cohete y planeta" (pixel art 10×13) | `src/render/models/furniture.ts` | Claude Code | Código | Todos los derechos reservados | Original | 2026-11-14 |
 | A-005 | Caja coleccionable de producto | `src/render/models/furniture.ts` | Claude Code | Código | Todos los derechos reservados | Original | 2026-11-14 |
 | A-006 | Empirian modular (cabeza, torso, brazos, piernas, 8 peinados, 5 prendas, 6 accesorios) | `src/render/models/empirian.ts` | Claude Code | Código | Todos los derechos reservados | Original; proporciones propias (ART_DIRECTION §3.1) | 2026-11-14 |

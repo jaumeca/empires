@@ -130,6 +130,8 @@ function buildHair(a: Appearance, c: ReturnType<typeof partColors>): VoxelGrid {
   const cap = (yTop: number) => {
     H(1, 10, 1, 13, yTop, 12, hc);
     H(1, 10, 1, 13, 11, 2, hs); // darker band at the back for depth
+    // Soften the silhouette: trim the four top corners.
+    for (const [x, z] of [[1, 1], [12, 1], [1, 11], [12, 11]] as const) H(x, yTop - 1, z, x + 1, yTop, z + 1, 0);
   };
 
   if (!hasCap) {
