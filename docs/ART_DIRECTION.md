@@ -7,7 +7,7 @@
 
 ## 1. Imagen de referencia
 
-**Estado:** la imagen de referencia mencionada en el documento fundador **no llegó a esta sesión** (el repositorio estaba vacío y no se recibió ningún adjunto). Este documento se basa en su descripción textual:
+**Estado:** la imagen de referencia **no llegó** ni en la sesión de la Fase 0 ni en la sesión autónoma F1–F2 (2026-11-14): no se recibió ningún adjunto y no está en el repositorio. Siguiendo la instrucción del propietario, se ha continuado con la descripción textual (personajes voxel pequeños, adorables y expresivos; cabezas cuadradas, peinados geométricos y cuerpos compactos; oficinas como maquetas isométricas; mobiliario detallado; colores cálidos y pastel; burbujas sobre los personajes; sensación de juego de gestión con muñequitos, no de dashboard). Esta limitación queda registrada también en `DEVELOPMENT_LOG.md`. Este documento se basa en su descripción textual:
 
 > Pequeña oficina con personajes voxel, escritorios, ordenadores, plantas, libros y burbujas visuales sobre los empleados.
 
@@ -45,8 +45,8 @@ Unidad: **1 vóxel (v)**. Medidas en anchura × altura × profundidad.
 | Torso | 8 × 6 × 5 v | Compacto, más estrecho que la cabeza. |
 | Brazos | 2 × 5 × 2 v | Cuelgan desde el borde del torso; "mano" = último vóxel en color de piel. |
 | Piernas | 3 × 4 × 3 v | Cortas, separadas por 2 v. |
-| Calzado | 3 × 1 × 4 v | Sobresale un vóxel hacia delante: da estabilidad a la silueta. |
-| **Total** | **≈ 10 × 21 × 9 v** | Peinado añade 1–4 v de altura. |
+| Calzado | 3 × 2 × 4 v | Oscuro, con suela y raya lateral; sobresale un vóxel hacia delante (con 1 vóxel de alto se leía como "pies separados"). |
+| **Total** | **≈ 10 × 21 × 9 v** | Peinado añade 1–4 v de altura. Se dibuja a escala 0,78 respecto al vóxel del escenario (D-022). |
 
 **Por qué estas proporciones:**
 
@@ -275,3 +275,26 @@ Por orden de prioridad:
 7. Después (F2): 3–4 peinados más, 2–3 prendas, 2 accesorios (para la personalización mínima), caja de producto para la estantería, expresiones extra.
 
 Todos los recursos de F1 pueden ser **originales creados por el equipo** (o generados por código como *placeholder* propio en la primera iteración técnica). No se usarán recursos de terceros.
+
+---
+
+## 11. Estado de implementación (2026-11-14)
+
+Todo generado por código a partir de definiciones voxel originales (D-014, D-017). Registro en `ASSET_REGISTRY.md`.
+
+| Recurso | Archivo | Estado |
+|---|---|---|
+| Paleta maestra + catálogos de piel (8), pelo (12), ropa (10), pantalón (6) | `src/render/palette.ts` | ✅ |
+| Mallador voxel con oclusión ambiental por vértice y variación sutil de color | `src/render/voxel.ts` | ✅ |
+| Habitación (suelo de tarima, 2 paredes con zócalo y remate, ventana con nubes) | `models/furniture.ts` | ✅ |
+| Escritorio, monitor (pantalla animada), teclado, taza, lámpara, silla, planta, estantería con libros, póster original (cohete), corcho, alfombra, puf | `models/furniture.ts` | ✅ |
+| Caja coleccionable de producto (color y "logo" derivados del nombre) | `models/furniture.ts` | ✅ |
+| Empirian modular: 8 peinados, 5 prendas, 6 accesorios (gafas, auriculares, gorra, barba…) | `models/empirian.ts` | ✅ |
+| Caras: 9 expresiones + parpadeo | `src/render/face.ts` | ✅ |
+| Animaciones: reposo, caminar, sentado trabajando (teclear / diseñar / probar), pensar, levantar la mano, celebrar, descansar en el puf | `src/render/empirianView.ts` | ✅ |
+| Iconos pixel-art 8×8 (código, diseño, bug, check, idea, estrella, sudor, lupa, alerta, moneda, corazón…) compartidos por burbujas e interfaz | `src/render/icons.ts` | ✅ |
+| Confeti de lanzamiento | `officeScene.ts` | ✅ |
+
+**Lista de originalidad (§7):** revisada para todos los recursos anteriores. Proporciones propias (cabeza ≈ 45 %), sin manos en pinza ni cabezas cilíndricas, sin texturas pixeladas sobre cubos al estilo Minecraft (los cubos son de color liso con AO), sin marcas ni productos reconocibles. **Pendiente:** revisión visual del propietario (F1.12).
+
+**Mejoras artísticas identificadas:** el puf aún parece una caja; la planta se lee como cactus; los peinados "Corto" y "Flequillo" forman un bloque muy cuadrado; las burbujas pueden solaparse con el texto anclado al Empirian; falta un retrato del Empirian renderizado desde el modelo 3D (hoy es la cara 2D).

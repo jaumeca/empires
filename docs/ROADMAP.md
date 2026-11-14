@@ -1,6 +1,6 @@
 # EMPIRES — Roadmap
 
-> Versión 0.1 · 2026-11-14 · Roadmap incremental. Se puede reorganizar con motivo justificado, pero **no** se eliminan funcionalidades ni se reduce la visión sin consultar al propietario.
+> Versión 0.2 · 2026-11-14 (actualizado tras la sesión autónoma F1–F2) · Roadmap incremental. Se puede reorganizar con motivo justificado, pero **no** se eliminan funcionalidades ni se reduce la visión sin consultar al propietario.
 >
 > Estados: ⬜ Pendiente · 🟦 En curso · ✅ Hecho · ⏸ Bloqueado (esperando aprobación)
 
@@ -8,9 +8,9 @@
 
 | Fase | Nombre | Estado | Entregable |
 |---|---|---|---|
-| F0 | Fundación | 🟦 En curso | Documentos maestros + decisiones aprobadas |
-| F1 | El primer Empirian | ⏸ | Habitación voxel con un Empirian animado, medido en móviles reales |
-| F2 | El primer proyecto | ⬜ | **v0.1 — primera versión jugable** |
+| F0 | Fundación | ✅ Hecho | Documentos maestros + decisiones aprobadas |
+| F1 | El primer Empirian | 🟦 Casi completa | Habitación voxel con un Empirian animado (falta medir en móviles reales) |
+| F2 | El primer proyecto | 🟦 Jugable | **v0.1 — primera versión jugable** (falta prueba de juego del propietario) |
 | F3 | Consecuencias y personalización | ⬜ | Proyectos más ricos, decisiones dinámicas, registro causal visible |
 | F4 | Empleados y oficinas | ⬜ | Contratación, personalidades, decoración, garaje |
 | F5 | Mercado vivo | ⬜ | Productos persistentes, competidores, mantenimiento |
@@ -27,90 +27,72 @@
 
 ---
 
-## F0 — Fundación
-
-- **Objetivos:** Documentar la visión completa, la dirección artística y la propuesta técnica; identificar riesgos y decisiones; acordar el plan.
-- **Dependencias:** —
-- **Riesgos:** Aprobar demasiado pronto decisiones técnicas que dependen de la validación en dispositivos.
+## F0 — Fundación — ✅ Hecho
 
 | ID | Tarea | Estado |
 |---|---|---|
-| F0.1 | Inspeccionar el repositorio | ✅ (repositorio vacío, sin commits) |
-| F0.2 | Crear documentos maestros (`CLAUDE.md`, `docs/GAME_DESIGN.md`, `docs/ROADMAP.md`, `docs/DECISIONS.md`, `docs/ART_DIRECTION.md`, `docs/ARCHITECTURE.md`, `docs/ASSET_REGISTRY.md`) | ✅ |
-| F0.3 | Analizar la imagen de referencia | ⏸ La imagen no llegó a la sesión; pendiente de que el propietario la añada a `docs/references/` |
-| F0.4 | Revisión de documentos con el propietario | ⬜ |
-| F0.5 | Aprobación (o cambio) de D-005 a D-021, como mínimo D-005, D-006, D-007, D-009, D-011, D-014, D-016, D-018 | ⬜ |
-| F0.6 | Respuesta a preguntas abiertas prioritarias: Q-005 (dominio), Q-006 (marca), Q-008 (dispositivos de prueba) | ⬜ |
-
-**Criterios de aceptación:** documentos aprobados por el propietario; decisiones necesarias para F1 confirmadas; ninguna idea del documento fundador perdida.
-
-**Próximo paso:** revisión del propietario.
+| F0.1 | Inspeccionar el repositorio | ✅ |
+| F0.2 | Documentos maestros | ✅ |
+| F0.3 | Analizar la imagen de referencia | ⏸ La imagen no llegó en ninguna de las dos sesiones; se trabaja con la descripción textual (ver `ART_DIRECTION.md` §1) |
+| F0.4 | Revisión con el propietario | ✅ (2026-11-14) |
+| F0.5 | Aprobación de decisiones | ✅ D-005…D-019, D-021 confirmadas. D-020 sigue pendiente |
+| F0.6 | Preguntas abiertas prioritarias | ✅ Respondidas (ver `DECISIONS.md`) |
 
 ---
 
-## F1 — El primer Empirian
+## F1 — El primer Empirian — 🟦 Casi completa (falta validación en móviles reales)
 
-- **Objetivos:** Validar la identidad voxel, la cámara, la escala, la iluminación, las animaciones, la interacción táctil y el rendimiento en móviles; establecer los cimientos técnicos (proyecto, pruebas, simulación mínima).
-- **Dependencias:** F0.5 (motor, lenguaje, empaquetado, herramientas aprobados) y autorización para instalar dependencias.
-- **Riesgos:** R-001 (rendimiento WebView), estética poco atractiva en la primera iteración, sobreinversión en recursos antes de validar.
+- **Dependencias:** cumplidas (F0.5, autorización de dependencias).
+- **Riesgos vigentes:** R-001 (rendimiento WebView) sin medir en dispositivos.
 
-| ID | Tarea | Criterio de aceptación | Estado |
+| ID | Tarea | Estado | Evidencia |
 |---|---|---|---|
-| F1.1 | Esqueleto del proyecto: Vite + TS estricto + Vitest + ESLint con regla de límites `sim/` | `npm test` y `npm run build` pasan; una importación prohibida desde `sim/` falla el lint | ⬜ |
-| F1.2 | Núcleo de simulación sin gameplay: `GameState`, reloj de paso fijo, velocidades, pausa, PRNG con semilla, bus de eventos | Pruebas: mismos comandos + semilla ⇒ mismo estado; resultado idéntico con fotogramas de 8, 16, 33 y 100 ms; pausa no avanza ticks | ⬜ |
-| F1.3 | Guardado v1: serializar/deserializar, cabecera versionada, almacenamiento en memoria e IndexedDB, migración de ejemplo | Prueba guardar→cargar ≡ estado idéntico; importar archivo corrupto se rechaza con error claro | ⬜ |
-| F1.4 | Escena de habitación con cámara ortográfica; comparación isométrica vs. dimétrica | Capturas de ambas para que el propietario elija (D-009) | ⬜ |
-| F1.5 | Paleta maestra y voxelizador desde JSON: mallado optimizado, AO por vértice, canales de color | Habitación con suelo, 2 paredes (ventana), escritorio, ordenador, silla, planta, lámpara, estantería con libros y un decorativo | ⬜ |
-| F1.6 | Primer Empirian modular (esqueleto rígido, piezas, canales de color, cara-calcomanía) | Cambiar piel/pelo/ropa en tiempo de ejecución sin nuevos modelos; legible a 60 px de altura en móvil | ⬜ |
-| F1.7 | Animaciones: reposo, caminar, trabajar en el ordenador, celebrar | Las 4 animaciones en bucle sin saltos; el Empirian camina por la habitación sin atravesar muebles | ⬜ |
-| F1.8 | Burbujas e interacción táctil: tocar al Empirian muestra su nombre/estado; burbujas de prueba conectadas a eventos simulados (código, bug, idea, cansancio) | Las burbujas aparecen solo cuando la simulación emite el evento; toque reconocido de forma fiable en pantalla de 6" | ⬜ |
-| F1.9 | Controles de tiempo (pausa/1x/2x/4x/8x) conectados al reloj y a la velocidad de animación | Pausar detiene simulación y animaciones de trabajo (el reposo puede seguir vivo); la UI refleja la velocidad | ⬜ |
-| F1.10 | Panel de diagnóstico (FPS, tiempo de fotograma, draw calls, triángulos, memoria) y escena de estrés (habitación + 10 Empirians) | Datos visibles en dispositivo | ⬜ |
-| F1.11 | Build Capacitor y medición en dispositivos de referencia (requiere aprobación, Xcode/Android Studio y dispositivos) | Métricas de `ARCHITECTURE.md` §9.2 cumplidas en "mínimo soportado", o informe con plan de optimización / plan B | ⬜ |
-| F1.12 | Revisión de dirección artística y originalidad con el propietario; decisión de orientación (D-011) | Aprobación de la identidad visual del Empirian y la habitación | ⬜ |
+| F1.1 | Esqueleto: Vite + TS estricto + Vitest + Three.js; límites de `sim/` | ✅ | `tests/architecture.test.ts` sustituye a la regla de lint (sin ESLint, ver D-027) |
+| F1.2 | Núcleo de simulación: estado, reloj de paso fijo, velocidades, pausa, PRNG con semilla, eventos | ✅ | `tests/sim/clock.test.ts`, `determinism.test.ts`, `rng.test.ts` |
+| F1.3 | Guardado v1: cabecera versionada, checksum, migración 0→1, rechazo de archivos corruptos | ✅ | `tests/sim/save.test.ts`. Web: localStorage (D-023) |
+| F1.4 | Habitación + comparación isométrica/dimétrica | ✅ | `docs/screenshots/cam-*.png`. Elegida dimétrica provisional (D-009) |
+| F1.5 | Paleta maestra + mallador voxel (AO por vértice) + mobiliario completo | ✅ | `src/render/voxel.ts`, `models/furniture.ts` |
+| F1.6 | Empirian modular (esqueleto rígido, piezas, colores, cara-calcomanía) | ✅ | `tests/render/render.test.ts`; legible a ~60 px en 844×390 (captura 10) — revisión del propietario pendiente |
+| F1.7 | Animaciones reposo, caminar, trabajar, celebrar (+ levantar la mano, pensar, descansar) | ✅ | Capturas 04, 06; navegación por celdas sin atravesar muebles |
+| F1.8 | Burbujas ligadas a eventos + toque sobre Empirian y objetos | ✅ | e2e "bubbles appear from simulation events"; toque en ordenador/estantería/cajas/Empirian |
+| F1.9 | Controles de tiempo | ✅ | e2e "pause stops simulated time", "4x speed advances time" |
+| F1.10 | Panel de diagnóstico (`?debug`) | ✅ | FPS, draw calls, triángulos, geometrías, texturas. Escena de estrés con 10 Empirians: **pendiente** (solo hay 1 Empirian en la simulación) |
+| F1.11 | Build Capacitor y medición en dispositivos | ⏸ Bloqueada | Sin Android SDK/Xcode ni dispositivos en el entorno. `capacitor.config.ts` listo; pasos en `ARCHITECTURE.md` §13. **No se declara validación móvil.** |
+| F1.12 | Revisión de dirección artística y orientación | ⬜ Pendiente del propietario | Capturas en `docs/screenshots/` |
 
-**Criterios de aceptación de F1 (prototipo visual):**
-- La identidad voxel resulta atractiva al propietario; el Empirian tiene personalidad visual.
-- La habitación se siente viva (el Empirian se mueve, reacciona, hay burbujas).
-- El personaje se distingue en una pantalla móvil.
-- Las interacciones táctiles funcionan.
-- El tiempo se puede pausar y acelerar correctamente.
-- La simulación funciona y se prueba sin renderizar.
-- Rendimiento adecuado en los dispositivos de referencia según métricas acordadas.
-
-**Próximos pasos tras F1:** confirmar D-005 definitivamente (o activar plan B) y empezar F2.
+**Criterios de aceptación de F1:** cumplidos todos salvo *rendimiento en dispositivos de referencia* (F1.11) y *aprobación de la identidad visual* (F1.12).
+Medido en el entorno (Chromium headless con renderizado por software SwiftShader, sin GPU): 22–25 draw calls, ~42 k triángulos, 24 geometrías — dentro de presupuesto. Los FPS medidos ahí (7–50) no son representativos de un móvil.
 
 ---
 
-## F2 — El primer proyecto → v0.1 "Primer Lanzamiento"
+## F2 — El primer proyecto → v0.1 "Primer Lanzamiento" — 🟦 Jugable de principio a fin; pendiente de pruebas de juego
 
-- **Objetivos:** El primer bucle jugable completo (GDD §21): crear un producto, elegir características, presupuesto y plazo, observar el desarrollo, decidir, publicar y obtener resultados; guardar y cargar.
-- **Dependencias:** F1 completada; D-008 (framework UI) aprobada.
-- **Riesgos:** Que no sea divertido (mitigación: guion de experiencia GDD §21.1, pruebas de juego tempranas); balance (mitigación: `sim-runner`); exceso de UI tipo panel.
-
-| ID | Tarea | Criterio de aceptación | Estado |
+| ID | Tarea | Estado | Evidencia |
 |---|---|---|---|
-| F2.1 | Modelo de proyecto y sistemas: fases, trabajo, calidad con rendimientos decrecientes, bugs ocultos/conocidos, energía, coste (ARCHITECTURE §5.5) | Pruebas de propiedades 1–4 de ARCHITECTURE §5.5 | ⬜ |
-| F2.2 | Mercado mínimo, críticas y ventas | Mismo producto lanzado en distintos momentos/precios da resultados coherentes y explicables | ⬜ |
-| F2.3 | `tools/sim-runner` para simular miles de proyectos sin render | Informe de distribuciones; existe un plazo óptimo interior (no "cuanto más, mejor") | ⬜ |
-| F2.4 | Creación del fundador (nombre, piel, peinado, color de pelo, ropa, accesorio) | Se completa en ≤ 60 s; el aspecto se guarda y se recupera | ⬜ |
-| F2.5 | Tarjetas de nuevo proyecto: nombre, tema, tamaño, presupuesto, plazo, foco | Sin tablas; cada elección muestra estimaciones, no certezas | ⬜ |
-| F2.6 | Representación del desarrollo: actividades → animaciones; eventos → burbujas de código, diseño, bugs, progreso | Cada burbuja corresponde a un evento real (verificable en modo depuración) | ⬜ |
-| F2.7 | Momento Decisivo con consecuencias reales (p. ej. "dos semanas más para la mecánica genial") con 3–4 opciones adaptadas al estado | Cada opción produce efectos distintos medibles y quedan en el registro causal | ⬜ |
-| F2.8 | Pulido y lanzamiento: elegir tiempo de pruebas, secuencia de lanzamiento con celebración | Bugs conocidos bajan visiblemente al probar; celebración proporcional al resultado | ⬜ |
-| F2.9 | Resultados: tarjetas de críticas, ventas, dinero; "¿Por qué esta nota?" con 2–3 causas reales | Las causas mostradas proceden del registro causal | ⬜ |
-| F2.10 | Recuerdo: la caja del producto aparece en la estantería | Persiste tras guardar/cargar | ⬜ |
-| F2.11 | Guardado en interfaz: autoguardado, cargar partida, exportar/importar archivo; pausa al ir a segundo plano | Guardar/cargar en cualquier momento conserva el estado exacto (prueba automatizada + manual) | ⬜ |
-| F2.12 | Pruebas de juego con el propietario y ajustes | Ver criterios abajo | ⬜ |
+| F2.1 | Modelo de proyecto: fases, trabajo, calidad con rendimientos decrecientes, bugs ocultos/conocidos, energía, ritmo, costes | ✅ | `tests/sim/consequences.test.ts` |
+| F2.2 | Mercado mínimo, críticas y ventas semanales; precio con óptimo | ✅ | idem + `npm run sim` |
+| F2.3 | Simulador de balance sin render | ✅ | `tools/sim-runner/balance.report.ts` (`npm run sim`) |
+| F2.4 | Creación del fundador (nombre, estudio, piel, peinado, pelo, ropa, color, pantalón, accesorio) | ✅ | e2e "founder customized via command" |
+| F2.5 | Tarjeta de nuevo proyecto: nombre, tema, tamaño, precio, enfoque, presupuesto, plazo con estimaciones | ✅ | Captura 03. Mejora pendiente: es larga en móvil horizontal |
+| F2.6 | Desarrollo visible: actividades → animaciones, eventos → burbujas, pantalla del monitor | ✅ | Captura 04 |
+| F2.7 | Momento Decisivo con consecuencias reales (gran idea; fecha límite) | ✅ | e2e + pruebas "decisions have real consequences" |
+| F2.8 | Pulido, pruebas y lanzamiento con celebración | ✅ | Captura 06 |
+| F2.9 | Resultados: críticas, ventas, dinero, "¿Por qué esta nota?" desde el registro causal | ✅ | Captura 07; prueba "every release has an explanation linked to the causal ledger" |
+| F2.10 | Caja coleccionable en la estantería | ✅ | e2e "collectible box on the shelf" y "persists after reload" |
+| F2.11 | Guardado en UI: autoguardado, guardar, exportar/importar, pausa al ir a segundo plano | ✅ | e2e "save + reload restores the exact state". Exportar/importar: implementado, **no probado automáticamente** (diálogo de archivos) |
+| F2.12 | Pruebas de juego con el propietario y ajustes | ⬜ | — |
 
-**Criterios de aceptación de v0.1 (incluye los del documento fundador §24):**
-- El jugador completa un ciclo de desarrollo y lanzamiento en ≈ 10–15 minutos sin ayuda externa.
-- Modificar presupuesto y plazo produce consecuencias coherentes; dedicar más tiempo no garantiza mejores resultados (demostrado con `sim-runner` y en juego).
-- Al menos una decisión con consecuencias reales y explicables.
-- Guardar y recuperar conserva el estado exacto.
-- Los sistemas importantes tienen pruebas automatizadas; la simulación funciona sin render.
-- Rendimiento dentro de las métricas en los dispositivos de referencia.
-- Sensación de videojuego: la pantalla principal es la habitación, no un panel.
+**Criterios de aceptación de v0.1:**
+- [x] Ciclo completo de desarrollo y lanzamiento a través de la interfaz (e2e 16/16).
+- [x] Presupuesto y plazo con consecuencias coherentes; más tiempo ≠ mejor resultado (óptimo interior demostrado en pruebas y en `npm run sim`).
+- [x] Al menos una decisión con consecuencias reales y explicables.
+- [x] Guardar y recuperar conserva el estado exacto.
+- [x] Pruebas automatizadas de los sistemas importantes; la simulación funciona sin render (40 pruebas).
+- [ ] Rendimiento en dispositivos de referencia (bloqueado, F1.11).
+- [ ] Duración ≈ 10–15 min y diversión validadas por pruebas de juego (F2.12).
+- [x] La pantalla principal es la habitación, no un panel.
+
+**Próximos pasos recomendados:** F2.12 (prueba de juego del propietario) → F1.11 (dispositivos) → F3.
 
 ---
 

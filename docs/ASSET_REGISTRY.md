@@ -6,16 +6,31 @@ Todo recurso que entre en el repositorio (modelos, texturas, animaciones, fuente
 
 | ID | Tipo | Archivo fuente | Autor | Herramienta | Licencia | Origen / notas | Fecha |
 |---|---|---|---|---|---|---|---|
-| — | — | — | — | — | — | Aún no hay recursos | — |
+| A-001 | Paleta maestra y catálogos de color | `src/render/palette.ts` | Claude Code para el propietario | Código | Todos los derechos reservados (D-016) | Original | 2026-11-14 |
+| A-002 | Habitación inicial (suelo, paredes, ventana) | `src/render/models/furniture.ts` | Claude Code | Código (definición voxel) | Todos los derechos reservados | Original | 2026-11-14 |
+| A-003 | Mobiliario: escritorio, monitor, teclado, taza, lámpara, silla, planta, estantería, corcho, alfombra, puf | `src/render/models/furniture.ts` | Claude Code | Código | Todos los derechos reservados | Original | 2026-11-14 |
+| A-004 | Póster "cohete y planeta" (pixel art 10×13) | `src/render/models/furniture.ts` | Claude Code | Código | Todos los derechos reservados | Original | 2026-11-14 |
+| A-005 | Caja coleccionable de producto | `src/render/models/furniture.ts` | Claude Code | Código | Todos los derechos reservados | Original | 2026-11-14 |
+| A-006 | Empirian modular (cabeza, torso, brazos, piernas, 8 peinados, 5 prendas, 6 accesorios) | `src/render/models/empirian.ts` | Claude Code | Código | Todos los derechos reservados | Original; proporciones propias (ART_DIRECTION §3.1) | 2026-11-14 |
+| A-007 | Caras: 9 expresiones 10×10 | `src/render/face.ts` | Claude Code | Código | Todos los derechos reservados | Original | 2026-11-14 |
+| A-008 | Iconos pixel-art 8×8 (19) y burbuja voxel | `src/render/icons.ts`, `bubbles.ts` | Claude Code | Código | Todos los derechos reservados | Original | 2026-11-14 |
+| A-009 | Animaciones procedurales del Empirian | `src/render/empirianView.ts` | Claude Code | Código | Todos los derechos reservados | Original | 2026-11-14 |
+| A-010 | Temas de juego ficticios y nombres de medios ficticios (PixelPost, Tecla Crítica, Bitácora Lúdica, Modo Arcade) | `src/content/topics.ts`, `systems/market.ts` | Claude Code | Código | Todos los derechos reservados | Ficticios (D-021); comprobar antes del lanzamiento que no coinciden con medios reales | 2026-11-14 |
+
+Tipografía: la interfaz usa la fuente del sistema (`system-ui`/`ui-rounded`); no se incluye ningún archivo de fuente. Sin sonidos ni música todavía.
 
 ## Referencias (NO utilizables en el juego)
 
 | ID | Descripción | Archivo | Origen | Derechos | Notas |
 |---|---|---|---|---|---|
-| REF-001 | Imagen de referencia del documento fundador: pequeña oficina voxel con personajes, escritorios, ordenadores, plantas, libros y burbujas | Pendiente (`docs/references/`) | Aportada por el propietario | Desconocidos — solo inspiración | No llegó a la sesión del 2026-11-14 |
+| REF-001 | Imagen de referencia del documento fundador: pequeña oficina voxel con personajes, escritorios, ordenadores, plantas, libros y burbujas | Pendiente (`docs/references/`) | Aportada por el propietario | Desconocidos — solo inspiración | No llegó en ninguna de las sesiones del 2026-11-14 |
 
 ## Herramientas y dependencias de terceros
 
 | Nombre | Uso | Licencia | Verificado |
 |---|---|---|---|
-| — | Ninguna dependencia instalada todavía | — | — |
+| three 0.170 | Render 3D | MIT | ✅ |
+| @capacitor/core, @capacitor/cli 8.5.3 | Empaquetado móvil (D-007) | MIT | ✅ |
+| vite 8.3.5, vitest 5.0.5, typescript 5.6, @types/* | Desarrollo y pruebas (no se distribuyen) | MIT / Apache-2.0 | ✅ |
+| Dependencias transitivas | — | MIT, ISC, BlueOak-1.0.0, BSD-3-Clause, Apache-2.0, 0BSD, Unlicense (comprobado en `package-lock.json`) | ✅ |
+| Playwright + Chromium | Pruebas e2e y capturas (preinstalado en el entorno, no es dependencia del proyecto) | Apache-2.0 | ✅ |

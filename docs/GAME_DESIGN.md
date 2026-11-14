@@ -13,7 +13,17 @@
 | `[PREGUNTA]` | Pregunta abierta que hay que resolver. |
 | `[IMPLEMENTADO]` | Sistema ya presente en el código (hoy: ninguno). |
 
-**Sistemas implementados a fecha de este documento: ninguno.** El repositorio solo contiene documentación.
+**Sistemas implementados `[IMPLEMENTADO]` (2026-11-14, v0.1 en desarrollo):**
+- Reloj continuo con pausa y velocidades 1x/2x/4x/8x, independiente de los FPS; pausa automática en acontecimientos decisivos (§10).
+- Simulación determinista con semilla y guardado versionado; pausa y guardado al pasar a segundo plano (§10, §18).
+- Oficina viva: habitación voxel, Empirian fundador personalizable, animaciones y burbujas ligadas a la simulación (§3, §4).
+- Primer proyecto de videojuego: tema, tamaño, enfoque, presupuesto, plazo, precio; fases concepto/producción/pulido; ritmo de trabajo (tranquilo/normal/crunch) y peso de las pruebas; ajuste de fecha y presupuesto durante el desarrollo (§6, §9).
+- Consecuencias: calidad con rendimientos decrecientes, bugs ocultos y conocidos, energía, interés del público que se desvanece con los retrasos; registro causal y "¿Por qué esta nota?" (§8).
+- Momentos Decisivos: "gran idea" a mitad de producción y "fecha de lanzamiento" (§7).
+- Lanzamiento con celebración, cuatro críticas, ventas semanales durante 10 semanas, reputación (§13).
+- Caja coleccionable del producto en la estantería (§15, versión mínima).
+
+Detalle técnico y pruebas: `ARCHITECTURE.md` §13 y `ROADMAP.md` (F1–F2).
 
 ---
 
@@ -423,7 +433,7 @@ Ver `ART_DIRECTION.md` §8–10. Sistema modular de personajes (cabezas, caras, 
 
 ## 21. Primera versión jugable (v0.1 "Primer Lanzamiento")
 
-`[CONFIRMADO]` (alcance definido por el propietario). El jugador puede:
+`[IMPLEMENTADO]` los 13 puntos son jugables (pendiente: prueba de juego del propietario y validación en móviles). `[CONFIRMADO]` (alcance definido por el propietario). El jugador puede:
 
 1. Ver una habitación voxel.
 2. Ver a su Empirian fundador.

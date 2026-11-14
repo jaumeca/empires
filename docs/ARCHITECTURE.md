@@ -308,3 +308,70 @@ Ver `DECISIONS.md`: D-005 (motor visual), D-006 (lenguaje), D-007 (empaquetado m
 | R-006 | Pipeline de recursos voxel más costoso de lo previsto | Media | Medio | Empezar con modelos definidos en JSON y generados por código; pipeline después |
 | R-007 | Limitaciones de las tiendas (WebView/"apps web empaquetadas") | Baja | Alto | El juego es offline y con contenido propio; revisar guías de App Store antes de F10 |
 | R-008 | Rendimiento de la UI HTML con muchas actualizaciones por fotograma | Baja | Medio | La UI se actualiza por eventos/ticks, no por fotograma |
+
+---
+
+## 13. Implementación actual (2026-11-14)
+
+Estructura real (sigue la propuesta de §4 con estas diferencias: sin ESLint (D-027), sin `content/` en JSON — datos en TS—, `tools/e2e` añadido):
+
+```
+src/sim/            simulación pura (sin DOM ni Three.js)
+  config.ts         constantes de ritmo y balance (D-010, D-024)
+  core/rng.ts       sfc32 con semilla y flujos separados
+  core/events.ts    eventos de dominio con severidad
+  core/ledger.ts    registro causal
+  model/state.ts    tipos del GameState (datos planos)
+  state.ts          creación de partida
+  commands.ts       comandos del jugador (única vía de modificar el estado desde fuera)
+  step.ts           un tick = una hora laborable; frontera de día
+  game.ts           SimClock (paso fijo + acumulador) y Game (estado, reloj, comandos, replays)
+  systems/          project.ts, decisions.ts, market.ts
+  estimates.ts      estimaciones con incertidumbre para la UI
+  autoplay.ts       jugador automático para pruebas y balance
+  save/             serialización versionada, checksum, migraciones
+src/content/        temas ficticios
+src/render/         Three.js: voxel.ts, palette.ts, models/, empirianView.ts, bubbles.ts, icons.ts, face.ts, officeScene.ts
+src/ui/             dom.ts (helper h()), gameUI.ts, style.css
+src/platform/       storage.ts (localStorage, exportar/importar, segundo plano)
+src/app/main.ts     arranque y bucle requestAnimationFrame
+tests/              40 pruebas (sim, guardado, arquitectura, render)
+tools/sim-runner/   informe de balance (npm run sim)
+tools/e2e/          playthrough Playwright (16 comprobaciones) y capturas
+```
+
+**Flujo por fotograma:** `game.frame(dtMs)` → ticks enteros según velocidad → eventos acumulados → `scene.sync(state)` + `scene.handleEvents` (burbujas, caras, confeti) + `ui.handleEvents` (avisos, diálogos) → `scene.update` (animación y render) → `ui.frame` (posición de la burbuja de diálogo, diagnóstico).
+
+**Pausa automática:** los eventos `decisive` (momento decisivo, lanzamiento) detienen el reloj dentro del mismo fotograma, en el tick exacto: por eso el resultado no depende de los FPS aunque haya decisiones.
+
+**Comandos de desarrollo:**
+
+| Comando | Qué hace |
+|---|---|
+| `npm install --legacy-peer-deps` | Instala dependencias (ver D-025) |
+| `npm run dev` | Servidor de desarrollo (http://localhost:5173) |
+| `npm test` | 40 pruebas automatizadas |
+| `npm run typecheck` / `npm run build` | Comprobación de tipos / build de producción en `dist/` |
+| `npm run sim` | Informe de balance sin render (`EMPIRES_SEEDS=100` para más partidas) |
+| `npm run e2e` | Playthrough completo en Chromium (requiere `npm run dev` en marcha) |
+
+Parámetros de URL: `?debug` (diagnóstico y `window.__empires`), `?fresh` (ignora el autoguardado), `?seed=N`, `?cam=iso|dim`.
+
+### 13.1 Pasos pendientes para móviles (F1.11)
+
+Requieren Android Studio / Xcode y dispositivos físicos (no disponibles en este entorno):
+
+```bash
+npm run build
+npx cap add android   # y/o: npx cap add ios  (requiere instalar @capacitor/android / @capacitor/ios 8.5.x)
+npx cap sync
+npx cap open android
+```
+
+Después: activar `?debug` (o un ajuste equivalente en la build) y medir en los dispositivos de §9.1 las métricas de §9.2 durante 10 minutos con la oficina activa a 1x y 8x. Añadir un adaptador `SaveStorage` sobre `@capacitor/filesystem` y usar `@capacitor/app` (`appStateChange`) además de `visibilitychange`.
+
+### 13.2 Mediciones disponibles en este entorno (no representativas de móviles)
+
+Chromium headless con WebGL por software (SwiftShader), 1280×720, DPR 1: **22–25 draw calls, ~42 000 triángulos, 24 geometrías, 3–12 texturas**. Los FPS (7–50) dependen de la CPU del contenedor y no sirven para validar rendimiento. Bundle de producción: ~570 kB JS (151 kB gzip), 11 kB CSS.
+
+Optimizaciones previstas si hiciera falta: *greedy meshing* de la habitación (fusionar las caras del suelo), fusionar los muebles estáticos en una sola malla, sombras solo en calidad alta, limitar DPR a 1,5 en gama baja, render a 30 FPS cuando no hay movimiento.

@@ -144,6 +144,45 @@ Tomadas por el propietario en el documento fundador (2026-11-14).
 
 ---
 
+## Decisiones menores y reversibles tomadas por Claude (sesión F1–F2, 2026-11-14)
+
+Autorizadas por el propietario como "decisiones pequeñas, reversibles y coherentes con lo aprobado". Pueden revertirse sin coste relevante.
+
+### D-009a — Cámara dimétrica como predeterminada (provisional)
+- **Estado:** Provisional (revisable en F1.12)
+- **Decisión:** Dimétrica (elevación 30°) por defecto; isométrica (35,26°) disponible en el menú y con `?cam=iso`.
+- **Motivo:** Muestra más las paredes (póster, ventana, estantería: personalidad de la habitación), menos suelo vacío y encaja mejor en horizontal. Comparativa: `docs/screenshots/cam-dimetric.png` vs `cam-isometric.png`.
+
+### D-022 — Escala de los Empirians: 0,78 respecto al vóxel del escenario
+- **Estado:** Provisional (revisable en F1.12)
+- **Decisión:** El Empirian conserva sus proporciones en vóxeles (cabeza 10×10×9, ≈ 45 % de la altura) pero se dibuja a escala 0,78.
+- **Motivo:** A escala 1 el personaje parecía gigante frente a un escritorio de 10 vóxeles de alto. Alternativa descartada por ahora: reducir la resolución del personaje (perdía detalle facial) o agrandar todos los muebles (rehacer la escala de la cuadrícula).
+- **Consecuencias:** Los vóxeles del personaje son algo más pequeños que los del escenario. Si se considera un problema estético, la alternativa es rehacer los muebles a mayor tamaño.
+
+### D-023 — Guardado web en localStorage (en lugar de IndexedDB)
+- **Estado:** Provisional
+- **Decisión:** `LocalSaveStorage` con autoguardado + copia de seguridad (`auto.bak`). La interfaz `SaveStorage` permite cambiar a IndexedDB o al sistema de archivos de Capacitor sin tocar el juego.
+- **Motivo:** Las partidas pesan pocos KB; localStorage es síncrono y más simple. Revisar cuando el registro causal crezca (R-004) o al añadir el adaptador nativo.
+
+### D-024 — Valores de balance iniciales
+- **Estado:** Provisional
+- **Decisión:** Constantes en `src/sim/config.ts`, ajustadas con `npm run sim` para que: el plazo óptimo sea interior (~8 semanas para un juego pequeño), el presupuesto tenga rendimientos decrecientes (a partir de ~4000 € deja de compensar), el precio tenga un óptimo que sube con la calidad, y el crunch y las pocas pruebas empeoren el resultado en promedio.
+
+### D-025 — Pinchar dependencias de desarrollo a versiones actuales sin vulnerabilidades
+- **Estado:** Aplicada
+- **Decisión:** Vite 8.3.5, Vitest 5.0.5, Three.js 0.170, TypeScript 5.6, Capacitor 8.5.3. Instalación con `npm install --legacy-peer-deps` (fallo interno de npm al resolver *peer dependencies* opcionales de Vitest 5).
+- **Licencias:** todas permisivas (MIT, ISC, BlueOak-1.0.0, BSD-3-Clause, Apache-2.0, 0BSD, Unlicense). Ver `ASSET_REGISTRY.md`.
+
+### D-026 — Identificador de aplicación provisional `top.expires.empires`
+- **Estado:** **Pendiente de aprobación del propietario**
+- **Motivo:** Capacitor necesita un identificador; se ha usado el dominio disponible. **Una vez publicada la app no puede cambiarse**, así que debe confirmarse antes de F10.
+
+### D-027 — Límites de arquitectura comprobados por prueba en lugar de ESLint
+- **Estado:** Provisional
+- **Decisión:** `tests/architecture.test.ts` comprueba que `src/sim/` no importa render/UI/plataforma/Three.js ni usa `Math.random`, `Date.now`, DOM o `localStorage`. Evita añadir ESLint y su árbol de dependencias por ahora.
+
+---
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.
