@@ -93,3 +93,46 @@ export function autoplay(plan: AutoplayPlan): AutoplayResult {
 function must(res: { ok: boolean; error?: string }): void {
   if (!res.ok) throw new Error(`Command failed: ${res.error}`);
 }
+
+/**
+ * Plays `projects` consecutive games with a policy function (career mode).
+ * Returns the game for inspection. Used by long-game tests and balance reports.
+ */
+export function autoplayCareer(
+  seed: number,
+  projects: number,
+  policy: (i: number, state: GameState) => Omit<AutoplayPlan, 'seed' | 'weeksAfter'> = () => ({}),
+  restDaysBetween = 7,
+): { game: Game; scores: number[]; moneyAfter: number[] } {
+  const game = new Game(createNewGame(seed));
+  must(game.dispatch({ type: 'setup_founder', name: 'Test', companyName: 'Test Studio', appearance: DEFAULT_APPEARANCE }));
+  const scores: number[] = [];
+  const moneyAfter: number[] = [];
+  for (let i = 0; i < projects; i++) {
+    const plan = policy(i, game.state);
+    const money = Math.max(0, game.state.company.money);
+    const r = game.dispatch({
+      type: 'start_project', name: `P${i}`, topicId: plan.topicId ?? 'space-farm', size: plan.size ?? 'small', focus: plan.focus ?? 0.35,
+      budget: Math.min(plan.budget ?? 1500, money), days: plan.days ?? 42, price: plan.price ?? 9.99,
+    });
+    if (!r.ok) break;
+    if (plan.pace || plan.testFocus !== undefined) game.dispatch({ type: 'adjust_project', pace: plan.pace, testFocus: plan.testFocus });
+    const pid = game.state.activeProjectId!;
+    let guard = 0;
+    while (game.state.activeProjectId && guard++ < 50000) {
+      const d = game.state.pendingDecision;
+      if (d) {
+        const p = getProject(game.state, pid)!;
+        const ext = p.decisionsTaken.filter((x) => x.startsWith('deadline:extend')).length;
+        const opt = d.kind === 'big_idea' ? (plan.bigIdea ?? 'keep') : ext >= 2 ? 'release' : (plan.atDeadline ?? 'release');
+        must(game.dispatch({ type: 'choose_option', decisionId: d.id, optionId: opt }));
+        continue;
+      }
+      game.tick();
+    }
+    for (let k = 0; k < restDaysBetween * 8; k++) game.tick();
+    scores.push(getProject(game.state, pid)!.result!.averageScore);
+    moneyAfter.push(game.state.company.money);
+  }
+  return { game, scores, moneyAfter };
+}

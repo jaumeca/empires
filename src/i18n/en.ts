@@ -274,4 +274,5 @@ export const en: Record<string, string> = {
   'save.error.missing_field': 'The save is missing data.',
   'save.error.incomplete_migration': 'The save upgrade did not complete.',
   'save.error.invalid_state': 'The save contains inconsistent data.',
+  'save.error.write_failed': 'The game could not be written to storage.',
 };

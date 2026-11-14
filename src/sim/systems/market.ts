@@ -4,6 +4,7 @@ import { entriesFor, record } from '../core/ledger';
 import { nextRange } from '../core/rng';
 import type { Empirian, GameState, Project, Review, TextRef } from '../model/state';
 import { getTopic, TOPICS } from '../../content/topics';
+import { compactHistory } from './history';
 import { fitModifier, investmentRatio, productionProgress, qualityCeiling, trueQuality } from './project';
 
 const C = SIM_CONFIG;
@@ -88,6 +89,7 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
   founder.activity = 'celebrating';
   state.activeProjectId = null;
   record(state, { kind: 'released', text: { key: 'ledger.released', params: { project: p.name, score: averageScore } }, causes: explanation, tone: averageScore >= 6 ? 1 : -1, projectId: p.id });
+  compactHistory(state);
   emit({ type: 'project_released', projectId: p.id, severity: 'decisive' });
 }
 

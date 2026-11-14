@@ -45,7 +45,15 @@ export class Game {
   readonly clock: SimClock;
   private listeners: GameListener[] = [];
   private scheduled = new Map<number, Command[]>();
+  /**
+   * In-memory log of applied commands (debugging / replays of a session).
+   * Not saved: a save file is itself a full checkpoint (state + RNG), so a game
+   * is reproducible from any save plus the commands issued after it. Capped to
+   * keep memory bounded in long sessions; `commandLogDropped` counts the trimmed ones.
+   */
   readonly commandLog: { tick: number; cmd: Command }[] = [];
+  commandLogLimit = 5000;
+  commandLogDropped = 0;
   /** When true, decisive events pause the clock automatically. */
   autoPauseOnDecisive = true;
 
@@ -67,7 +75,7 @@ export class Game {
   dispatch(cmd: Command): CommandResult {
     const events: SimEvent[] = [];
     const res = applyCommand(this.state, cmd, (e) => events.push(e));
-    if (res.ok) this.commandLog.push({ tick: this.state.tick, cmd });
+    if (res.ok) this.logCommand(cmd);
     this.handleEvents(events);
     return res;
   }
@@ -99,12 +107,21 @@ export class Game {
       this.scheduled.delete(this.state.tick);
       for (const cmd of due) {
         const res = applyCommand(this.state, cmd, sink);
-        if (res.ok) this.commandLog.push({ tick: this.state.tick, cmd });
+        if (res.ok) this.logCommand(cmd);
       }
     }
     step(this.state, sink);
     this.handleEvents(events);
     return events;
+  }
+
+  private logCommand(cmd: Command): void {
+    this.commandLog.push({ tick: this.state.tick, cmd });
+    if (this.commandLog.length > this.commandLogLimit) {
+      const extra = this.commandLog.length - this.commandLogLimit;
+      this.commandLog.splice(0, extra);
+      this.commandLogDropped += extra;
+    }
   }
 
   private handleEvents(events: SimEvent[]): void {

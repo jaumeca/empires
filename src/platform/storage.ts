@@ -5,14 +5,22 @@
  */
 export interface SaveStorage {
   read(slot: string): string | null;
-  write(slot: string, data: string): void;
+  /** Returns false if the write failed (e.g. storage quota exceeded). */
+  write(slot: string, data: string): boolean;
   remove(slot: string): void;
 }
 
+/** In-memory storage for tests, with fault injection. */
 export class MemoryStorage implements SaveStorage {
-  private m = new Map<string, string>();
+  readonly m = new Map<string, string>();
+  /** Simulate quota errors / truncated writes. */
+  fault: 'none' | 'fail' | 'truncate' = 'none';
   read(slot: string) { return this.m.get(slot) ?? null; }
-  write(slot: string, data: string) { this.m.set(slot, data); }
+  write(slot: string, data: string) {
+    if (this.fault === 'fail') return false;
+    this.m.set(slot, this.fault === 'truncate' ? data.slice(0, Math.floor(data.length / 2)) : data);
+    return true;
+  }
   remove(slot: string) { this.m.delete(slot); }
 }
 
@@ -26,16 +34,13 @@ export class LocalSaveStorage implements SaveStorage {
       return null;
     }
   }
-  write(slot: string, data: string): void {
+  write(slot: string, data: string): boolean {
     try {
-      // Keep the previous autosave as a backup against corruption.
-      if (slot === 'auto') {
-        const prev = localStorage.getItem(PREFIX + 'auto');
-        if (prev) localStorage.setItem(PREFIX + 'auto.bak', prev);
-      }
       localStorage.setItem(PREFIX + slot, data);
+      return true;
     } catch (e) {
       console.warn('Save failed', e);
+      return false;
     }
   }
   remove(slot: string): void {

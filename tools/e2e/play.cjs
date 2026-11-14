@@ -140,6 +140,23 @@ const check = (name, ok, detail = '') => { checks.push({ name, ok, detail }); co
   check('import restores the exported game', imported.tick === after.tick && JSON.stringify(imported) === JSON.stringify(after), `tick ${imported.tick}`);
   require('fs').unlinkSync(exportPath);
 
+  // Corrupted autosave in the browser → recovered from backup with a notice
+  await page.evaluate(() => { window.__empires.game.clock.setSpeed(0); for (let i = 0; i < 16; i++) window.__empires.game.tick(); });
+  await page.click('#hud-menu');
+  await page.click('text=Guardar ahora'); // auto = newest, auto.bak1 = previous
+  const beforeCorrupt = await st();
+  // Leave the game first (its hide-autosave runs), then damage the save "at rest"
+  // from another page of the same origin, like a crash or a bad disk write would.
+  const cssAsset = require('fs').readdirSync('dist/assets').find((f) => f.endsWith('.css'));
+  await page.goto(`${base}/assets/${cssAsset}`); // a static file of the same origin (no game code)
+  await page.evaluate(() => { const k = 'empires.save.auto'; localStorage.setItem(k, localStorage.getItem(k).replace('"money":', '"money":7')); });
+  await page.goto(`${base}/?debug`);
+  await page.waitForTimeout(2500);
+  const recovered = await st();
+  const toastText = await page.locator('.toast').allInnerTexts();
+  check('corrupted autosave is recovered from a backup', recovered.tick > 0 && recovered.tick <= beforeCorrupt.tick && toastText.some((x) => x.includes('copia de seguridad')), `tick ${recovered.tick} / ${beforeCorrupt.tick}`);
+  check('damaged save is kept in quarantine', await page.evaluate(() => !!localStorage.getItem('empires.save.quarantine.auto')));
+
   // Portrait/phone sizes
   await page.setViewportSize({ width: 844, height: 390 });
   await page.waitForTimeout(1200);

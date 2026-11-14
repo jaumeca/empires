@@ -111,6 +111,8 @@ export interface Project {
   testFocus: number;
   decisionsTaken: string[];
   bigIdeaOffered: boolean;
+  /** Set once its routine history has been archived (systems/history.ts). */
+  historyCompacted?: boolean;
   result?: ProjectResult;
 }
 

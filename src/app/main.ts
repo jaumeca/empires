@@ -1,6 +1,7 @@
 import { Game } from '../sim/game';
 import { createNewGame } from '../sim/state';
-import { deserialize, SaveError, serialize } from '../sim/save/save';
+import { SaveError, serialize } from '../sim/save/save';
+import { SaveManager } from '../platform/saveManager';
 import type { SimEvent } from '../sim/core/events';
 import { OfficeScene, type CameraMode } from '../render/officeScene';
 import { GameUI } from '../ui/gameUI';
@@ -18,16 +19,18 @@ const wantedLocale = params.get('lang') ?? savedLocale ?? 'es';
 setLocale((wantedLocale in CATALOGS ? wantedLocale : 'es') as Locale);
 document.documentElement.lang = wantedLocale in CATALOGS ? wantedLocale : 'es';
 
+const saves = new SaveManager(storage, { gameVersion: GAME_VERSION, now: () => new Date().toISOString() });
+let startupNotice: string | null = null;
+/** Set before a deliberate reload (import / new game) so the hide-autosave can't overwrite the new save. */
+let reloading = false;
+
 function loadOrCreate(): Game {
   if (!params.has('fresh')) {
-    for (const slot of ['auto', 'auto.bak']) {
-      const text = storage.read(slot);
-      if (!text) continue;
-      try {
-        return new Game(deserialize(text));
-      } catch (e) {
-        console.warn(`Could not load ${slot}`, e);
-      }
+    const res = saves.load();
+    if (res.problems.length) console.warn('Save problems', res.problems, 'quarantined', res.quarantined);
+    if (res.state) {
+      if (res.recovered) startupNotice = 'toast.recovered_backup';
+      return new Game(res.state);
     }
   }
   const seed = params.has('seed') ? Number(params.get('seed')) : (Date.now() % 2147483647);
@@ -41,7 +44,7 @@ const scene = new OfficeScene(document.getElementById('stage')!, camMode);
 
 const services = {
   save(): void {
-    storage.write('auto', serialize(game.state, { gameVersion: GAME_VERSION, savedAt: new Date().toISOString() }));
+    if (!saves.save(game.state)) ui.toast(t('toast.save_failed'), 'alert');
   },
   exportSave(): void {
     const name = game.state.company.name.replace(/[^\w-]+/g, '_') || 'partida';
@@ -51,16 +54,19 @@ const services = {
     const text = await pickTextFile();
     if (!text) return;
     try {
-      switchGame(new Game(deserialize(text)));
-      services.save();
-      ui.toast(t('toast.imported'), 'check');
+      saves.importText(text); // validated + previous game kept as backup
+      sessionStorage.setItem('empires.notice', 'toast.imported');
+      reloading = true;
+      location.reload();
     } catch (e) {
       ui.toast(e instanceof SaveError ? t(`save.error.${e.code}`) : t('toast.import_failed'), 'alert');
     }
   },
   newGame(): void {
-    storage.remove('auto');
-    switchGame(new Game(createNewGame(Date.now() % 2147483647)));
+    saves.startOver(); // the previous game stays in a backup slot
+    saves.save(createNewGame(Date.now() % 2147483647));
+    reloading = true;
+    location.reload();
   },
   setLocale(l: Locale): void {
     try { localStorage.setItem('empires.locale', l); } catch { /* ignore */ }
@@ -74,20 +80,16 @@ const services = {
 
 const ui = new GameUI(document.getElementById('ui')!, game, scene, services, debug);
 let pending: SimEvent[] = [];
-let unsubscribe = game.onUpdate((events) => pending.push(...events));
+game.onUpdate((events) => pending.push(...events));
 
-function switchGame(g: Game): void {
-  unsubscribe();
-  game = g;
-  unsubscribe = game.onUpdate((events) => pending.push(...events));
-  location.hash = '';
-  // Simplest robust way to rebuild the scene for a different game: reload with the new autosave.
-  storage.write('auto', serialize(game.state, { gameVersion: GAME_VERSION, savedAt: new Date().toISOString() }));
-  location.reload();
-}
 
 scene.sync(game.state);
 ui.start();
+try {
+  const notice = startupNotice ?? sessionStorage.getItem('empires.notice');
+  sessionStorage.removeItem('empires.notice');
+  if (notice) setTimeout(() => ui.toast(t(notice), notice === 'toast.imported' ? 'check' : 'alert'), 600);
+} catch { /* ignore */ }
 
 // F1.10 stress scene: extra cosmetic Empirians (render only, not in the simulation).
 const stress = Math.min(30, Number(params.get('stress') ?? 0));
@@ -98,6 +100,7 @@ for (let i = 0; i < stress; i++) {
 
 // Pause + save when the app goes to background or closes (D-013).
 onAppHidden(() => {
+  if (reloading) return;
   if (game.clock.speed !== 0) game.clock.setSpeed(0);
   if (game.state.setupComplete) services.save();
   ui.renderHud(true);
