@@ -8,6 +8,7 @@ import { maybeOfferBigIdea } from './decisions';
 import { maybeOfferMoment } from './moments';
 import { gainTopicXp, gainXp, topicBonus } from './progression';
 import { officeEffects, type OfficeEffects } from './office';
+import { toolMultiplier } from './world';
 
 const C = SIM_CONFIG;
 
@@ -125,7 +126,7 @@ export function workTick(state: GameState, p: Project, founder: Empirian, emit: 
 
   if (p.phase === 'concept' || p.phase === 'production') {
     const isTech = nextFloat(rngW) < p.focus;
-    const pts = basePts * officeWorkMultiplier(fx, p.phase === 'concept' && !isTech ? 'concept' : isTech ? 'tech' : 'design');
+    const pts = basePts * officeWorkMultiplier(fx, p.phase === 'concept' && !isTech ? 'concept' : isTech ? 'tech' : 'design') * toolMultiplier(state, isTech ? 'tech' : 'design');
     if (isTech) p.workDone.tech += pts;
     else p.workDone.design += pts;
     founder.activity = p.phase === 'concept' && nextFloat(rngW) < 0.4 ? 'thinking' : isTech ? 'coding' : 'designing';
@@ -172,7 +173,7 @@ export function workTick(state: GameState, p: Project, founder: Empirian, emit: 
   }
 
   // Polish phase: split between testing/fixing and polishing.
-  const pts = basePts * officeWorkMultiplier(fx, 'mixed', p.focus);
+  const pts = basePts * officeWorkMultiplier(fx, 'mixed', p.focus) * (toolMultiplier(state, 'tech') * p.focus + toolMultiplier(state, 'design') * (1 - p.focus));
   let testPts = pts * p.testFocus;
   const polishPts = pts - testPts;
   if (p.bugs.known > 0 && testPts > 0) {

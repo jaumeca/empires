@@ -86,6 +86,11 @@ export interface ProjectResult {
   revenue: number;
   /** Causal ledger ids explaining the score, most relevant first. */
   explanation: string[];
+  /** Long-tail sales after the launch weeks (LS.6). */
+  tailWeeks?: number;
+  tailUnits?: number;
+  /** True once sales have dried up. */
+  salesEnded?: boolean;
 }
 
 export interface Project {
@@ -142,6 +147,47 @@ export interface LedgerEntry {
   projectId?: string;
 }
 
+export type NewsKind =
+  | 'trend_rising' | 'trend_peak' | 'trend_over' | 'competitor_release' | 'economy_up' | 'economy_down'
+  | 'tool_tech' | 'tool_design' | 'revival';
+
+export interface NewsItem {
+  id: string;
+  day: number;
+  kind: NewsKind;
+  /** Parameters for the headline/consequence texts (`news.<kind>.title` / `.body`). */
+  params: Record<string, string | number>;
+  importance: 'major' | 'minor';
+}
+
+export interface Trend {
+  id: string;
+  topicId: string;
+  startDay: number;
+  peakDay: number;
+  endDay: number;
+  /** Extra demand at the peak (0.5 = +50 %). */
+  strength: number;
+  peakAnnounced: boolean;
+  endAnnounced: boolean;
+}
+
+/** The world outside the studio (LS.5, Empires Daily). */
+export interface World {
+  trends: Trend[];
+  /** Saturation per topic from competitors' releases (decays weekly). */
+  competition: Record<string, number>;
+  /** Sales multiplier from the general economy (~0.85–1.15). */
+  economy: number;
+  /** Temporary speed-up of one kind of work (tech news). */
+  toolBoost: { kind: 'tech' | 'design'; factor: number; untilDay: number } | null;
+  news: NewsItem[];
+  nextTrendDay: number;
+  lastReadNewsId: string | null;
+  /** Products whose topic is having a revival, until the given day. */
+  revivals: Record<string, number>;
+}
+
 export type Rot = 0 | 1 | 2 | 3;
 
 /** A catalog item placed in the office (LS.2). Coordinates are grid cells. */
@@ -184,4 +230,5 @@ export interface GameState {
   /** Set until the founder has been customized. */
   setupComplete: boolean;
   office: Office;
+  world: World;
 }

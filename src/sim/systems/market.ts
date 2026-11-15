@@ -5,6 +5,7 @@ import { nextRange } from '../core/rng';
 import type { Empirian, GameState, Project, Review, TextRef } from '../model/state';
 import { getTopic, TOPICS } from '../../content/topics';
 import { compactHistory } from './history';
+import { demandFactor, worldWeek } from './world';
 import { gainXp } from './progression';
 import { fitModifier, investmentRatio, productionProgress, qualityCeiling, trueQuality } from './project';
 
@@ -97,6 +98,7 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
 
 /** Called at the start of each new week. */
 export function marketWeek(state: GameState, emit: EventSink): void {
+  worldWeek(state, emit);
   // Topic trends drift a little each week (contemporary market, D-021).
   for (const t of TOPICS) {
     const cur = state.topicTrends[t.id] ?? 1;
@@ -106,7 +108,11 @@ export function marketWeek(state: GameState, emit: EventSink): void {
   // Released products keep selling for a few weeks.
   for (const p of state.projects) {
     const r = p.result;
-    if (!r || r.weeklySales.length >= C.market.salesWeeks) continue;
+    if (!r || r.salesEnded) continue;
+    if (r.weeklySales.length >= C.market.salesWeeks) {
+      tailWeek(state, p, emit);
+      continue;
+    }
     const w = r.weeklySales.length;
     const topic = getTopic(p.topicId);
     const appeal = Math.pow(r.averageScore / 10, 2.2) * 1.6;
@@ -116,7 +122,7 @@ export function marketWeek(state: GameState, emit: EventSink): void {
     const priceFactor = Math.min(2.2, Math.exp(-1.1 * (r.price / expectedPrice - 1)));
     const noise = nextRange(state.rng.market, 0.9, 1.1);
     const units = Math.round(
-      C.market.baseAudience * (C.market.sizeAudience[p.size] ?? 1) * topic.interest * (state.topicTrends[topic.id] ?? 1) * appeal * visibility * priceFactor * Math.pow(C.market.weeklySalesDecay, w) * noise,
+      C.market.baseAudience * (C.market.sizeAudience[p.size] ?? 1) * topic.interest * demandFactor(state, topic.id) * appeal * visibility * priceFactor * Math.pow(C.market.weeklySalesDecay, w) * noise,
     );
     const revenue = Math.round(units * r.price * 0.7 * 100) / 100; // 30 % store fee
     r.weeklySales.push(units);
@@ -125,4 +131,27 @@ export function marketWeek(state: GameState, emit: EventSink): void {
     state.company.money += revenue;
     emit({ type: 'sales_week', projectId: p.id, units, revenue, severity: 'info' });
   }
+}
+
+/**
+ * Long tail (LS.6): after the launch weeks a product keeps selling a little,
+ * following demand for its topic; a revival of its topic gives it a new push.
+ */
+function tailWeek(state: GameState, p: Project, emit: EventSink): void {
+  const r = p.result!;
+  const week1 = r.weeklySales[0] ?? 0;
+  const k = r.tailWeeks ?? 0;
+  const revival = (state.world.revivals[p.id] ?? 0) > state.day ? 1 + C.world.revivalStrength * 4 : 1;
+  const units = Math.round(week1 * C.market.tailShare * Math.pow(C.market.tailDecay, k) * demandFactor(state, p.topicId) * revival * nextRange(state.rng.market, 0.85, 1.15));
+  if (units < C.market.tailStopUnits && revival === 1) {
+    r.salesEnded = true;
+    return;
+  }
+  const revenue = Math.round(units * r.price * 0.7 * 100) / 100;
+  r.tailWeeks = k + 1;
+  r.tailUnits = (r.tailUnits ?? 0) + units;
+  r.totalUnits += units;
+  r.revenue += revenue;
+  state.company.money += revenue;
+  emit({ type: 'sales_week', projectId: p.id, units, revenue, severity: 'info' });
 }

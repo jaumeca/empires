@@ -3,8 +3,9 @@ import { createRngStreams } from './core/rng';
 import type { Appearance, Empirian, GameState, Project } from './model/state';
 import { TOPICS } from '../content/topics';
 import { createStartingOffice } from './systems/office';
+import { createWorld } from './systems/world';
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export const DEFAULT_APPEARANCE: Appearance = {
   skin: 2,
@@ -50,6 +51,7 @@ export function createNewGame(seed: number): GameState {
     topicTrends,
     setupComplete: false,
     office,
+    world: createWorld(),
   };
 }
 

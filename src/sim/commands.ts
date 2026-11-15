@@ -28,7 +28,8 @@ export type Command =
   | { type: 'buy_item'; defId: string; x: number; z: number; rot: Rot }
   | { type: 'mount_item'; defId: string; deskUid: string }
   | { type: 'move_item'; uid: string; x: number; z: number; rot: Rot }
-  | { type: 'sell_item'; uid: string };
+  | { type: 'sell_item'; uid: string }
+  | { type: 'mark_news_read' };
 
 /** `error` is a stable code; the UI translates it as `error.<code>`. */
 export type CommandResult = { ok: true } | { ok: false; error: string };
@@ -211,6 +212,11 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       state.company.money += refund;
       record(state, { kind: 'office', text: { key: 'ledger.office.sold', params: { item: def.id, refund } }, causes: [], tone: 0 });
       emit({ type: 'office_changed', severity: 'info' });
+      return { ok: true };
+    }
+
+    case 'mark_news_read': {
+      state.world.lastReadNewsId = state.world.news[0]?.id ?? null;
       return { ok: true };
     }
 

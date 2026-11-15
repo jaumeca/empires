@@ -18,6 +18,7 @@ import {
 } from '../render/palette';
 import { clear, h } from './dom';
 import { DecorUI } from './decorUI';
+import { topicMood } from '../sim/systems/world';
 import { fmtMoney, fmtNum1, fmtPrice, getLocale, LOCALE_NAMES, setLocale, t, tr, type Locale } from '../i18n/i18n';
 
 export interface UIServices {
@@ -106,7 +107,7 @@ export class GameUI {
     const p = getActiveProject(s);
     // Structure is rebuilt only when it changes; values are patched in place so
     // buttons are never replaced under the player's finger.
-    const key = JSON.stringify([this.game.clock.speed, p?.id, p?.phase, s.setupComplete, !!this.modal, s.projects.length]);
+    const key = JSON.stringify([this.game.clock.speed, p?.id, p?.phase, s.setupComplete, !!this.modal, s.projects.length, this.unreadNews()]);
     if (force || key !== this.lastHudKey) {
       this.lastHudKey = key;
       this.buildHud();
@@ -147,6 +148,7 @@ export class GameUI {
       ),
       h('div.hud-tr', null,
         h('div.pill.speeds', null, speedBtn(0, icon('pause', 18)), speedBtn(1, '1x'), speedBtn(2, '2x'), speedBtn(4, '4x'), speedBtn(8, '8x')),
+        h('button.icon-btn.badge-host', { 'aria-label': t('daily.button'), id: 'hud-news', onclick: () => this.showDaily() }, icon('news'), this.unreadNews() ? h('span.badge', null, String(Math.min(9, this.unreadNews()))) : null),
         h('button.icon-btn', { 'aria-label': t('decor.button'), id: 'hud-decor', onclick: () => this.decor.open() }, icon('decor')),
         h('button.icon-btn', { 'aria-label': t('hud.menu'), id: 'hud-menu', onclick: () => this.showMenu() }, icon('menu')),
       ),
@@ -226,6 +228,12 @@ export class GameUI {
         case 'money_low':
           this.toast(t('toast.money_low'), 'alert');
           break;
+        case 'news':
+          if (e.importance === 'major') {
+            const n = this.state.world.news.find((x) => x.id === e.newsId);
+            if (n) this.toast(t('daily.toast', { title: t(`news.${n.kind}.title`, n.params) }), 'news');
+          }
+          break;
         case 'skill_up': {
           const who = this.state.empirians.find((x) => x.id === e.empirianId);
           if (who) this.toast(t('toast.skill_up', { name: who.name, skill: e.skill, level: e.level }), 'star');
@@ -274,6 +282,9 @@ export class GameUI {
       }
       case 'poster':
         this.toast(t('toast.poster'), 'rocket');
+        break;
+      case 'news':
+        this.showDaily();
         break;
       case 'plant':
         this.toast(t('toast.plant'), 'heart');
@@ -413,7 +424,9 @@ export class GameUI {
       clear(topicTiles);
       for (const topic of TOPICS) {
         topicTiles.append(h('button.tile', { class: plan.topicId === topic.id ? 'on' : '', dataset: { topic: topic.id }, onclick: () => { plan.topicId = topic.id; drawTopics(); } },
-          h('div.t', null, t(`topic.${topic.id}.name`)), h('div.d', null, t(`topic.${topic.id}.blurb`))));
+          h('div.t', null, t(`topic.${topic.id}.name`)),
+          (() => { const m = topicMood(s, topic.id); return m === 'calm' ? null : h(`span.mood.${m}`, null, t(`mood.${m}`)); })(),
+          h('div.d', null, t(`topic.${topic.id}.blurb`))));
       }
     };
     drawTopics();
@@ -635,6 +648,31 @@ export class GameUI {
         specs.length ? h('div.row', null, ...specs.map((sp) => h('span.chip.good', null, icon('star', 16), t('emp.specialty', { topic: sp.topicId, bonus: sp.bonus })))) : h('div.hint', null, t('emp.no_specialty'))),
     );
     this.openModal('empirian', card, { pause: false });
+  }
+
+  // ----------------------------------------------------------- Empires Daily
+  private unreadNews(): number {
+    const w = this.state.world;
+    const idx = w.news.findIndex((n) => n.id === w.lastReadNewsId);
+    return idx === -1 ? w.news.length : idx;
+  }
+
+  showDaily(): void {
+    const s = this.state;
+    const news = s.world.news;
+    const card = h('div.card.daily', null, this.closeBtn(),
+      h('h2.masthead', null, t('daily.title')),
+      h('p.sub', null, t('daily.sub', { day: s.day })),
+      news.length
+        ? h('div.news-list', null, ...news.slice(0, 20).map((n) =>
+            h(`article.news.${n.importance}`, null,
+              h('div.news-day', null, t('daily.day', { day: n.day })),
+              h('h3', null, t(`news.${n.kind}.title`, n.params)),
+              h('p', null, t(`news.${n.kind}.body`, n.params)))))
+        : h('p.hint', null, t('daily.empty')),
+    );
+    this.game.dispatch({ type: 'mark_news_read' });
+    this.openModal('daily', card);
   }
 
   // ------------------------------------------------------------------- menu

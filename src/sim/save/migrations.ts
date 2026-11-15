@@ -7,6 +7,8 @@
  * It is kept as a real example of how migrations work.
  */
 import { createStartingOffice } from '../systems/office';
+import { createWorld } from '../systems/world';
+import { createRngState } from '../core/rng';
 
 type AnyState = Record<string, unknown>;
 
@@ -63,5 +65,10 @@ export const MIGRATIONS: Record<number, (s: AnyState) => AnyState> = {
   3: (s) => {
     let uid = 0;
     return { ...s, schemaVersion: 4, office: createStartingOffice(() => `I-start-${++uid}`) };
+  },
+  /** 4 → 5 (LS.5): the world (Empires Daily) starts calm; its own random stream is derived from the seed. */
+  4: (s) => {
+    const rng = { ...(s.rng as AnyState), world: createRngState(s.seed as number, 'world') };
+    return { ...s, schemaVersion: 5, rng, world: createWorld() };
   },
 };

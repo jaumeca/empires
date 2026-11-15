@@ -257,6 +257,14 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Medido por pruebas:** en un juego técnico la estación de trabajo supera al equipo creativo y en uno de diseño ocurre lo contrario; ningún ordenador se amortiza en un solo juego (inversión a largo plazo); dos pizarras valen lo mismo que una.
 - **La habitación de la v0.1 es la oficina inicial** con efectos neutros: el equilibrio anterior no cambia (todas las pruebas previas siguen pasando).
 
+### D-039 — Empires Daily: modelo del mundo y equilibrio de las tendencias
+- **Fecha:** 2026-11-15 · **Estado:** Aplicada (provisional hasta LS.9 y pruebas de juego)
+- **Demanda de un tema** = deriva semanal × curva de tendencia × economía ÷ (1 + competencia). El mundo usa su propio flujo aleatorio (`world`), así que no altera el resto de tiradas.
+- **Tendencias:** como mucho 2 a la vez; suben 35–56 días hasta un pico (+90 % a +140 % de demanda) y se apagan en 42–70 días. **Competidores** (PixelForge, ByteBakery, Nimbus Games, LoopLab): publican con un 10 % semanal; cuando una tendencia ya está en su pico, la mitad se lanzan a ella y la saturan (la competencia decae un 12 % semanal). **Economía:** paseo aleatorio en 0,85–1,15; solo hay noticia al cruzar ±6 %. **Herramientas:** +8 % de velocidad en programar o diseñar durante 42 días. **Resurgimientos:** un tema de un juego tuyo de hace más de 140 días vuelve brevemente y ese juego vuelve a vender.
+- **Regla:** cada titular lo escribe un cambio real del estado (prueba automática sobre 1 500 días y 3 semillas). Solo los lanzamientos rivales notables (nota ≥ 7,3) o del tema en el que trabajas salen en el periódico; la saturación siempre se simula y se ve en la etiqueta del tema.
+- **Medición (8 juegos, 16 semillas):** perseguir cualquier tendencia en cualquier fase rinde ≈ −37 % frente a quedarse en un tema; anticiparse a tendencias recién anunciadas queda entre −6 % y +3 % según el tema propio (alternativa viable con otro riesgo); evitar temas saturados ≈ igual. Ninguna estrategia domina.
+- **Productos con vida propia (1.ª parte):** tras las 10 semanas de lanzamiento, cola de ventas del 5 % de la primera semana con caída del 7 % semanal hasta < 3 copias (en las pruebas, menos del 35 % de las ventas de lanzamiento).
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

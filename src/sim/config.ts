@@ -91,6 +91,30 @@ export const SIM_CONFIG = {
     speedPerLevel: 0.1,
   },
 
+  /** Empires Daily world (LS.5). Days are game days; chances are per week. */
+  world: {
+    maxTrends: 2,
+    trendGap: [35, 70] as [number, number],
+    riseDays: [35, 56] as [number, number],
+    fallDays: [42, 70] as [number, number],
+    strength: [0.9, 1.4] as [number, number],
+    competitorReleaseChance: 0.1,
+    followTrendChance: 0.5,
+    trendReleaseBonus: 0.3,
+    competitionPerRelease: 0.22,
+    competitionDecay: 0.88,
+    economyRange: [0.85, 1.15] as [number, number],
+    toolChance: 0.06,
+    toolFactor: 1.08,
+    toolDays: 42,
+    revivalChance: 0.03,
+    revivalMinAge: 140,
+    revivalStrength: 0.6,
+    keepNews: 40,
+    /** Competitor releases at or above this score make the news (others only crowd the topic). */
+    newsworthyScore: 7.3,
+  },
+
   /** Office atmosphere (LS.4): morale drifts towards base + fromAmbiance · ambianceLevel. */
   office: {
     moraleBase: 52,
@@ -114,6 +138,10 @@ export const SIM_CONFIG = {
     hypeSaturation: 4,
     /** Weeks a released product keeps selling in the MVP. */
     salesWeeks: 10,
+    /** Long tail after the launch weeks (LS.6): share of week-1 sales, weekly decay, stop below. */
+    tailShare: 0.05,
+    tailDecay: 0.93,
+    tailStopUnits: 3,
     weeklySalesDecay: 0.72,
     baseAudience: 2000,
     /** Bigger games reach more players and justify higher prices (D-030). */

@@ -5,7 +5,7 @@
 export type RngState = [number, number, number, number];
 
 /** Independent streams so that adding a roll in one system doesn't shift others. */
-export const RNG_STREAMS = ['work', 'bugs', 'market', 'events', 'people'] as const;
+export const RNG_STREAMS = ['work', 'bugs', 'market', 'events', 'people', 'world'] as const;
 export type RngStream = (typeof RNG_STREAMS)[number];
 export type RngStreams = Record<RngStream, RngState>;
 
