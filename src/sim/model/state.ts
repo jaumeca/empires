@@ -63,11 +63,13 @@ export interface DecisionOption {
 
 export interface PendingDecision {
   id: string;
-  kind: 'big_idea' | 'deadline' | 'exhausted' | 'running_late' | 'polish_plan';
+  kind: 'big_idea' | 'deadline' | 'exhausted' | 'running_late' | 'polish_plan' | 'streamer_preview' | 'rival_similar' | 'critical_bug' | 'unexpected_idea';
   speakerId: string;
   text: TextRef;
   options: DecisionOption[];
   createdTick: number;
+  /** Data the event needs to resolve (dynamic events, LS.7). */
+  context?: Record<string, string | number>;
 }
 
 export interface Review {
@@ -91,6 +93,8 @@ export interface ProjectResult {
   tailUnits?: number;
   /** True once sales have dried up. */
   salesEnded?: boolean;
+  /** Temporary sales multiplier (patches, scandals). */
+  salesBoost?: { factor: number; untilDay: number };
 }
 
 export interface Project {
@@ -130,6 +134,12 @@ export interface Project {
   lastMomentDay?: number;
   /** The team is taking days off until this day (no work, extra recovery). */
   restUntilDay?: number;
+  /** Dynamic events already seen in this project (LS.7). */
+  previewGiven?: string;
+  eventsSeen?: number;
+  rivalAnnounced?: boolean;
+  ideaOffered?: boolean;
+  bugReported?: boolean;
   /** Set once its routine history has been archived (systems/history.ts). */
   historyCompacted?: boolean;
   result?: ProjectResult;
@@ -218,6 +228,8 @@ export interface GameState {
     name: string;
     money: number;
     reputation: number; // 0-100
+    /** Ideas saved for later (ledger ids), used by the next projects. */
+    savedIdeas?: string[];
   };
   founderId: string;
   empirians: Empirian[];
@@ -231,4 +243,18 @@ export interface GameState {
   setupComplete: boolean;
   office: Office;
   world: World;
+  /** Deferred consequences (LS.7). */
+  scheduled: ScheduledEffect[];
+  /** Pacing of dynamic events. */
+  eventLog: { lastDay: number | null; lastByKind: Record<string, number> };
+}
+
+export interface ScheduledEffect {
+  id: string;
+  day: number;
+  causeId: string;
+  effect:
+    | { kind: 'reputation'; delta: number }
+    | { kind: 'competition'; topic: string; amount: number; company: string }
+    | { kind: 'fix_bugs'; projectId: string };
 }

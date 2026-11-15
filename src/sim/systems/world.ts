@@ -65,7 +65,7 @@ export function toolMultiplier(state: GameState, kind: 'tech' | 'design'): numbe
   return b && b.kind === kind && state.day < b.untilDay ? b.factor : 1;
 }
 
-function addNews(state: GameState, kind: NewsKind, params: NewsItem['params'], importance: NewsItem['importance'], emit: EventSink): void {
+export function addNews(state: GameState, kind: NewsKind, params: NewsItem['params'], importance: NewsItem['importance'], emit: EventSink): void {
   const item: NewsItem = { id: newId(state, 'N'), day: state.day, kind, params, importance };
   state.world.news.unshift(item);
   if (state.world.news.length > W().keepNews) state.world.news.length = W().keepNews;

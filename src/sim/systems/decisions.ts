@@ -6,6 +6,7 @@ import type { Empirian, GameState, PendingDecision, Project, TextRef } from '../
 import { productionProgress } from './project';
 import { releaseProject } from './market';
 import { resolveMoment } from './moments';
+import { EVENT_KINDS, resolveEvent } from './events';
 import { gainXp } from './progression';
 
 /**
@@ -71,8 +72,17 @@ export function resolveDecision(
   const d = state.pendingDecision;
   if (!d || d.id !== decisionId) return { ok: false, error: 'no_pending_decision' };
   if (!d.options.some((o) => o.id === optionId)) return { ok: false, error: 'invalid_option' };
-  const p = state.projects.find((x) => x.id === state.activeProjectId);
   const founder = state.empirians.find((e) => e.id === d.speakerId);
+  if (founder && EVENT_KINDS.includes(d.kind)) {
+    // Dynamic events (LS.7) may not involve an active project.
+    state.pendingDecision = null;
+    founder.activity = 'idle';
+    gainXp(state, founder, 'management', SIM_CONFIG.progression.managementPerDecision, emit);
+    resolveEvent(state, d, optionId, founder, emit);
+    emit({ type: 'decision_resolved', decisionId, optionId, severity: 'info' });
+    return { ok: true };
+  }
+  const p = state.projects.find((x) => x.id === state.activeProjectId);
   if (!p || !founder) return { ok: false, error: 'no_active_project' };
 
   state.pendingDecision = null;

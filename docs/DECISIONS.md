@@ -265,6 +265,14 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Medición (8 juegos, 16 semillas):** perseguir cualquier tendencia en cualquier fase rinde ≈ −37 % frente a quedarse en un tema; anticiparse a tendencias recién anunciadas queda entre −6 % y +3 % según el tema propio (alternativa viable con otro riesgo); evitar temas saturados ≈ igual. Ninguna estrategia domina.
 - **Productos con vida propia (1.ª parte):** tras las 10 semanas de lanzamiento, cola de ventas del 5 % de la primera semana con caída del 7 % semanal hasta < 3 copias (en las pruebas, menos del 35 % de las ventas de lanzamiento).
 
+### D-040 — Eventos dinámicos: motor, ritmo y primer conjunto
+- **Fecha:** 2026-11-15 · **Estado:** Aplicada (provisional hasta pruebas de juego)
+- **Motor:** cada evento tiene condición sobre el estado real, probabilidad diaria (puede depender del estado: la creatividad aumenta las ideas inesperadas), enfriamiento por tipo, opciones y efectos. Los **efectos diferidos** se guardan en `state.scheduled` (día, causa, efecto serializable: reputación, competencia, parche) y al aplicarse dejan una entrada en el registro causal enlazada a la decisión que los provocó. Es la base para eventos encadenados.
+- **Ritmo:** como mucho un evento cada 14 días y 2 por proyecto, además de los Momentos Decisivos del proyecto (máx. 3 + gran idea + fecha). Medido: ≈ 0,5 eventos por juego pequeño y ≈ 1,5 por mediano.
+- **Eventos:** vista previa para una creadora de contenido (más interés; si el juego sale con ≥ 5 bugs, la crítica lo recuerda: −0,6 de nota y causa en "¿Por qué?"); rival que anuncia un juego similar (su fecha la fija su plan: ~7 días después de la tuya; adelantarse, diferenciarse o ignorarlo); error grave en un juego publicado (parche ahora: +reputación y ventas; parche más tarde: −4 de reputación a los 21 días; ignorarlo: −6 y −30 % de ventas); idea inesperada en el concepto (explorarla ahora o guardarla: el **siguiente** proyecto gana +0,4 de techo).
+- **Equilibrio medido (30 semillas):** ante el rival, en un juego pequeño diferenciarse rinde +16 % frente a ignorar y en uno mediano adelantarse y diferenciarse empatan (+22 %); ante la vista previa, dar la versión actual gana con juegos limpios (+15 %) y es la peor opción con juegos llenos de bugs, donde gana la demo pulida. Ninguna opción domina en todos los contextos.
+- **Corregido durante la medición:** (1) el rival llegaba según la nueva fecha del jugador, así que adelantarse nunca servía; (2) la idea inesperada mezclaba condición y azar en el disparador; (3) el jugador automático no respondía a eventos surgidos entre proyectos.
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

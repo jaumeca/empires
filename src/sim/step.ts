@@ -5,6 +5,7 @@ import { getActiveProject, getFounder } from './state';
 import { isResting, projectDay, workTick } from './systems/project';
 import { maybeDeadlineDecision } from './systems/decisions';
 import { marketWeek } from './systems/market';
+import { applyScheduled, maybeTriggerEvent } from './systems/events';
 import { gainXp } from './systems/progression';
 import { ambianceLevel, officeEffects } from './systems/office';
 
@@ -64,6 +65,8 @@ function dayBoundary(state: GameState, emit: EventSink): void {
     projectDay(state, project);
     maybeDeadlineDecision(state, project, founder, emit);
   }
+  applyScheduled(state, emit);
+  maybeTriggerEvent(state, emit);
   if ((state.day - 1) % 7 === 0) marketWeek(state, emit);
   if (state.company.money < 500 && state.company.money + C.economy.dailyLivingCost >= 500) {
     emit({ type: 'money_low', severity: 'important' });

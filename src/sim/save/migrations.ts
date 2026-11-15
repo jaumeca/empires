@@ -71,4 +71,6 @@ export const MIGRATIONS: Record<number, (s: AnyState) => AnyState> = {
     const rng = { ...(s.rng as AnyState), world: createRngState(s.seed as number, 'world') };
     return { ...s, schemaVersion: 5, rng, world: createWorld() };
   },
+  /** 5 → 6 (LS.7): dynamic events start with nothing scheduled. */
+  5: (s) => ({ ...s, schemaVersion: 6, scheduled: [], eventLog: { lastDay: null, lastByKind: {} } }),
 };

@@ -37,7 +37,8 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
   const bugPenalty = 2.4 * (1 - Math.exp(-shippedBugs / 12));
   const incompletePenalty = (1 - prog) * 6;
   const repMod = (state.company.reputation - 50) / 100;
-  const base = quality - bugPenalty - incompletePenalty + repMod;
+  const previewPenalty = p.previewGiven === 'give_build' && shippedBugs >= C.events.previewBugThreshold ? C.events.previewBugPenalty : 0;
+  const base = quality - bugPenalty - incompletePenalty - previewPenalty + repMod;
 
   const reviews: Review[] = OUTLETS.map((outlet) => {
     const s = Math.max(1, Math.min(10, base + nextRange(state.rng.market, -0.7, 0.7)));
@@ -76,6 +77,11 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
   }
   for (const m of p.ceilingMods) {
     factors.push({ amount: m.amount * 0.85, text: { key: 'factor.big_idea' }, causes: [m.causeId] });
+  }
+  // A public preview of a buggy build comes back at launch (LS.7, deferred consequence).
+  if (p.previewGiven === 'give_build' && shippedBugs >= C.events.previewBugThreshold) {
+    const cause = entriesFor(state, p.id, ['decision']).find((e) => e.text.key === 'ledger.event.streamer_preview.give_build');
+    factors.push({ amount: -C.events.previewBugPenalty, text: { key: 'factor.preview_bugs' }, causes: cause ? [cause.id] : [] });
   }
   const promise = entriesFor(state, p.id, ['promise'])[0];
   if (promise) factors.push({ amount: 0.05, text: { key: 'factor.promise' }, causes: [promise.id] });
@@ -120,7 +126,7 @@ export function marketWeek(state: GameState, emit: EventSink): void {
     // Players accept higher prices for better games: optimum price ~ expected / 1.1.
     const expectedPrice = 4 + r.averageScore * 1.2 + (C.market.sizePriceBonus[p.size] ?? 0);
     const priceFactor = Math.min(2.2, Math.exp(-1.1 * (r.price / expectedPrice - 1)));
-    const noise = nextRange(state.rng.market, 0.9, 1.1);
+    const noise = nextRange(state.rng.market, 0.9, 1.1) * salesBoost(state, p);
     const units = Math.round(
       C.market.baseAudience * (C.market.sizeAudience[p.size] ?? 1) * topic.interest * demandFactor(state, topic.id) * appeal * visibility * priceFactor * Math.pow(C.market.weeklySalesDecay, w) * noise,
     );
@@ -142,7 +148,7 @@ function tailWeek(state: GameState, p: Project, emit: EventSink): void {
   const week1 = r.weeklySales[0] ?? 0;
   const k = r.tailWeeks ?? 0;
   const revival = (state.world.revivals[p.id] ?? 0) > state.day ? 1 + C.world.revivalStrength * 4 : 1;
-  const units = Math.round(week1 * C.market.tailShare * Math.pow(C.market.tailDecay, k) * demandFactor(state, p.topicId) * revival * nextRange(state.rng.market, 0.85, 1.15));
+  const units = Math.round(salesBoost(state, p) * week1 * C.market.tailShare * Math.pow(C.market.tailDecay, k) * demandFactor(state, p.topicId) * revival * nextRange(state.rng.market, 0.85, 1.15));
   if (units < C.market.tailStopUnits && revival === 1) {
     r.salesEnded = true;
     return;
@@ -154,4 +160,9 @@ function tailWeek(state: GameState, p: Project, emit: EventSink): void {
   r.revenue += revenue;
   state.company.money += revenue;
   emit({ type: 'sales_week', projectId: p.id, units, revenue, severity: 'info' });
+}
+
+function salesBoost(state: GameState, p: Project): number {
+  const b = p.result?.salesBoost;
+  return b && state.day < b.untilDay ? b.factor : 1;
 }

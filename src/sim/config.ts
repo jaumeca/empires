@@ -115,6 +115,19 @@ export const SIM_CONFIG = {
     newsworthyScore: 7.3,
   },
 
+  /** Dynamic events (LS.7). */
+  events: {
+    /** Minimum days between two dynamic events. */
+    minGapDays: 14,
+    maxPerProject: 2,
+    rivalCompetition: 0.5,
+    criticalBugMinHidden: 2,
+    savedIdeaBonus: 0.4,
+    /** Score penalty when a buggy game had a public preview. */
+    previewBugPenalty: 0.6,
+    previewBugThreshold: 5,
+  },
+
   /** Office atmosphere (LS.4): morale drifts towards base + fromAmbiance · ambianceLevel. */
   office: {
     moraleBase: 52,

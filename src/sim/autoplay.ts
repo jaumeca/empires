@@ -47,7 +47,10 @@ export interface AutoplayResult {
 }
 
 
-const MOMENT_DEFAULTS: Record<string, string> = { exhausted: 'rest', running_late: 'carry_on', polish_plan: 'balanced' };
+const MOMENT_DEFAULTS: Record<string, string> = {
+  exhausted: 'rest', running_late: 'carry_on', polish_plan: 'balanced',
+  streamer_preview: 'decline', rival_similar: 'differentiate', critical_bug: 'patch_later', unexpected_idea: 'save',
+};
 
 /** Picks the autoplay answer for any pending decision. */
 function answerFor(kind: string, plan: Omit<AutoplayPlan, 'seed'>, extensions: number): string {
@@ -108,7 +111,7 @@ export function autoplay(plan: AutoplayPlan): AutoplayResult {
   }
   const releaseDay = game.state.day;
   const weeks = plan.weeksAfter ?? 11;
-  for (let i = 0; i < weeks * 7 * 8; i++) game.tick();
+  for (let i = 0; i < weeks * 7 * 8; i++) answerOrTick(game, plan);
   const p = getProject(game.state, projectId)!;
   const r = p.result!;
   return {
@@ -121,6 +124,13 @@ export function autoplay(plan: AutoplayPlan): AutoplayResult {
     profit: game.state.company.money - startMoney,
     releaseDay,
   };
+}
+
+/** Answers a pending decision (dynamic events can happen between projects) or advances one tick. */
+function answerOrTick(game: Game, plan: Omit<AutoplayPlan, 'seed'>): void {
+  const d = game.state.pendingDecision;
+  if (d) must(game.dispatch({ type: 'choose_option', decisionId: d.id, optionId: answerFor(d.kind, plan, 2) }));
+  else game.tick();
 }
 
 function must(res: { ok: boolean; error?: string }): void {
@@ -163,7 +173,7 @@ export function autoplayCareer(
       }
       game.tick();
     }
-    for (let k = 0; k < restDaysBetween * 8; k++) game.tick();
+    for (let k = 0; k < restDaysBetween * 8; k++) answerOrTick(game, plan);
     scores.push(getProject(game.state, pid)!.result!.averageScore);
     moneyAfter.push(game.state.company.money);
   }

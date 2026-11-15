@@ -3,6 +3,7 @@ import type { EventSink } from './core/events';
 import { newId, record } from './core/ledger';
 import type { Appearance, GameState, Project, ProjectSize, Rot } from './model/state';
 import { canPlace, getItemDef, SELL_REFUND } from './systems/office';
+import { useSavedIdeas } from './systems/events';
 import { getActiveProject, getFounder } from './state';
 import { getTopic } from '../content/topics';
 import { resolveDecision } from './systems/decisions';
@@ -95,6 +96,7 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       };
       state.projects.push(p);
       state.activeProjectId = p.id;
+      useSavedIdeas(state, p);
       record(state, {
         kind: 'project_started',
         text: { key: 'ledger.project_started', params: { project: p.name, topic: p.topicId, size: p.size, budget: cmd.budget, days: cmd.days } },
