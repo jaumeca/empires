@@ -9,8 +9,9 @@
 | Fase | Nombre | Estado | Entregable |
 |---|---|---|---|
 | F0 | Fundación | ✅ Hecho | Documentos maestros + decisiones aprobadas |
-| F1 | El primer Empirian | 🟦 Casi completa | Habitación voxel con un Empirian animado (falta medir en móviles reales) |
+| F1 | El primer Empirian | 🟦 Casi completa (solo falta F1.11, móviles reales) | Habitación voxel con un Empirian animado (falta medir en móviles reales) |
 | F2 | El primer proyecto | 🟦 Jugable | **v0.1 — primera versión jugable** (falta prueba de juego del propietario) |
+| LS | A Living Studio (adelanta partes de F4, F5, F8) | 🟦 En curso | Oficina personalizable, fundador que aprende, Empires Daily, eventos, contratos |
 | F3 | Consecuencias y personalización | 🟦 En curso (F3.1) | Proyectos más ricos, decisiones dinámicas, registro causal visible |
 | F4 | Empleados y oficinas | ⬜ | Contratación, personalidades, decoración, garaje |
 | F5 | Mercado vivo | ⬜ | Productos persistentes, competidores, mantenimiento |
@@ -58,7 +59,7 @@
 | F1.9 | Controles de tiempo | ✅ | e2e "pause stops simulated time", "4x speed advances time" |
 | F1.10 | Panel de diagnóstico (`?debug`) y escena de estrés (`?stress=10`) | ✅ | 1 Empirian: 22 draw calls / 42 k triángulos; 11 Empirians: 91 draw calls / 81 k triángulos (dentro de presupuesto). `tools/e2e/stress.cjs`, captura 13 |
 | F1.11 | Build Capacitor y medición en dispositivos | ⏸ Bloqueada | Sin Android SDK/Xcode ni dispositivos en el entorno. `capacitor.config.ts` listo; pasos en `ARCHITECTURE.md` §13. **No se declara validación móvil.** |
-| F1.12 | Revisión de dirección artística y orientación | ⬜ Pendiente del propietario | Galería preparada: `docs/screenshots/README.md` (22 capturas con índice) |
+| F1.12 | Revisión de dirección artística y orientación | ✅ Aprobada por el propietario (D-032) | Galería: `docs/screenshots/README.md`. Dimétrica y escala 0,78 como valores actuales |
 
 **Criterios de aceptación de F1:** cumplidos todos salvo *rendimiento en dispositivos de referencia* (F1.11) y *aprobación de la identidad visual* (F1.12).
 Medido en el entorno (Chromium headless con renderizado por software SwiftShader, sin GPU): 22–25 draw calls, ~42 k triángulos, 24 geometrías — dentro de presupuesto. Los FPS medidos ahí (7–50) no son representativos de un móvil.
@@ -80,7 +81,7 @@ Medido en el entorno (Chromium headless con renderizado por software SwiftShader
 | F2.9 | Resultados: críticas, ventas, dinero, "¿Por qué esta nota?" desde el registro causal | ✅ | Captura 07; prueba "every release has an explanation linked to the causal ledger" |
 | F2.10 | Caja coleccionable en la estantería | ✅ | e2e "collectible box on the shelf" y "persists after reload" |
 | F2.11 | Guardado en UI: autoguardado, guardar, exportar/importar, pausa al ir a segundo plano | ✅ | e2e "save + reload restores the exact state", "export produces a versioned save file", "import restores the exported game" |
-| F2.12 | Pruebas de juego con el propietario y ajustes | ⬜ | — |
+| F2.12 | Pruebas de juego con el propietario y ajustes | ✅ Primera prueba hecha (D-033) | Valoración muy positiva; pide más oficina, actividades, eventos, noticias. Equilibrio y diversión **no** validados definitivamente |
 
 **Criterios de aceptación de v0.1:**
 - [x] Ciclo completo de desarrollo y lanzamiento a través de la interfaz (e2e 21/21).
@@ -89,12 +90,34 @@ Medido en el entorno (Chromium headless con renderizado por software SwiftShader
 - [x] Guardar y recuperar conserva el estado exacto.
 - [x] Pruebas automatizadas de los sistemas importantes; la simulación funciona sin render (73 pruebas).
 - [ ] Rendimiento en dispositivos de referencia (bloqueado, F1.11).
-- [ ] Duración ≈ 10–15 min y diversión validadas por pruebas de juego (F2.12).
+- [~] Primera prueba de juego del propietario positiva (D-033); diversión y equilibrio definitivos pendientes de nuevas pruebas.
 - [x] La pantalla principal es la habitación, no un panel.
 
 **Consolidación (3.ª sesión, hecha):** npm sin `--legacy-peer-deps` (D-028), internacionalización (D-031), historial y guardado robusto (D-029), ventanas para móvil horizontal, galería de revisión, revisión de gameplay (D-030).
 
 **Próximos pasos recomendados:** F1.12 (revisión visual con la galería) y F2.12 (prueba de juego) del propietario → F3.2 → F1.11 (dispositivos).
+
+---
+
+## LS — "A Living Studio" (actualización en curso, D-036)
+
+Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, oficina personalizable, fundador que aprende, mundo que cambia, varias actividades), sin convertir la oficina en un panel. **Toda mecánica nueva tiene representación en el mundo** (objeto, animación, burbuja o reacción del Empirian).
+
+| ID | Tarea | Fase de origen | Representación en el mundo | Criterios de aceptación | Depende de | Estado |
+|---|---|---|---|---|---|---|
+| LS.1 | **Experiencia del fundador**: programación, diseño, creatividad y gestión aprenden de la actividad real; especialización por tema; rendimientos decrecientes y techo | F4 (adelantado, D-035) | Burbuja y aviso al subir de nivel; ficha del Empirian con niveles | Aprender depende de lo que hace (prueba); techo y rendimientos decrecientes (prueba); estrategias distintas producen perfiles distintos; partidas antiguas migran | — | ⬜ |
+| LS.2 | **Catálogo de oficina** (10–15 objetos como datos: id, nombre traducible, precio, tamaño, categoría, requisitos, efectos, coste recurrente, modelo) | F4 (adelantado) | Los objetos aparecen en la habitación con el estilo voxel | Definiciones independientes y validadas por pruebas; la habitación actual es la oficina inicial y se conserva | — | ⬜ |
+| LS.3 | **Comprar, colocar, mover, girar y vender** en cuadrícula con colisiones y acceso del Empirian; táctil | F4 (adelantado) | Modo decoración con objeto fantasma verde/rojo | Ningún objeto bloquea el acceso (prueba); funciona con toques (e2e); guardar/cargar conserva la oficina | LS.2 | ⬜ |
+| LS.4 | **Efectos de los objetos** (fatiga, recuperación, productividad técnica o de diseño, ambiente) con rendimientos decrecientes y contrapartidas | F4 (adelantado) | El Empirian usa los objetos (sofá, cafetera, pizarra) | Comprar siempre lo más caro **no** es óptimo (prueba de no-dominancia); efectos explicados con palabras, sin tablas | LS.3, LS.1 | ⬜ |
+| LS.5 | **Empires Daily**: tendencias de temas (suben, alcanzan pico, desaparecen), competidores ficticios que publican, economía moderada, noticias tecnológicas; noticias = hechos simulados | F5 (adelantado) | Periódico en la oficina (corcho) y avisos breves | Cada noticia corresponde a un cambio real del estado (prueba); perseguir siempre la tendencia no es óptimo (prueba); determinista con la semilla | — | ⬜ |
+| LS.6 | **Productos con vida propia (1.ª parte)**: ventas residuales tras el lanzamiento, resurgimientos y relación con noticias; caja → historia del producto | F5 (adelantado, parcial) | Cajas de la estantería | Ventas a largo plazo acotadas; un resurgimiento afecta de verdad a un producto antiguo | LS.5 | ⬜ |
+| LS.7 | **Eventos dinámicos** (proyecto, energía, calidad, economía, tendencias, reputación, productos antiguos, oportunidades), con condiciones, frecuencia, opciones y efectos diferidos; base para cadenas | F3/F9 | El Empirian levanta la mano / burbuja de alerta | Cada opción cambia el resultado (prueba); efectos diferidos programados y registrados; frecuencia limitada | LS.5, LS.6 | ⬜ |
+| LS.8 | **Contratos externos** como primera actividad alternativa | F8 (adelantado) | El Empirian trabaja en el ordenador con pantalla de "cliente"; tablón/tarjeta de ofertas | Ingresos previsibles a cambio de tiempo y compromiso; retrasos penalizan; da experiencia; no domina a hacer juegos (prueba) | LS.1 | ⬜ |
+| LS.9 | **Revisión económica conjunta** (ingresos, gastos recurrentes, inversión, progresión) con simulaciones de estrategias | F3.10 / D-034 | — | Informe antes/después; el dinero tiene usos; estudio pequeño viable; sin compras obligatorias en cadena | LS.1–LS.8 | ⬜ |
+
+**Orden de implementación:** el del propietario (LS.1 → LS.2–LS.4 → LS.5 → LS.7 → LS.8 → LS.9), con LS.6 junto a LS.5 porque los resurgimientos y las ventas residuales dependen de las noticias y alimentan los eventos sobre productos antiguos. F3.2 (funcionalidades y alcance) y el resto de F3 continúan después de LS o intercalados si el tiempo lo permite; no hay tareas de F3 a medio hacer (F3.1 está terminada).
+
+**Ideas registradas para fases posteriores (sin implementar ahora):** investigación tecnológica (F6), mantenimiento y actualizaciones de productos, expansiones y secuelas, portabilidad a nuevas plataformas (F5/F7), formación y descanso como actividades (F4), ferias y oportunidades comerciales (F9), gestión de productos antiguos y venta/licencia (F5/F8), historia del producto al tocar su caja (F3.9/F5), servidores en etapas posteriores de la oficina (F4/F8), eventos encadenados largos y crisis (F9).
 
 ---
 
@@ -114,7 +137,7 @@ Medido en el entorno (Chromium headless con renderizado por software SwiftShader
 | F3.5 | **Estrategias de calidad y pruebas**: prototipo en la fase de concepto, beta cerrada, pruebas externas de pago; dimensiones de calidad (estabilidad, diseño, rendimiento) que pesan distinto según el tema | Varias formas válidas de hacer un buen juego | Al menos 3 estrategias con beneficio por día dentro de un ±20 % y perfiles de riesgo distintos (prueba de no-dominancia) | F3.3 | ⬜ |
 | F3.6 | **Presupuesto por partidas y reserva**: repartir entre herramientas, marketing, pruebas externas y reserva para imprevistos; el dinero se queda corto | El presupuesto pasa a ser una decisión | Con la escala económica revisada (decisión del propietario tras F2.12), ningún reparto gana en todos los planes; quedarse sin reserva ante un imprevisto tiene consecuencias | F2.12, F3.3 | ⬜ (bloqueada parcialmente) |
 | F3.7 | **Cronograma con hitos**: demo y beta opcionales con fecha; anunciar fecha pronto o tarde | El calendario se planifica, no solo se elige una duración | Una demo temprana sube el interés y expone los bugs; incumplir un hito anunciado cuesta interés; todo queda en el registro | F3.2 | ⬜ |
-| F3.8 | **Consecuencias persistentes entre proyectos**: promesas incumplidas, reputación por tipo de fallo (bugs, retrasos), lecciones aprendidas del estudio (encaje tema↔enfoque descubierto), experiencia del fundador | Lo que haces en un juego afecta al siguiente; sensación de progreso | La promesa de "una actualización" tiene efecto en el siguiente lanzamiento; lo aprendido se muestra al crear el proyecto siguiente; pruebas de carrera de 5 proyectos | F3.2 | ⬜ (la experiencia del fundador adelanta una parte pequeña de F4: **pendiente de aprobación**) |
+| F3.8 | **Consecuencias persistentes entre proyectos**: promesas incumplidas, reputación por tipo de fallo (bugs, retrasos), lecciones aprendidas del estudio (encaje tema↔enfoque descubierto) | Lo que haces en un juego afecta al siguiente; sensación de progreso | La promesa de "una actualización" tiene efecto en el siguiente lanzamiento; lo aprendido se muestra al crear el proyecto siguiente; pruebas de carrera de 5 proyectos | F3.2 | ⬜ (la experiencia del fundador pasa a LS.1, aprobada: D-035) |
 | F3.9 | **Historia del proyecto y avisos**: línea de tiempo ilustrada del proyecto desde la caja de la estantería; aviso de previsión dicho por el Empirian; preferencias de avisos (informativo/importante/decisivo) | Entender el porqué en cualquier momento | Cualquier resultado enlaza con su cadena de causas; el jugador puede silenciar avisos informativos | F3.1 | ⬜ |
 | F3.10 | **Revisión de balance de F3** con `review.report.ts` y pruebas de juego | Que F3 no introduzca estrategias dominantes | Informe antes/después; pruebas de no-dominancia ampliadas; prueba de juego del propietario | todas | ⬜ |
 

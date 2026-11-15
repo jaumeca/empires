@@ -216,6 +216,28 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Consecuencia:** el formato de guardado pasa a la versión 2, con migración desde la 1 probada con partidas reales de la versión anterior.
 - **Para añadir un idioma:** crear `src/i18n/<código>.ts` con las mismas claves (una prueba lo exige) y registrarlo en `i18n.ts`.
 
+### D-032 — Dirección artística aprobada como base (F1.12)
+- **Fecha:** 2026-11-15 (4.ª sesión) · **Estado:** Confirmada por el propietario
+- **Decisión:** se conserva la identidad visual actual (Empirians, paleta, oficina voxel) como base del juego. Cámara dimétrica (D-009a) y escala 0,78 (D-022) quedan como valores actuales. Sin rediseño radical.
+- **Consecuencias:** los objetos nuevos (catálogo de oficina, etc.) deben mantener la escala, la paleta maestra y el mallado voxel existentes.
+
+### D-033 — Primera prueba de juego del propietario (F2.12)
+- **Fecha:** 2026-11-15 · **Estado:** Registrada
+- **Valoración:** muy positiva para una versión temprana. Peticiones principales: más personalización de la oficina, más variedad de actividades, eventos, noticias y tendencias.
+- **Importante:** el equilibrio y la diversión definitiva **no** se consideran validados; habrá más pruebas de juego tras *A Living Studio*.
+
+### D-034 — Economía: dar usos al dinero antes de recortar ingresos
+- **Fecha:** 2026-11-15 · **Estado:** Confirmada por el propietario
+- **Decisión:** no reducir drásticamente los ingresos todavía. Primero introducir usos interesantes del dinero (equipamiento, costes recurrentes, formación, investigación, mantenimiento, contratación, expansión) y después equilibrar ingresos, gastos, inversión y progresión de forma conjunta. Debe seguir siendo viable jugar como estudio pequeño y rentable, sin cadenas de compras obligatorias.
+
+### D-035 — Experiencia del fundador adelantada desde F4
+- **Fecha:** 2026-11-15 · **Estado:** Confirmada por el propietario
+- **Decisión:** se adelanta a esta actualización una parte pequeña de F4: el fundador aprende de sus actividades reales y se especializa, con rendimientos decrecientes y sin progresión infinita. El sistema se diseña para ampliarse a empleados, personalidades y equipos en F4.
+
+### D-036 — Actualización "A Living Studio" y orden de trabajo
+- **Fecha:** 2026-11-15 · **Estado:** Confirmada (visión y orden propuestos por el propietario; reordenación técnica documentada en `ROADMAP.md`)
+- **Decisión:** la siguiente actualización convierte la sucesión de juegos en un estudio vivo: experiencia del fundador, catálogo y personalización de la oficina, Empires Daily (noticias y tendencias), eventos dinámicos, una primera actividad alternativa (contratos) y una revisión económica conjunta. Se adelantan partes pequeñas de F4 (oficina, experiencia), F5 (tendencias, competidores, productos persistentes) y F8 (contratos). El resto de esas fases sigue en su sitio.
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.
