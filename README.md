@@ -4,7 +4,9 @@ Videojuego premium de simulación y gestión en el que pequeños personajes voxe
 
 **Estado:** v0.1 "Primer Lanzamiento" jugable de principio a fin en navegador (F1–F2). Pendiente: prueba de juego del propietario y validación en móviles reales.
 
-![La oficina](docs/screenshots/04-working.png)
+![La oficina](docs/screenshots/g08-development.jpg)
+
+Galería de revisión visual: [`docs/screenshots/README.md`](docs/screenshots/README.md).
 
 ## Probarlo
 
@@ -40,7 +42,7 @@ npm run sim
 npm run e2e
 ```
 
-(`npm run e2e` necesita `npm run dev` en marcha.)
+(`npm run e2e` necesita `npm run dev` en marcha; `npm run gallery` regenera la galería y necesita `npm run build` + `npx vite preview --port 4173`.)
 
 ## Documentos
 

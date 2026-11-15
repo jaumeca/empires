@@ -149,6 +149,8 @@ export class OfficeScene {
   private focus = false;
   private zoomLevel = 1;
   private lastState: GameState | null = null;
+  /** Debug/gallery only: frame a specific floor-voxel point at a given view height. */
+  private shot: { x: number; y: number; z: number; viewH: number } | null = null;
 
   constructor(private container: HTMLElement, mode: CameraMode = 'dim') {
     this.camMode = mode;
@@ -271,10 +273,10 @@ export class OfficeScene {
     const h = this.container.clientHeight || window.innerHeight;
     this.renderer.setSize(w, h, false);
     const aspect = w / h;
-    const target = this.focus ? fw(30, 11, 31) : fw(28, 16, 24);
+    const target = this.shot ? fw(this.shot.x, this.shot.y, this.shot.z) : this.focus ? fw(30, 11, 31) : fw(28, 16, 24);
     // Fit the diorama: by height in landscape, by width in portrait.
-    let viewH = this.focus ? 2.2 : 6.1;
-    if (!this.focus && aspect < 1.35) viewH = Math.max(viewH, 7.7 / aspect);
+    let viewH = this.shot ? this.shot.viewH : this.focus ? 2.2 : 6.1;
+    if (!this.focus && !this.shot && aspect < 1.35) viewH = Math.max(viewH, 7.7 / aspect);
     viewH /= this.zoomLevel;
     const viewW = viewH * aspect;
     this.camera.left = -viewW / 2;
@@ -590,6 +592,23 @@ export class OfficeScene {
       ev.preventDefault();
       this.setZoom(this.zoomLevel * (ev.deltaY < 0 ? 1.1 : 0.9));
     }, { passive: false });
+  }
+
+  /** Debug/gallery helper (not used by the game UI). Pass null to restore. */
+  frameShot(shot: { x: number; y: number; z: number; viewH: number } | null): void {
+    this.shot = shot;
+    this.resize();
+  }
+
+  /** Debug/gallery helper: place an Empirian and keep it there, facing `heading`. */
+  pinEmpirian(id: string, x: number, z: number, heading: number, pose: Pose = 'stand'): void {
+    const a = this.actors.get(id);
+    if (!a) return;
+    a.pos = [x, z];
+    a.path = [];
+    a.targetName = `pin:${x},${z}`;
+    a.target = { x, z, heading, pose };
+    a.nextWander = Number.POSITIVE_INFINITY;
   }
 
   setZoom(z: number): void {

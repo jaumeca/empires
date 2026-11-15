@@ -402,26 +402,32 @@ export class GameUI {
     };
     const nameInput = h('input', { type: 'text', value: plan.name, maxLength: 32, oninput: (e: Event) => (plan.name = (e.target as HTMLInputElement).value) });
 
-    const card = h('div.card', null, this.closeBtn(),
+    const card = h('div.card.wide', null, this.closeBtn(),
       h('h2', null, t('np.title')),
       h('p.sub', null, t('np.sub', { money: s.company.money, living: SIM_CONFIG.economy.dailyLivingCost })),
-      h('div.section', null, h('label', null, t('np.name')), nameInput),
-      h('div.section', null, h('label', null, t('np.topic')), topicTiles),
-      h('div.grid2', null,
-        h('div.section', null, h('label', null, t('np.size')), seg([['small', t('np.size.small')], ['medium', t('np.size.medium')]], () => plan.size, (v) => (plan.size = v as ProjectSize))),
-        h('div.section', null, h('label', null, t('np.price')), seg(PROJECT_LIMITS.prices.map((p) => [String(p), fmtPrice(p)]), () => String(plan.price), (v) => (plan.price = Number(v)))),
+      h('div.cols', null,
+        h('div.col', null,
+          h('div.section', null, h('label', null, t('np.name')), nameInput),
+          h('div.section', null, h('label', null, t('np.topic')), topicTiles),
+          h('div.grid2', null,
+            h('div.section', null, h('label', null, t('np.size')), seg([['small', t('np.size.small')], ['medium', t('np.size.medium')]], () => plan.size, (v) => (plan.size = v as ProjectSize))),
+            h('div.section', null, h('label', null, t('np.price')), seg(PROJECT_LIMITS.prices.map((p) => [String(p), fmtPrice(p)]), () => String(plan.price), (v) => (plan.price = Number(v)))),
+          ),
+        ),
+        h('div.col', null,
+          h('div.section', null, h('label', null, t('np.focus')),
+            h('input', { type: 'range', min: 0, max: 100, value: plan.focus * 100, 'aria-label': t('np.focus'), oninput: (e: Event) => { plan.focus = Number((e.target as HTMLInputElement).value) / 100; refresh(); } }),
+            h('div.hint', null, focusLbl, ` · ${t('np.focus_hint')}`)),
+          h('div.section', null, h('label', null, t('np.budget')),
+            h('input', { type: 'range', min: 0, max: maxBudget, step: 100, value: plan.budget, 'aria-label': t('np.budget'), oninput: (e: Event) => { plan.budget = Number((e.target as HTMLInputElement).value); refresh(); } }),
+            h('div.hint', null, budgetLbl, ` · ${t('np.budget_hint')}`)),
+          h('div.section', null, h('label', null, t('np.deadline')),
+            h('input', { type: 'range', min: PROJECT_LIMITS.minDays, max: PROJECT_LIMITS.maxDays, step: 7, value: plan.days, 'aria-label': t('np.deadline'), oninput: (e: Event) => { plan.days = Number((e.target as HTMLInputElement).value); refresh(); } }),
+            h('div.hint', null, daysLbl)),
+          est,
+        ),
       ),
-      h('div.section', null, h('label', null, t('np.focus')),
-        h('input', { type: 'range', min: 0, max: 100, value: plan.focus * 100, oninput: (e: Event) => { plan.focus = Number((e.target as HTMLInputElement).value) / 100; refresh(); } }),
-        h('div.hint', null, focusLbl, ` · ${t('np.focus_hint')}`)),
-      h('div.section', null, h('label', null, t('np.budget')),
-        h('input', { type: 'range', min: 0, max: maxBudget, step: 100, value: plan.budget, oninput: (e: Event) => { plan.budget = Number((e.target as HTMLInputElement).value); refresh(); } }),
-        h('div.hint', null, budgetLbl, ` · ${t('np.budget_hint')}`)),
-      h('div.section', null, h('label', null, t('np.deadline')),
-        h('input', { type: 'range', min: PROJECT_LIMITS.minDays, max: PROJECT_LIMITS.maxDays, step: 7, value: plan.days, oninput: (e: Event) => { plan.days = Number((e.target as HTMLInputElement).value); refresh(); } }),
-        h('div.hint', null, daysLbl)),
-      est,
-      h('div.actions', null,
+      h('div.actions.sticky', null,
         h('button.big-btn.mint', { id: 'start-project', onclick: () => {
           const res = this.game.dispatch({ type: 'start_project', ...plan });
           if (!res.ok) return this.toast(t(`error.${res.error}`));
@@ -450,7 +456,7 @@ export class GameUI {
     const seg = (options: [string, string][], current: string, onPick: (v: string) => void) =>
       h('div.seg', null, ...options.map(([v, l]) => h('button', { class: current === v ? 'on' : '', onclick: () => onPick(v) }, l)));
     const prog = productionProgress(p);
-    const card = h('div.card', null, this.closeBtn(),
+    const card = h('div.card.wide', null, this.closeBtn(),
       h('h2', null, projectName(p)),
       h('p.sub', null, t('pp.sub', { topic: p.topicId, phase: phaseLabel(p.phase), day: s.day, deadline: p.deadlineDay })),
       h('div.row', null,
@@ -461,11 +467,13 @@ export class GameUI {
         h('span.chip', null, icon('heart', 16), t('pp.hype', { n: p.hype })),
         h('span.chip', null, icon('coin', 16), t('pp.spent', { spent: p.spent, budget: p.budget })),
       ),
+      h('div.cols', null, h('div.col', null,
       h('div.section', null, h('label', null, t('pp.pace')),
         seg([['relaxed', t('pp.pace.relaxed')], ['normal', t('pp.pace.normal')], ['crunch', t('pp.pace.crunch')]], p.pace, (v) => send({ type: 'adjust_project', pace: v as Project['pace'] })),
         h('div.hint', null, t('pp.pace_hint'))),
       h('div.section', null, h('label', null, t('pp.testing')),
         seg([['0.2', t('pp.testing.low')], ['0.6', t('pp.testing.mid')], ['0.9', t('pp.testing.high')]], String(p.testFocus), (v) => send({ type: 'adjust_project', testFocus: Number(v) }))),
+      ), h('div.col', null,
       h('div.grid2', null,
         h('div.section', null, h('label', null, t('pp.deadline')),
           h('div.stepper', null,
@@ -479,8 +487,8 @@ export class GameUI {
             h('span', null, fmtMoney(p.budget)),
             h('button', { onclick: () => send({ type: 'adjust_project', budget: p.budget + 500 }) }, '+')),
           h('div.hint', null, t('pp.budget_hint'))),
-      ),
-      h('div.actions', null,
+      ))),
+      h('div.actions.sticky', null,
         h('button.big-btn.coral', { disabled: p.phase === 'concept', onclick: () => this.confirmRelease() }, p.phase === 'polish' ? t('pp.release') : t('pp.release_early')),
         h('button.big-btn.mint', { onclick: () => this.closeModal(true) }, t('pp.keep_working')),
       ),
@@ -523,12 +531,12 @@ export class GameUI {
   showDecision(d: PendingDecision): void {
     if (this.modalKind === 'decision') return;
     const speaker = this.state.empirians.find((e) => e.id === d.speakerId);
-    const card = h('div.card.decision', null,
+    const card = h('div.card.decision.wide', null,
       h('div.row', { style: { alignItems: 'flex-start', flexWrap: 'nowrap' } },
         this.portrait(d.speakerId),
         h('div', { style: { flex: '1' } }, h('div.label', { style: { fontWeight: '900', marginBottom: '4px' } }, speaker?.name ?? ''), h('div.quote', null, tr(d.text))),
       ),
-      ...d.options.map((o) =>
+      h('div.options', null, ...d.options.map((o) =>
         h('button.option', { dataset: { option: o.id }, disabled: !!o.disabledReason, onclick: () => {
           const r = this.game.dispatch({ type: 'choose_option', decisionId: d.id, optionId: o.id });
           if (!r.ok) return this.toast(t(`error.${r.error}`));
@@ -539,7 +547,7 @@ export class GameUI {
           h('div.t', null, tr(o.label)),
           h('div.hs', null, ...o.hints.map((x) => h('span.chip', null, tr(x)))),
         ),
-      ),
+      )),
     );
     this.openModal('decision', card);
   }
@@ -554,7 +562,7 @@ export class GameUI {
     const why = r.explanation.map((id) => ledger.find((e) => e.id === id)).filter((e): e is NonNullable<typeof e> => !!e);
     const maxW = Math.max(1, ...r.weeklySales);
     const verdict = t(r.averageScore >= 8 ? 'res.verdict.hit' : r.averageScore >= 6.5 ? 'res.verdict.good' : r.averageScore >= 5 ? 'res.verdict.meh' : 'res.verdict.lesson');
-    const card = h('div.card', null, this.closeBtn(),
+    const card = h('div.card.wide', null, this.closeBtn(),
       h('h2', null, projectName(p)),
       h('p.sub', null, t('res.sub', { verdict, day: r.releasedDay, price: r.price })),
       h('div.row', null,
