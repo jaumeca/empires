@@ -91,6 +91,13 @@ Planes dentro del 5 % del mejor beneficio: de 2 (todos "normal") a 8, repartidos
 - **Propuesta:** experiencia del fundador por proyecto y lecciones aprendidas (F3, pequeña parte adelantada de F4, a aprobar); gasto en mejoras y contratación (F4).
 - **Necesita valoración humana:** si publicar el segundo y tercer juego sigue apeteciendo.
 
+## 8. Después de F3.1 (momentos contextuales)
+
+- **Medido:** el plan por defecto pasa de 2 a 3–4 decisiones por proyecto (gran idea, plan de pulido, fecha y, en proyectos largos o con crunch, agotamiento). El hueco de 54 s sin decisiones empieza ahora con una elección (plan de pulido).
+- **La mejor respuesta depende del contexto (prueba automática):** con 28 días conviene "probar a fondo"; con 84, "mejorar el juego". Agotado, seguir empujando publica más bugs que descansar. Con retraso previsto, recortar alcance o retrasar la fecha superan a no hacer nada, con resultados distintos entre sí.
+- **Efecto lateral medido:** el crunch con descanso al agotarse supera al ritmo normal con plazo corto (17 178 € frente a 14 645 € a 28 días) y es casi igual con plazo cómodo (84 días). El crunch ignorando el agotamiento sigue siendo peor que el ritmo normal.
+- **Descartado:** un momento "bugs acumulados" se retiró porque casi nunca se disparaba y ninguna de sus opciones mejoraba el resultado frente a no hacer nada: se retomará con la deuda técnica (F3.4).
+
 ## Datos completos
 
 - Antes de D-030: sección "2026-11-15" de `DEVELOPMENT_LOG.md` y tabla de arriba.

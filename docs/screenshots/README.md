@@ -27,6 +27,7 @@ Capturas generadas automáticamente con `npm run gallery` (Chromium sin pantalla
 | 19 | [g18-phone-results.jpg](g18-phone-results.jpg) | Resultados en móvil horizontal. |
 | 20 | [g19-phone-decision.jpg](g19-phone-decision.jpg) | Momento decisivo en móvil horizontal (opciones en 2 columnas). |
 | 21 | [g20-english-decision.jpg](g20-english-decision.jpg) | Interfaz en inglés (borrador) para comprobar la internacionalización. |
+| 22 | [g21-moment-polish-plan.jpg](g21-moment-polish-plan.jpg) | Momento decisivo contextual "plan de pulido" (F3.1), al terminar la producción. |
 
 ## Qué decidir en la revisión (F1.12)
 

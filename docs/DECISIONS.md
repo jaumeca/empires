@@ -194,6 +194,28 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Override:** `@capacitor/cli 8.5.3 → xcode 3.0.1 → uuid 7.0.3` tiene un aviso moderado (GHSA-w5hq-g745-h8pq, afecta a v3/v5/v6 con `buf`). `xcode` solo usa `uuid.v4()`; se fuerza `uuid 11.1.1` (compatible CJS, `v4` verificado). Herramienta de desarrollo, no se distribuye en el juego. Retirar el override al actualizar a una CLI de Capacitor que ya lo incluya (8.6.2+).
 - **Resultado:** `npm audit` 0 vulnerabilidades; 40/40 pruebas; build correcta.
 
+### D-029 — Historial para partidas largas y política de guardado
+- **Fecha:** 2026-11-15 · **Estado:** Aplicada (reversible; revisar con D-023 antes de versiones comerciales)
+- **Medición:** 60 proyectos (11 años de juego) = 151 kB de partida (2,5 kB por proyecto), 532 entradas de registro, 361 comandos. El crecimiento es lineal y pequeño; los datos de producto (críticas, ventas) pesan más que el registro.
+- **Registro causal:** se conserva completo para el proyecto activo y los 5 últimos publicados; en los anteriores se archivan las entradas rutinarias (cambios de ritmo, presupuesto, pruebas) y se conservan siempre los hitos (inicio, decisiones, promesas, lanzamiento) y toda entrada citada por una explicación, de forma transitiva. La compactación forma parte de la simulación determinista. Los datos de producto no se borran nunca (alimentarán el museo, GDD §15).
+- **Comandos:** el registro de comandos es solo de sesión (en memoria, con tope de 5 000). **La partida guardada es un punto de control completo** (estado + generador aleatorio): la reproducibilidad se garantiza desde cualquier guardado más los comandos posteriores, sin necesidad de conservar todos los comandos desde el día 1. Alternativa descartada: guardar el historial completo de comandos para repetir la partida entera (crece sin límite y se rompe al cambiar el balance entre versiones).
+- **Guardado:** escritura verificada (se serializa, se relee y se compara antes de sustituir nada), dos copias de seguridad rotativas, recuperación automática de la copia más reciente válida con aviso al jugador, y cuarentena de partidas dañadas o de versiones más nuevas (nunca se sobrescriben). Importar y "nueva partida" dejan la partida anterior en copia.
+- **Pendiente para versiones comerciales:** almacenamiento nativo (Capacitor Filesystem), varias ranuras visibles para el jugador, y política ante cambios de balance entre versiones.
+
+### D-030 — Ajustes de balance tras la revisión del gameplay
+- **Fecha:** 2026-11-15 · **Estado:** Aplicada (provisional hasta F2.12)
+- **Motivo:** la simulación de 648 planes mostró tres estrategias dominantes (aprobar siempre la gran idea, ritmo siempre normal, tamaño siempre pequeño). Detalle y tablas antes/después en `GAMEPLAY_REVIEW.md` §1.
+- **Cambios:** gran idea como apuesta con semilla (65 % gran salto, 35 % pequeño; +35 % de trabajo; bugs ×1,2); desgaste de energía a ritmo normal 0,7 → 0,85 y crunch ×1,45 con desgaste 1,5; juegos medianos con audiencia ×1,9 y precio aceptado +3 €.
+- **Protección:** 6 pruebas de no-dominancia en `tests/sim/consequences.test.ts`.
+- **No cambiado a propósito:** la escala económica (sobra dinero). Requiere decisión del propietario tras jugar.
+
+### D-031 — Internacionalización
+- **Fecha:** 2026-11-15 · **Estado:** Aplicada
+- **Decisión:** sistema propio y mínimo (`src/i18n`): catálogos por idioma como objetos TypeScript, función `t(clave, parámetros)` con formatos (dinero, números, porcentaje, precio, tema) y plurales mediante `Intl`. Español es el idioma base; inglés incluido como **borrador sin revisar**. Sin dependencias nuevas.
+- **Regla:** la simulación no contiene texto para el jugador; guarda referencias `{clave, parámetros}` (registro causal, decisiones, críticas) y códigos de error. Así una partida guardada puede mostrarse en cualquier idioma y añadir un idioma no toca la lógica.
+- **Consecuencia:** el formato de guardado pasa a la versión 2, con migración desde la 1 probada con partidas reales de la versión anterior.
+- **Para añadir un idioma:** crear `src/i18n/<código>.ts` con las mismas claves (una prueba lo exige) y registrarlo en `i18n.ts`.
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

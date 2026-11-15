@@ -21,6 +21,7 @@
    - `docs/ARCHITECTURE.md` — arquitectura técnica.
    - `docs/ART_DIRECTION.md` — identidad visual.
    - `docs/ASSET_REGISTRY.md` — procedencia y licencia de recursos.
+   - `docs/DEVELOPMENT_LOG.md` (última entrada) y `docs/GAMEPLAY_REVIEW.md` cuando la tarea afecte al gameplay.
 3. No sobrescribas archivos existentes sin entender su contenido.
 
 ## Reglas de trabajo
@@ -37,6 +38,9 @@
 - **Mantener el roadmap actualizado.** Al terminar una tarea, actualiza su estado, criterios cumplidos y próximos pasos en `docs/ROADMAP.md`. Si se implementa un sistema, márcalo como `[IMPLEMENTADO]` en `docs/GAME_DESIGN.md`.
 - **Informar de limitaciones y riesgos** al final de cada sesión, con honestidad (pruebas fallidas, pasos omitidos, deuda técnica creada).
 - **Sin servicios de IA generativa en tiempo real** dentro del juego.
+- **Textos traducibles.** Ningún texto para el jugador se escribe en el código: se añade una clave a `src/i18n/es.ts` (y a `en.ts`) y se usa `t()`. La simulación solo guarda claves y parámetros (`TextRef`).
+- **Sin decisiones huecas ni estrategias dominantes.** Cada opción nueva debe cambiar el resultado de forma medible; comprobarlo con `npm run sim` y añadir una prueba de no-dominancia cuando proceda (ver `docs/GAMEPLAY_REVIEW.md`).
+- **Requisitos de entorno:** Node ≥ 22.12 y npm ≥ 11 (D-028).
 
 ## Prohibido sin autorización expresa del propietario
 

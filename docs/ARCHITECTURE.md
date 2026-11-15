@@ -375,3 +375,25 @@ Después: activar `?debug` (o un ajuste equivalente en la build) y medir en los 
 Chromium headless con WebGL por software (SwiftShader), 1280×720, DPR 1: **22–25 draw calls, ~42 000 triángulos, 24 geometrías, 3–12 texturas**. Los FPS (7–50) dependen de la CPU del contenedor y no sirven para validar rendimiento. Bundle de producción: ~570 kB JS (151 kB gzip), 11 kB CSS.
 
 Optimizaciones previstas si hiciera falta: *greedy meshing* de la habitación (fusionar las caras del suelo), fusionar los muebles estáticos en una sola malla, sombras solo en calidad alta, limitar DPR a 1,5 en gama baja, render a 30 FPS cuando no hay movimiento.
+
+---
+
+## 14. Consolidación (2026-11-15)
+
+### 14.1 Internacionalización (D-031)
+`src/i18n/i18n.ts` (`t`, `tr`, formatos y plurales), `es.ts` (base), `en.ts` (borrador). La simulación guarda `TextRef {key, params}` y códigos de error; `tests/i18n.test.ts` exige catálogos con las mismas claves y marcadores, que toda clave usada exista y que `src/sim` no contenga texto en español. Idioma: `?lang=en`, preferencia guardada o español.
+
+### 14.2 Historial en partidas largas (D-029)
+`src/sim/systems/history.ts` compacta, al publicar, el registro de los proyectos anteriores a los 5 últimos (conserva hitos y causas citadas). El registro de comandos es de sesión y tiene tope. Una partida guardada es un punto de control completo, por lo que la reproducibilidad no depende del historial de comandos. Medición: `tools/sim-runner/growth.report.ts` (≈ 2,5 kB por proyecto).
+
+### 14.3 Guardado (D-029)
+`src/platform/saveManager.ts`: ranuras `auto`, `auto.bak1`, `auto.bak2`; escritura verificada a través de `auto.tmp`; carga con recuperación de la copia válida más reciente; cuarentena (`quarantine.<ranura>`) de archivos dañados o de versiones futuras; importación validada antes de sustituir. Formato v2 con migraciones 0→1→2 y partidas reales de la v1 como *fixtures* (`tests/fixtures/`).
+
+### 14.4 Momentos contextuales (F3.1)
+`src/sim/systems/moments.ts`: lista de definiciones `{kind, trigger, build, resolve}` evaluadas al inicio de cada tick de trabajo; reglas de ritmo en `MOMENT_RULES`. Añadir un momento = añadir una definición y sus claves de texto.
+
+### 14.5 Instalación (D-028)
+Node ≥ 22.12 y npm ≥ 11 (`packageManager` en `package.json`). Versiones exactas. `npm run gallery` regenera `docs/screenshots/`.
+
+### 14.6 Herramientas de análisis
+`npm run sim` ejecuta todos los informes de `tools/sim-runner/*.report.ts`: balance básico, crecimiento del historial, revisión de estrategias (`review.report.ts`) y palancas de ritmo y momentos (`pace.report.ts`).

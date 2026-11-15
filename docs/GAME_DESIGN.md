@@ -23,7 +23,11 @@
 - Lanzamiento con celebración, cuatro críticas, ventas semanales durante 10 semanas, reputación (§13).
 - Caja coleccionable del producto en la estantería (§15, versión mínima).
 
-Detalle técnico y pruebas: `ARCHITECTURE.md` §13 y `ROADMAP.md` (F1–F2).
+- Momentos Decisivos contextuales (F3.1): agotamiento, retraso previsto y plan de pulido, además de la gran idea (ahora una apuesta) y la fecha de lanzamiento (§7, §16).
+- Interfaz traducible (español; inglés en borrador) (§18).
+- Historial compactado para partidas largas y guardado con copias de seguridad y recuperación (§8, §18).
+
+Detalle técnico y pruebas: `ARCHITECTURE.md` §13 y `ROADMAP.md` (F1–F2). Revisión del gameplay: `GAMEPLAY_REVIEW.md`.
 
 ---
 

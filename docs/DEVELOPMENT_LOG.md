@@ -4,6 +4,79 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-15 — Tercera sesión: consolidación de la v0.1 y arranque de F3
+
+### Resumen
+Consolidación técnica completa (instalación, idiomas, historial, guardado, móvil horizontal), galería de revisión visual, revisión del gameplay con simulaciones y corrección de tres estrategias dominantes, desglose de F3 y primera tarea de F3 (momentos decisivos contextuales).
+
+### Commits
+| Commit | Contenido |
+|---|---|
+| `d364c77` | npm ≥ 11 sin `--legacy-peer-deps`, versiones exactas, decisiones aprobadas (D-028) |
+| `ebf36bf` | Internacionalización: español base, inglés en borrador, guardado v2 (D-031) |
+| `44872b9` | Compactación del historial, SaveManager con copias y cuarentena (D-029) |
+| `3e3f836` | Galería de revisión con índice; ventanas en dos columnas en móvil horizontal |
+| `d4bac26` | Revisión del gameplay y ajustes de balance (D-030) |
+| `bec5774` | F3.1: momentos decisivos contextuales |
+| (este) | Documentación: roadmap F3, decisiones, registro, arquitectura |
+
+### Estado real del roadmap
+- **F1.11, F1.12, F2.12: siguen pendientes** (dispositivos reales y revisión/juego del propietario). No se han marcado como hechas.
+- **F3:** desglosada en 10 tareas; **F3.1 hecha**. Siguiente: F3.2 (funcionalidades y alcance).
+
+### Pruebas ejecutadas
+| Prueba | Resultado |
+|---|---|
+| `npm test` | ✅ 73/73 (antes 40): + idiomas (8), partidas largas (6), gestor de guardado (7), migración 1→2 con partidas reales (2), no-dominancia (6), momentos contextuales (4) |
+| `npm run typecheck`, `npm run build` | ✅ |
+| `npm audit` (npm 11) | ✅ 0 vulnerabilidades |
+| Instalación desde cero sin indicadores (npm 11.21.1 y 12.2.1) | ✅ |
+| e2e en Chromium contra la build de producción | ✅ 21/21 (añadidas: recuperación de autoguardado dañado, cuarentena, momento contextual) |
+| Simulación de estrategias (648 planes × 30 semillas) | ✅ ejecutada antes y después de D-030 |
+| **Rendimiento en móviles reales** | ⏸ **No probado**. Chromium de escritorio no lo valida. |
+| Diversión / claridad | ⏸ **No evaluable automáticamente** (F2.12) |
+
+### Problemas encontrados
+- **`--legacy-peer-deps`:** fallo interno de npm 10.9.x al instalar Vitest (reproducido de forma aislada). Solución: npm ≥ 11.
+- **Errores introducidos y detectados por las pruebas e2e durante la sesión:** el guardado al ocultar la página sobrescribía una partida recién importada (corregido con una marca de recarga).
+- **El worker de la sesión se reinició** a mitad de la galería; no se perdió trabajo (se rehízo el paso y se reverificó todo).
+- **Momento "bugs acumulados"** retirado por no tener consecuencias apreciables.
+- **La imagen de referencia sigue sin recibirse.** No se ha usado ningún recurso externo ni se ha cambiado la estética.
+
+### Capturas
+`docs/screenshots/README.md` — 22 capturas con índice (JPEG, 2 MB), regenerables con `npm run gallery`.
+
+### Balance: antes y después de D-030 (plan por defecto de 42 días, 30–40 semillas)
+| | Antes | Después (con F3.1) |
+|---|---|---|
+| Gran idea: aprobar / sencilla / mantener | 37 701 / 30 532 / 24 298 € | 32 529 / 29 148 / 23 202 € (y la aprobación es una apuesta) |
+| Ritmo a 28 días: tranquilo / normal / crunch | 5 509 / 14 831 / 8 917 € | 5 325 / 14 645 / 17 178 € (crunch con descanso; ignorando el agotamiento: ~10 700 €) |
+| Tamaño: pequeño / mediano | 26 658 / 20 704 € | 26 350 / 55 671 € (mediano en ~3× el tiempo) |
+| Planes a menos del 5 % del mejor | 2 de 648 | 7 de 648 |
+| Decisiones por proyecto | 2 | 3–4 |
+| Variación de la nota con el mismo plan | ± 0,23 | ± 0,25 |
+
+### Limitaciones y deuda conocidas
+- La traducción inglesa es un borrador sin revisar.
+- Escala económica sin presión (sobra dinero): pendiente de decisión tras F2.12.
+- Los mejores planes siguen usando presupuesto alto: el presupuesto aún no es una decisión interesante (F3.6).
+- Resultados previsibles (± 0,25) hasta que lleguen los riesgos (F3.3).
+- El guardado sigue en localStorage (D-023): revisar antes de versiones comerciales.
+- En móviles pequeños (667×375) la tarjeta de nuevo proyecto aún pide un pequeño desplazamiento.
+
+### Decisiones pendientes del propietario
+1. **F1.12** — revisión visual con la galería (identidad, cámara D-009a, escala D-022).
+2. **F2.12** — jugar la v0.1 y valorar diversión, ritmo y claridad.
+3. **Escala económica** (GAMEPLAY_REVIEW §2): ¿reducir ingresos para que el dinero importe?
+4. **Experiencia del fundador en F3.8** (adelanta una parte pequeña de F4): ¿aprobada?
+5. **Dispositivos** para F1.11.
+6. Revisión de la traducción inglesa cuando se quiera activar.
+
+### Próxima tarea
+F3.2 — Funcionalidades y alcance personalizables.
+
+---
+
 ## 2026-11-14 — Bloque 3: pulido visual
 
 - Planta rediseñada con hojas anchas (antes se leía como un cactus).

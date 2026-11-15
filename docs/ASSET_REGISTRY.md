@@ -17,6 +17,8 @@ Todo recurso que entre en el repositorio (modelos, texturas, animaciones, fuente
 | A-009 | Animaciones procedurales del Empirian | `src/render/empirianView.ts` | Claude Code | Código | Todos los derechos reservados | Original | 2026-11-14 |
 | A-010 | Temas de juego ficticios y nombres de medios ficticios (PixelPost, Tecla Crítica, Bitácora Lúdica, Modo Arcade) | `src/content/topics.ts`, `systems/market.ts` | Claude Code | Código | Todos los derechos reservados | Ficticios (D-021); comprobar antes del lanzamiento que no coinciden con medios reales | 2026-11-14 |
 
+| A-011 | Textos del juego en español e inglés (borrador) | `src/i18n/es.ts`, `en.ts` | Claude Code | Código | Todos los derechos reservados | Originales | 2026-11-15 |
+
 Tipografía: la interfaz usa la fuente del sistema (`system-ui`/`ui-rounded`); no se incluye ningún archivo de fuente. Sin sonidos ni música todavía.
 
 ## Referencias (NO utilizables en el juego)
@@ -31,6 +33,6 @@ Tipografía: la interfaz usa la fuente del sistema (`system-ui`/`ui-rounded`); n
 |---|---|---|---|
 | three 0.170 | Render 3D | MIT | ✅ |
 | @capacitor/core, @capacitor/cli 8.5.3 | Empaquetado móvil (D-007) | MIT | ✅ |
-| vite 8.3.5, vitest 5.0.5, typescript 5.6, @types/* | Desarrollo y pruebas (no se distribuyen) | MIT / Apache-2.0 | ✅ |
+| vite 8.3.5, vitest 5.0.5, typescript 5.9.3, @types/* | Desarrollo y pruebas (no se distribuyen) | MIT / Apache-2.0 | ✅ |
 | Dependencias transitivas | — | MIT, ISC, BlueOak-1.0.0, BSD-3-Clause, Apache-2.0, 0BSD, Unlicense (comprobado en `package-lock.json`) | ✅ |
 | Playwright + Chromium | Pruebas e2e y capturas (preinstalado en el entorno, no es dependencia del proyecto) | Apache-2.0 | ✅ |
