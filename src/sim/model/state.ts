@@ -31,11 +31,20 @@ export type Activity =
   | 'celebrating'
   | 'resting';
 
+export type SkillId = 'tech' | 'design' | 'creativity' | 'management';
+
 export interface Empirian {
   id: string;
   name: string;
   appearance: Appearance;
-  skills: { tech: number; design: number }; // 1-10
+  /** Current levels (1-10, fractional). Derived from baseSkills + xp (systems/progression.ts). */
+  skills: Record<SkillId, number>;
+  /** Starting levels (future: founder origins). */
+  baseSkills: Record<SkillId, number>;
+  /** Experience earned by doing each kind of activity. */
+  xp: Record<SkillId, number>;
+  /** Experience per game topic (specialization). */
+  topicXp: Record<string, number>;
   energy: number; // 0-100
   morale: number; // 0-100
   activity: Activity;

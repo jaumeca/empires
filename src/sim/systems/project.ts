@@ -6,6 +6,7 @@ import { getTopic } from '../../content/topics';
 import { record } from '../core/ledger';
 import { maybeOfferBigIdea } from './decisions';
 import { maybeOfferMoment } from './moments';
+import { gainTopicXp, gainXp, topicBonus } from './progression';
 
 const C = SIM_CONFIG;
 
@@ -34,7 +35,8 @@ export function skillFor(e: Empirian, focus: number): number {
 export function qualityCeiling(p: Project, founder: Empirian): number {
   const skill = skillFor(founder, p.focus);
   const mods = p.ceilingMods.reduce((a, m) => a + m.amount, 0);
-  return Math.max(1, C.quality.baseCeiling + (skill - 5) * 0.35 + fitModifier(p) + mods);
+  const creativity = (founder.skills.creativity - 5) * C.progression.creativityCeiling;
+  return Math.max(1, C.quality.baseCeiling + (skill - 5) * 0.35 + creativity + topicBonus(founder, p.topicId) + fitModifier(p) + mods);
 }
 
 /** Ratio of quality-earning investment to required work (> 1 means extra polish). */
@@ -56,6 +58,14 @@ export function budgetMultiplier(p: Project): number {
   return 1 + C.work.budgetMaxBoost * (1 - Math.exp(-devDaily / C.work.budgetSpendScale));
 }
 
+/**
+ * Work speed from skill. Softer than linear so experience does not compound
+ * into runaway quality (LS.1): level 5 → ×1.0, level 8 → ×1.3, level 2 → ×0.7.
+ */
+export function skillSpeed(skill: number): number {
+  return 1 + C.progression.speedPerLevel * (skill - 5);
+}
+
 export function efficiency(e: Empirian): number {
   const t = C.energy.tiredThreshold;
   const energyEff = e.energy >= t ? 1 : 0.55 + (0.45 * e.energy) / t;
@@ -66,7 +76,7 @@ export function efficiency(e: Empirian): number {
 export function pointsPerTick(p: Project, e: Empirian): number {
   return (
     C.work.basePointsPerTick *
-    (skillFor(e, p.focus) / 5) *
+    skillSpeed(skillFor(e, p.focus)) *
     (C.pace.workMultiplier[p.pace] ?? 1) *
     budgetMultiplier(p) *
     efficiency(e)
@@ -106,6 +116,12 @@ export function workTick(state: GameState, p: Project, founder: Empirian, emit: 
     else p.workDone.design += pts;
     founder.activity = p.phase === 'concept' && nextFloat(rngW) < 0.4 ? 'thinking' : isTech ? 'coding' : 'designing';
     emit({ type: 'work', empirianId: founder.id, kind: isTech ? 'tech' : 'design', amount: pts, severity: 'info' });
+    // Learning by doing (LS.1).
+    // Experience comes from hours of practice (1 tick = 1 hour), not from boosted output.
+    const hours = 1;
+    gainXp(state, founder, isTech ? 'tech' : 'design', hours, emit);
+    if (p.phase === 'concept') gainXp(state, founder, 'creativity', hours * C.progression.conceptCreativity, emit);
+    gainTopicXp(founder, p.topicId, hours);
 
     // Bugs come from building things (less while prototyping).
     const techPts = isTech ? pts : pts * 0.3;
@@ -165,6 +181,12 @@ export function workTick(state: GameState, p: Project, founder: Empirian, emit: 
   }
   const qBefore = trueQuality(p, founder);
   p.polishDone += polishPts;
+  const hours = 1;
+  const testShare = pts > 0 ? testPts / pts : 0;
+  gainXp(state, founder, 'tech', hours * testShare * C.progression.testingTech, emit);
+  gainXp(state, founder, 'creativity', hours * (1 - testShare) * C.progression.polishCreativity, emit);
+  gainXp(state, founder, p.focus >= 0.5 ? 'tech' : 'design', hours * (1 - testShare) * 0.5, emit);
+  gainTopicXp(founder, p.topicId, hours * 0.5);
   if (Math.floor(trueQuality(p, founder) * 2) > Math.floor(qBefore * 2)) {
     emit({ type: 'quality_up', empirianId: founder.id, severity: 'info' });
   }
@@ -184,7 +206,8 @@ export function projectDay(state: GameState, p: Project): void {
   if (spend > 0) {
     p.spent += spend;
     state.company.money -= spend;
-    p.hype += spend * C.work.marketingShare * C.market.hypePerMarketingMoney;
+    // Marketing saturates: each euro buys less attention the more attention there already is.
+    p.hype += (spend * C.work.marketingShare * C.market.hypePerMarketingMoney) / (1 + p.hype / C.market.hypeSaturation);
   }
   // Attention fades over time, faster once the announced date has passed.
   const late = state.day > p.originalDeadlineDay;

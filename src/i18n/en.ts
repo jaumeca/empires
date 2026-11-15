@@ -311,4 +311,17 @@ export const en: Record<string, string> = {
   "hint.hidden_bugs_found": "Finds hidden bugs",
   "hint.quality_same": "Quality ≈",
   "hint.bit_of_both": "Balanced",
+
+  // ---- Founder experience (LS.1)
+  "ledger.skill_up": "{name} improved at {skill:skill} (level {level}).",
+  "toast.skill_up": "{name} got better at {skill:skill}! Level {level}.",
+  "skill.tech": "Programming",
+  "skill.design": "Design",
+  "skill.creativity": "Creativity",
+  "skill.management": "Management",
+  "emp.skills": "What they can do",
+  "emp.specialties": "Specialities",
+  "emp.specialty": "{topic:topic} +{bonus:num1}",
+  "emp.no_specialty": "No speciality yet: earned by working on the same topic.",
+  "emp.learning_hint": "Learns by doing: each level costs more than the last.",
 };

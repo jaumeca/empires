@@ -5,6 +5,7 @@ import { nextRange } from '../core/rng';
 import type { Empirian, GameState, Project, Review, TextRef } from '../model/state';
 import { getTopic, TOPICS } from '../../content/topics';
 import { compactHistory } from './history';
+import { gainXp } from './progression';
 import { fitModifier, investmentRatio, productionProgress, qualityCeiling, trueQuality } from './project';
 
 const C = SIM_CONFIG;
@@ -87,6 +88,7 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
   p.result = { releasedDay: state.day, price: p.price, reviews, averageScore, weeklySales: [], totalUnits: 0, revenue: 0, explanation };
   state.company.reputation = Math.max(0, Math.min(100, state.company.reputation + (averageScore - 5) * 4));
   founder.activity = 'celebrating';
+  gainXp(state, founder, 'management', C.progression.managementPerRelease, emit);
   state.activeProjectId = null;
   record(state, { kind: 'released', text: { key: 'ledger.released', params: { project: p.name, score: averageScore } }, causes: explanation, tone: averageScore >= 6 ? 1 : -1, projectId: p.id });
   compactHistory(state);

@@ -45,4 +45,16 @@ export const MIGRATIONS: Record<number, (s: AnyState) => AnyState> = {
     }
     return { ...s, schemaVersion: 2, ledger, projects, pendingDecision };
   },
+  /**
+   * 2 → 3 (LS.1, founder experience): Empirians get creativity/management,
+   * starting levels, empty experience and no topic specialization yet.
+   */
+  2: (s) => {
+    const empirians = ((s.empirians as AnyState[] | undefined) ?? []).map((e) => {
+      const old = (e.skills as Record<string, number> | undefined) ?? {};
+      const skills = { tech: old.tech ?? 5, design: old.design ?? 5, creativity: old.creativity ?? 5, management: old.management ?? 5 };
+      return { ...e, skills, baseSkills: { ...skills }, xp: { tech: 0, design: 0, creativity: 0, management: 0 }, topicXp: {} };
+    });
+    return { ...s, schemaVersion: 3, empirians };
+  },
 };

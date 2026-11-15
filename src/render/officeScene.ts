@@ -388,6 +388,10 @@ export class OfficeScene {
         case 'sales_week':
           this.bubbles.spawn(head, off, 'coin', now, { cooldown: 0.5 });
           break;
+        case 'skill_up':
+          this.bubbles.spawn(head, off, 'star', now, { cooldown: 0.3, life: 2.4 });
+          actor.view.flash('joyful', 1.4, now);
+          break;
       }
     }
   }

@@ -4,7 +4,8 @@ import { PROJECT_LIMITS } from '../sim/commands';
 import { SIM_CONFIG } from '../sim/config';
 import { estimatePlan, estimateProgress } from '../sim/estimates';
 import type { Game } from '../sim/game';
-import type { Appearance, GameState, PendingDecision, Project, ProjectSize } from '../sim/model/state';
+import type { Appearance, GameState, PendingDecision, Project, ProjectSize, SkillId } from '../sim/model/state';
+import { progressToNext, SKILLS, specializations } from '../sim/systems/progression';
 import { getActiveProject, getFounder, getProject } from '../sim/state';
 import { productionProgress } from '../sim/systems/project';
 import { TOPICS } from '../content/topics';
@@ -205,6 +206,11 @@ export class GameUI {
         case 'money_low':
           this.toast(t('toast.money_low'), 'alert');
           break;
+        case 'skill_up': {
+          const who = this.state.empirians.find((x) => x.id === e.empirianId);
+          if (who) this.toast(t('toast.skill_up', { name: who.name, skill: e.skill, level: e.level }), 'star');
+          break;
+        }
         case 'sales_week': {
           const p = getProject(this.state, e.projectId);
           if (p?.result && p.result.weeklySales.length <= 3) this.toast(t('toast.sales_week', { project: projectName(p), units: e.units, revenue: e.revenue }), 'coin');
@@ -589,14 +595,24 @@ export class GameUI {
   private showEmpirian(id: string): void {
     const e = this.state.empirians.find((x) => x.id === id);
     if (!e) return;
+    const skillIcon: Record<SkillId, IconName> = { tech: 'code', design: 'design', creativity: 'idea', management: 'calendar' };
+    const skillRow = (k: SkillId) =>
+      h('div.skill', null,
+        icon(skillIcon[k], 18),
+        h('span.skill-name', null, t(`skill.${k}`)),
+        h('span.skill-lvl', null, String(Math.floor(e.skills[k]))),
+        h('div.bar.skill-bar', null, h('i', { style: { width: `${Math.round(progressToNext(e, k) * 100)}%` } })),
+      );
+    const specs = specializations(e);
     const card = h('div.card.narrow', null, this.closeBtn(),
       h('div.row', { style: { flexWrap: 'nowrap' } }, this.portrait(id), h('div', null, h('h2', null, e.name), h('p.sub', null, t(`emp.activity.${e.activity}`)))),
       h('div.row', null,
-        h('span.chip', null, icon('code', 16), t('emp.tech', { n: e.skills.tech })),
-        h('span.chip', null, icon('design', 16), t('emp.design', { n: e.skills.design })),
         h(`span.chip.${e.energy < 30 ? 'bad' : 'good'}`, null, icon('sweat', 16), t('emp.energy', { n: e.energy })),
         h('span.chip', null, icon('heart', 16), t('emp.morale', { n: e.morale })),
       ),
+      h('div.section', null, h('div.label', null, t('emp.skills')), ...SKILLS.map(skillRow), h('div.hint', null, t('emp.learning_hint'))),
+      h('div.section', null, h('div.label', null, t('emp.specialties')),
+        specs.length ? h('div.row', null, ...specs.map((sp) => h('span.chip.good', null, icon('star', 16), t('emp.specialty', { topic: sp.topicId, bonus: sp.bonus })))) : h('div.hint', null, t('emp.no_specialty'))),
     );
     this.openModal('empirian', card, { pause: false });
   }

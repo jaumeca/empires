@@ -7,7 +7,7 @@ import { en } from './en';
  * text: it stores TextRefs ({ key, params }) and the UI translates them here.
  *
  * Placeholders: {name} plain · {name:money} · {name:int} · {name:num1} (1 decimal)
- * · {name:pct} (0.42 → 42) · {name:price} · {name:topic} (topic id → name) · {name:size}
+ * · {name:pct} (0.42 → 42) · {name:price} · {name:topic} (topic id → name) · {name:size} · {name:skill}
  * Plurals: if a `count` param exists and `<key>_one` / `<key>_other` exist, they are used.
  */
 export type Catalog = Record<string, string>;
@@ -68,6 +68,7 @@ export function t(key: string, params: Record<string, string | number> = {}): st
       case 'price': return fmtPrice(Number(v));
       case 'topic': return t(`topic.${v}.name`);
       case 'size': return t(`size.${v}`);
+      case 'skill': return t(`skill.${v}`);
       default: return String(v);
     }
   });

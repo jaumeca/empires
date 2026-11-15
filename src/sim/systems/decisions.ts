@@ -6,6 +6,7 @@ import type { Empirian, GameState, PendingDecision, Project, TextRef } from '../
 import { productionProgress } from './project';
 import { releaseProject } from './market';
 import { resolveMoment } from './moments';
+import { gainXp } from './progression';
 
 /**
  * Decisive Moments for the MVP. They are triggered by real simulation state
@@ -76,6 +77,7 @@ export function resolveDecision(
 
   state.pendingDecision = null;
   founder.activity = 'idle';
+  gainXp(state, founder, 'management', SIM_CONFIG.progression.managementPerDecision, emit);
   p.decisionsTaken.push(`${d.kind}:${optionId}`);
 
   if (resolveMoment(state, p, founder, d.kind, optionId)) {
@@ -86,7 +88,7 @@ export function resolveDecision(
       const cfg = SIM_CONFIG.bigIdea.approve;
       const id = record(state, { kind: 'decision', text: { key: 'ledger.big_idea.approve', params: { days: extraDays } }, causes: [], tone: 1, projectId: p.id });
       // The idea may land brilliantly or only partly: the roll is seeded (events stream).
-      const hit = nextFloat(state.rng.events) < cfg.hitChance;
+      const hit = nextFloat(state.rng.events) < cfg.hitChance + Math.max(0, founder.skills.creativity - 5) * SIM_CONFIG.progression.creativityBigIdea;
       p.requiredPoints *= cfg.work;
       p.deadlineDay += extraDays;
       p.ceilingMods.push({ amount: hit ? cfg.ceilingHit : cfg.ceilingMiss, causeId: id });

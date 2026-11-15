@@ -3,7 +3,7 @@ import { createRngStreams } from './core/rng';
 import type { Appearance, Empirian, GameState, Project } from './model/state';
 import { TOPICS } from '../content/topics';
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const DEFAULT_APPEARANCE: Appearance = {
   skin: 2,
@@ -20,7 +20,10 @@ export function createNewGame(seed: number): GameState {
     id: 'E-founder',
     name: 'Alex',
     appearance: { ...DEFAULT_APPEARANCE },
-    skills: { tech: 5, design: 5 },
+    skills: { tech: 5, design: 5, creativity: 5, management: 5 },
+    baseSkills: { tech: 5, design: 5, creativity: 5, management: 5 },
+    xp: { tech: 0, design: 0, creativity: 0, management: 0 },
+    topicXp: {},
     energy: SIM_CONFIG.energy.max,
     morale: 70,
     activity: 'idle',

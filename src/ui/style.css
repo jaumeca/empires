@@ -152,6 +152,12 @@ input[type=range] { width: 100%; accent-color: var(--mint-dark); height: 28px; }
 .option .t { font-weight: 900; font-size: 16px; }
 .option .hs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 
+/* Skills (Empirian card) */
+.skill { display: grid; grid-template-columns: 22px 1fr 22px 90px; gap: 8px; align-items: center; margin: 4px 0; font-weight: 800; font-size: 14px; }
+.skill-lvl { font-size: 16px; font-weight: 900; text-align: right; }
+.skill-bar { height: 10px; min-width: 0; }
+.skill-bar > i { background: linear-gradient(90deg, var(--mustard), #e0a52e); }
+
 /* Results */
 .score-big { font-size: 64px; font-weight: 900; line-height: 1; }
 .reviews { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-top: 10px; }

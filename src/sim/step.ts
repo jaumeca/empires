@@ -5,6 +5,7 @@ import { getActiveProject, getFounder } from './state';
 import { isResting, projectDay, workTick } from './systems/project';
 import { maybeDeadlineDecision } from './systems/decisions';
 import { marketWeek } from './systems/market';
+import { gainXp } from './systems/progression';
 
 const C = SIM_CONFIG;
 
@@ -22,7 +23,8 @@ export function step(state: GameState, emit: EventSink): void {
   // Energy drains while working (not while waiting for a decision).
   if (project && !state.pendingDecision && !isResting(state, project)) {
     const before = founder.energy;
-    founder.energy = Math.max(0, founder.energy - (C.energy.drainPerTick[project.pace] ?? 0.7));
+    const mgmt = 1 - Math.max(0, founder.skills.management - 5) * C.progression.managementFatigue;
+    founder.energy = Math.max(0, founder.energy - (C.energy.drainPerTick[project.pace] ?? 0.7) * mgmt);
     if (before >= 25 && founder.energy < 25) emit({ type: 'energy_low', empirianId: founder.id, severity: 'important' });
   }
 
@@ -42,6 +44,7 @@ function dayBoundary(state: GameState, emit: EventSink): void {
   if (!project) founder.morale = Math.min(100, founder.morale + 0.5);
 
   if (project) {
+    if (project.phase !== 'released') gainXp(state, founder, 'management', C.progression.managementPerProjectDay, emit);
     projectDay(state, project);
     maybeDeadlineDecision(state, project, founder, emit);
   }

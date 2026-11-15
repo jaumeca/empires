@@ -29,7 +29,7 @@ export const SIM_CONFIG = {
     /** Fraction of required points that make up the concept phase. */
     conceptFraction: 0.15,
     /** Productivity multiplier from budget: 1 + maxBoost * (1 - e^(-dailySpend / spendScale)). */
-    budgetMaxBoost: 0.45,
+    budgetMaxBoost: 0.3,
     budgetSpendScale: 120,
     /** Fraction of budget that goes to marketing (builds hype). */
     marketingShare: 0.3,
@@ -69,6 +69,28 @@ export const SIM_CONFIG = {
     simple: { work: 1.07, ceiling: 0.5, bugFactor: 1.3 },
   },
 
+  /** Founder learning (LS.1, D-035): level = base + gainMax · (1 − e^(−xp/xpScale)), capped. */
+  progression: {
+    gainMax: 3,
+    xpScale: 1800,
+    cap: 9.5,
+    topicGainMax: 0.45,
+    topicScale: 1500,
+    /** Share of work points that also count as creativity xp in the concept phase / polish improvements. */
+    conceptCreativity: 0.6,
+    polishCreativity: 0.35,
+    testingTech: 0.5,
+    managementPerProjectDay: 1,
+    managementPerRelease: 12,
+    managementPerDecision: 3,
+    /** Effects of the new skills (small on purpose). */
+    creativityCeiling: 0.12,
+    creativityBigIdea: 0.04,
+    managementFatigue: 0.03,
+    /** Work speed per skill level around 5 (was effectively 0.2 when speed was linear in skill). */
+    speedPerLevel: 0.1,
+  },
+
   pace: {
     workMultiplier: { relaxed: 0.8, normal: 1.0, crunch: 1.45 } as Record<string, number>,
     bugMultiplier: { relaxed: 0.85, normal: 1.0, crunch: 1.5 } as Record<string, number>,
@@ -81,6 +103,8 @@ export const SIM_CONFIG = {
     lateHypeDecayPerDay: 0.97,
     /** Hype gained per unit of marketing money spent. */
     hypePerMarketingMoney: 0.002,
+    /** Hype level at which marketing returns are halved (LS.1 review). */
+    hypeSaturation: 4,
     /** Weeks a released product keeps selling in the MVP. */
     salesWeeks: 10,
     weeklySalesDecay: 0.72,

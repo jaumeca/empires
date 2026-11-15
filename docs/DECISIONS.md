@@ -238,6 +238,15 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Fecha:** 2026-11-15 · **Estado:** Confirmada (visión y orden propuestos por el propietario; reordenación técnica documentada en `ROADMAP.md`)
 - **Decisión:** la siguiente actualización convierte la sucesión de juegos en un estudio vivo: experiencia del fundador, catálogo y personalización de la oficina, Empires Daily (noticias y tendencias), eventos dinámicos, una primera actividad alternativa (contratos) y una revisión económica conjunta. Se adelantan partes pequeñas de F4 (oficina, experiencia), F5 (tendencias, competidores, productos persistentes) y F8 (contratos). El resto de esas fases sigue en su sitio.
 
+### D-037 — Modelo de experiencia del fundador y ajustes asociados
+- **Fecha:** 2026-11-15 · **Estado:** Aplicada (provisional hasta LS.9 y nuevas pruebas de juego)
+- **Modelo:** nivel = base + 3 · (1 − e^(−xp/1800)), techo 9,5. La experiencia se mide en **horas de práctica** de cada actividad (1 tick = 1 hora), no en puntos producidos: así el presupuesto o el equipamiento no "compran" aprendizaje. Programar → programación; diseñar → diseño; concepto y pulido de mejoras → creatividad; días gestionando un proyecto, decisiones y lanzamientos → gestión; horas en un tema → especialización (máx. +0,45 de techo de calidad, escala 1 500 h).
+- **Efectos:** programación/diseño afectan a velocidad, techo de calidad y bugs (como antes); creatividad: +0,12 de techo por nivel sobre 5 y +4 % de acierto de la gran idea; gestión: −3 % de cansancio por nivel sobre 5.
+- **Medición (10 juegos del mismo tema, 6 semillas):** nota 6,4 → 8,1; sin aprendizaje 6,2 → 6,7. El aprendizaje aporta ≈ +1,3 puntos en 10 juegos; un fundador que programa acaba con programación ≈ 7 y uno que diseña, con diseño ≈ 7.
+- **Ajustes colaterales necesarios:**
+  - La velocidad por habilidad pasa de proporcional (nivel 7,5 = ×1,5) a suave (`1 + 0,1·(nivel − 5)`, nivel 7,5 = ×1,25): con la anterior el aprendizaje se retroalimentaba (más velocidad → más pulido → más calidad) y la nota subía > 2 puntos.
+  - El marketing satura dentro de un proyecto (`hypeSaturation` 4) y el impulso de productividad del presupuesto baja de 0,45 a 0,30: con juegos algo mejores, el presupuesto máximo volvía a ser lo más rentable. La velocidad de trabajo pasará a venir sobre todo del equipamiento de la oficina (LS.4). Ajuste final en LS.9.
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

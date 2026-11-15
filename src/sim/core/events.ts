@@ -19,6 +19,7 @@ export type SimEvent =
   | { type: 'project_started'; projectId: string; severity: 'important' }
   | { type: 'project_released'; projectId: string; severity: 'decisive' }
   | { type: 'sales_week'; projectId: string; units: number; revenue: number; severity: 'info' }
-  | { type: 'money_low'; severity: 'important' };
+  | { type: 'money_low'; severity: 'important' }
+  | { type: 'skill_up'; empirianId: string; skill: string; level: number; severity: 'important' };
 
 export type EventSink = (e: SimEvent) => void;
