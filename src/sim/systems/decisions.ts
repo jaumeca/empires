@@ -1,4 +1,6 @@
+import { SIM_CONFIG } from '../config';
 import type { EventSink } from '../core/events';
+import { nextFloat } from '../core/rng';
 import { newId, record } from '../core/ledger';
 import type { Empirian, GameState, PendingDecision, Project, TextRef } from '../model/state';
 import { productionProgress } from './project';
@@ -22,7 +24,7 @@ export function maybeOfferBigIdea(state: GameState, p: Project, founder: Empiria
     speakerId: founder.id,
     text: { key: 'decision.big_idea.text', params: { project: p.name, days: extraDays } },
     options: [
-      { id: 'approve', label: { key: 'decision.big_idea.approve', params: { days: extraDays } }, hints: [k('hint.quality_up2_probable'), k('hint.cost_delay'), k('hint.interest_down_if_late')] },
+      { id: 'approve', label: { key: 'decision.big_idea.approve', params: { days: extraDays } }, hints: [k('hint.quality_up2_probable'), k('hint.cost_delay'), k('hint.complexity_bugs')] },
       { id: 'simple', label: k('decision.big_idea.simple'), hints: [k('hint.quality_up_some'), { key: 'hint.plus_days', params: { days: Math.round(extraDays / 3) } }, k('hint.bugs_up_rush')] },
       { id: 'postpone', label: k('decision.big_idea.postpone'), hints: [k('hint.no_delay'), k('hint.promise'), k('hint.morale_up_little')] },
       { id: 'keep', label: k('decision.big_idea.keep'), hints: [k('hint.no_changes'), k('hint.morale_down')] },
@@ -78,17 +80,22 @@ export function resolveDecision(
   if (d.kind === 'big_idea') {
     const extraDays = p.size === 'small' ? 10 : 14;
     if (optionId === 'approve') {
+      const cfg = SIM_CONFIG.bigIdea.approve;
       const id = record(state, { kind: 'decision', text: { key: 'ledger.big_idea.approve', params: { days: extraDays } }, causes: [], tone: 1, projectId: p.id });
-      p.requiredPoints *= 1.25;
+      // The idea may land brilliantly or only partly: the roll is seeded (events stream).
+      const hit = nextFloat(state.rng.events) < cfg.hitChance;
+      p.requiredPoints *= cfg.work;
       p.deadlineDay += extraDays;
-      p.ceilingMods.push({ amount: 1.0, causeId: id });
+      p.ceilingMods.push({ amount: hit ? cfg.ceilingHit : cfg.ceilingMiss, causeId: id });
+      if (Number(cfg.bugFactor) !== 1) p.bugRateMods.push({ factor: cfg.bugFactor, causeId: id });
       founder.morale = Math.min(100, founder.morale + 8);
     } else if (optionId === 'simple') {
+      const cfg = SIM_CONFIG.bigIdea.simple;
       const id = record(state, { kind: 'decision', text: k('ledger.big_idea.simple'), causes: [], tone: 0, projectId: p.id });
-      p.requiredPoints *= 1.07;
+      p.requiredPoints *= cfg.work;
       p.deadlineDay += Math.round(extraDays / 3);
-      p.ceilingMods.push({ amount: 0.5, causeId: id });
-      p.bugRateMods.push({ factor: 1.3, causeId: id });
+      p.ceilingMods.push({ amount: cfg.ceiling, causeId: id });
+      p.bugRateMods.push({ factor: cfg.bugFactor, causeId: id });
     } else if (optionId === 'postpone') {
       record(state, { kind: 'promise', text: k('ledger.big_idea.postpone'), causes: [], tone: 0, projectId: p.id });
       founder.morale = Math.min(100, founder.morale + 3);

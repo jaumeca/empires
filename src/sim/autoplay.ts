@@ -18,6 +18,10 @@ export interface AutoplayPlan {
   pace?: Pace;
   testFocus?: number;
   bigIdea?: 'approve' | 'simple' | 'postpone' | 'keep';
+  /** Human-like burst: switch to crunch when this many days remain before the deadline. */
+  crunchLastDays?: number;
+  /** Rest policy: switch to relaxed pace while energy is below this, back to `pace` above +25. */
+  restBelowEnergy?: number;
   /** At the deadline: release or extend. */
   atDeadline?: 'release' | 'extend7' | 'extend14';
   /** Weeks to keep simulating after release so sales accrue. */
@@ -70,6 +74,15 @@ export function autoplay(plan: AutoplayPlan): AutoplayResult {
       }
       must(game.dispatch({ type: 'choose_option', decisionId: d.id, optionId: finalOpt }));
       continue;
+    }
+    if (game.state.tick % 8 === 0 && (plan.crunchLastDays || plan.restBelowEnergy)) {
+      const p = getProject(game.state, projectId)!;
+      const e = game.state.empirians[0]!.energy;
+      const base = plan.pace ?? 'normal';
+      let want = base;
+      if (plan.crunchLastDays && p.deadlineDay - game.state.day <= plan.crunchLastDays && p.phase !== 'polish') want = 'crunch';
+      if (plan.restBelowEnergy && (e < plan.restBelowEnergy || (p.pace === 'relaxed' && e < plan.restBelowEnergy + 25))) want = 'relaxed';
+      if (want !== p.pace) game.dispatch({ type: 'adjust_project', pace: want });
     }
     game.tick();
   }

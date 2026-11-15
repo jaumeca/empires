@@ -275,4 +275,5 @@ export const en: Record<string, string> = {
   'save.error.incomplete_migration': 'The save upgrade did not complete.',
   'save.error.invalid_state': 'The save contains inconsistent data.',
   'save.error.write_failed': 'The game could not be written to storage.',
+  'hint.complexity_bugs': 'More work and complexity: bugs ↑',
 };

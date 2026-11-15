@@ -294,4 +294,5 @@ export const es: Record<string, string> = {
   'save.error.incomplete_migration': 'La actualización de la partida no se completó.',
   'save.error.invalid_state': 'La partida contiene datos incoherentes.',
   'save.error.write_failed': 'No se pudo escribir la partida en el almacenamiento.',
+  'hint.complexity_bugs': 'Más trabajo y complejidad: bugs ↑',
 };

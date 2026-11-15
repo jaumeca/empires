@@ -57,14 +57,20 @@ export const SIM_CONFIG = {
 
   energy: {
     max: 100,
-    drainPerTick: { relaxed: 0.35, normal: 0.7, crunch: 1.6 } as Record<string, number>,
+    drainPerTick: { relaxed: 0.35, normal: 0.85, crunch: 1.5 } as Record<string, number>,
     overnightRecovery: 5.0,
     /** Below this, efficiency and bug rate get worse. */
     tiredThreshold: 40,
   },
 
+  /** "Big idea" Decisive Moment (D-030): a gamble, not a free upgrade. */
+  bigIdea: {
+    approve: { work: 1.35, ceilingHit: 1.1, ceilingMiss: 0.2, hitChance: 0.65, bugFactor: 1.2 },
+    simple: { work: 1.07, ceiling: 0.5, bugFactor: 1.3 },
+  },
+
   pace: {
-    workMultiplier: { relaxed: 0.8, normal: 1.0, crunch: 1.4 } as Record<string, number>,
+    workMultiplier: { relaxed: 0.8, normal: 1.0, crunch: 1.45 } as Record<string, number>,
     bugMultiplier: { relaxed: 0.85, normal: 1.0, crunch: 1.5 } as Record<string, number>,
   },
 
@@ -79,6 +85,9 @@ export const SIM_CONFIG = {
     salesWeeks: 10,
     weeklySalesDecay: 0.72,
     baseAudience: 2000,
+    /** Bigger games reach more players and justify higher prices (D-030). */
+    sizeAudience: { small: 1, medium: 1.9 } as Record<string, number>,
+    sizePriceBonus: { small: 0, medium: 3 } as Record<string, number>,
   },
 } as const;
 

@@ -82,3 +82,36 @@ describe('decisions have real consequences', () => {
     for (const id of p.result!.explanation) expect(r.state.ledger.some((e) => e.id === id)).toBe(true);
   });
 });
+
+describe('no dominant strategy (gameplay review, D-030)', () => {
+  const perDay = (plan: Omit<AutoplayPlan, 'seed'>) => {
+    const runs = SEEDS.map((seed) => autoplay({ ...plan, seed }));
+    return mean(runs.map((r) => r.profit)) / mean(runs.map((r) => r.releaseDay));
+  };
+  it('no answer to the big idea beats every other by a wide margin (profit per day)', () => {
+    const v = (['approve', 'simple', 'keep'] as const).map((bigIdea) => perDay({ bigIdea, days: 42 }));
+    expect(Math.max(...v) / Math.min(...v)).toBeLessThan(1.3);
+  });
+  it('approving the big idea is a gamble: outcomes vary more than keeping the plan', () => {
+    const spread = (bigIdea: 'approve' | 'keep') => {
+      const sc = SEEDS.map((seed) => autoplay({ seed, bigIdea }).score);
+      return Math.max(...sc) - Math.min(...sc);
+    };
+    expect(spread('approve')).toBeGreaterThan(spread('keep'));
+  });
+  it('crunch works as a final sprint on a tight deadline, not as a permanent pace', () => {
+    expect(avg({ days: 28, crunchLastDays: 7 }).profit).toBeGreaterThan(avg({ days: 28 }).profit);
+    expect(avg({ days: 28, pace: 'crunch' }).profit).toBeLessThan(avg({ days: 28 }).profit);
+  });
+  it('resting pays off on long projects', () => {
+    expect(avg({ size: 'medium', days: 119, restBelowEnergy: 45 }).profit).toBeGreaterThan(avg({ size: 'medium', days: 119 }).profit);
+  });
+  it('small and medium games are both viable (profit per day within 35 %)', () => {
+    const small = perDay({ size: 'small', days: 42 });
+    const medium = perDay({ size: 'medium', days: 119 });
+    expect(Math.max(small, medium) / Math.min(small, medium)).toBeLessThan(1.35);
+  });
+  it('a medium game needs its time: rushing it is punished', () => {
+    expect(avg({ size: 'medium', days: 70 }).score).toBeLessThan(avg({ size: 'medium', days: 119 }).score - 0.4);
+  });
+});

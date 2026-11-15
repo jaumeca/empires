@@ -110,11 +110,11 @@ export function marketWeek(state: GameState, emit: EventSink): void {
     const appeal = Math.pow(r.averageScore / 10, 2.2) * 1.6;
     const visibility = 0.8 + 0.6 * (1 - Math.exp(-p.hype / 1.6)) + (state.company.reputation / 100) * 0.5;
     // Players accept higher prices for better games: optimum price ~ expected / 1.1.
-    const expectedPrice = 4 + r.averageScore * 1.2;
+    const expectedPrice = 4 + r.averageScore * 1.2 + (C.market.sizePriceBonus[p.size] ?? 0);
     const priceFactor = Math.min(2.2, Math.exp(-1.1 * (r.price / expectedPrice - 1)));
     const noise = nextRange(state.rng.market, 0.9, 1.1);
     const units = Math.round(
-      C.market.baseAudience * topic.interest * (state.topicTrends[topic.id] ?? 1) * appeal * visibility * priceFactor * Math.pow(C.market.weeklySalesDecay, w) * noise,
+      C.market.baseAudience * (C.market.sizeAudience[p.size] ?? 1) * topic.interest * (state.topicTrends[topic.id] ?? 1) * appeal * visibility * priceFactor * Math.pow(C.market.weeklySalesDecay, w) * noise,
     );
     const revenue = Math.round(units * r.price * 0.7 * 100) / 100; // 30 % store fee
     r.weeklySales.push(units);
