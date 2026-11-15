@@ -4,7 +4,7 @@ const { chromium } = require('playwright');
   const out = process.argv[2];
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const p = await b.newPage({ viewport: { width: 1280, height: 720 } });
-  await p.goto('http://localhost:5173/?fresh&debug&seed=7&cam=' + (process.argv[3] || 'dim')); await p.waitForTimeout(1500);
+  await p.goto('http://localhost:4173/?fresh&debug&seed=7&cam=' + (process.argv[3] || 'dim')); await p.waitForTimeout(1500);
   await p.click('#start-game'); await p.waitForTimeout(500);
   await p.click('#hud-new-project'); await p.waitForTimeout(300);
   await p.click('#start-project'); await p.waitForTimeout(300);

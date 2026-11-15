@@ -4,9 +4,12 @@
  */
 export type IconName =
   | 'code' | 'design' | 'bug' | 'check' | 'idea' | 'star' | 'sweat' | 'test' | 'zzz' | 'alert' | 'coin' | 'heart'
-  | 'pause' | 'play' | 'menu' | 'clock' | 'box' | 'rocket' | 'calendar';
+  | 'pause' | 'play' | 'menu' | 'clock' | 'box' | 'rocket' | 'calendar' | 'decor' | 'rotate' | 'news';
 
 const ICONS: Record<IconName, { px: string[]; colors: Record<string, string> }> = {
+  decor: { px: ['........', '.aaaaaa.', '.abbbba.', '.aaaaaa.', '....c...', '....c...', '...ddd..', '...ddd..'], colors: { a: '#3b3a40', b: '#ff8a7a', c: '#8c5a3c', d: '#3b3a40' } },
+  rotate: { px: ['..aaaa..', '.a....a.', 'a......a', 'a.....aaa', 'a......a.', '.a......', '..aaa...', '........'].map((r) => r.slice(0, 8)), colors: { a: '#3b3a40' } },
+  news: { px: ['aaaaaaa.', 'abbbbba.', 'acccccab', 'abbbbbab', 'acccccab', 'abbbbbab', 'acccccab', 'aaaaaaab'], colors: { a: '#3b3a40', b: '#fff7e8', c: '#8c8580' } },
   code: { px: ['....b...', '..a.bc..', '.a..b.c.', 'a..b...c', '.a.b..c.', '..ab.c..', '...b....', '........'], colors: { a: '#3d9c84', b: '#2e2420', c: '#3d9c84' } },
   design: { px: ['......aa', '.....aaa', '....aaa.', '...aaa..', '..bba...', '.bbb....', '.bb.....', 'c.......'], colors: { a: '#b9a6e8', b: '#ff8a7a', c: '#8c5a3c' } },
   bug: { px: ['.a....a.', '..a..a..', '..bbbb..', 'abbccbba', '.bccccb.', 'abbccbba', '.bbbbbb.', 'a.b..b.a'], colors: { a: '#2e2420', b: '#e2675a', c: '#ff8a7a' } },

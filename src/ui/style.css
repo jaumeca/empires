@@ -152,6 +152,32 @@ input[type=range] { width: 100%; accent-color: var(--mint-dark); height: 28px; }
 .option .t { font-weight: 900; font-size: 16px; }
 .option .hs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 
+/* Decoration mode (LS.3) */
+#ui > div.hidden { display: none; }
+.decor { position: absolute; inset: 0; pointer-events: none !important; }
+.decor > * { pointer-events: auto; }
+.decor-top { position: absolute; top: calc(10px + var(--safe-top)); left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; }
+.pill.small { font-size: 12px; padding: 4px 10px; }
+.decor-sheet { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(8px + var(--safe-bottom)); width: min(980px, calc(100% - 16px)); max-height: 46%; padding: 12px 14px; animation: none; }
+.decor-tabs { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 6px; }
+.decor-tabs button { flex: none; border: 0; background: var(--paper-2); font: inherit; font-weight: 800; padding: 8px 12px; border-radius: 999px; cursor: pointer; color: var(--ink); min-height: 38px; }
+.decor-tabs button.on { background: var(--mint); }
+.decor-items { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 260px); gap: 8px; overflow-x: auto; padding: 4px 2px 8px; }
+.decor-item { background: #fff; border: 3px solid var(--edge); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.decor-item .t { font-weight: 900; font-size: 15px; }
+.decor-item .d { font-size: 12px; color: var(--ink-soft); font-weight: 600; min-height: 30px; }
+.decor-item .price { font-weight: 900; }
+.decor-item .upkeep { font-size: 12px; color: var(--coral-dark); font-weight: 800; }
+.big-btn.small { font-size: 14px; padding: 8px 14px; border-radius: 12px; }
+.decor-place { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + var(--safe-bottom)); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.decor-hint { background: var(--paper); border: 2px solid var(--edge); border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 14px; box-shadow: var(--shadow); }
+@media (max-height: 500px) {
+  .decor-sheet { max-height: 58%; padding: 8px 10px; }
+  .decor-items { grid-auto-columns: minmax(190px, 220px); }
+  .decor-item { padding: 6px 8px; gap: 3px; }
+  .decor-item .d { display: none; }
+}
+
 /* Skills (Empirian card) */
 .skill { display: grid; grid-template-columns: 22px 1fr 22px 90px; gap: 8px; align-items: center; margin: 4px 0; font-weight: 800; font-size: 14px; }
 .skill-lvl { font-size: 16px; font-weight: 900; text-align: right; }

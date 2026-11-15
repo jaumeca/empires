@@ -3,7 +3,10 @@ import { meshVoxels, VoxelGrid } from '../../src/render/voxel';
 import { buildEmpirianParts } from '../../src/render/models/empirian';
 import { EmpirianView } from '../../src/render/empirianView';
 import { findPath } from '../../src/render/officeScene';
-import { DEFAULT_APPEARANCE } from '../../src/sim/state';
+import { createNewGame, DEFAULT_APPEARANCE } from '../../src/sim/state';
+import { blockedCells } from '../../src/sim/systems/office';
+import { itemModel, computerModel, chairModel } from '../../src/render/models/catalogModels';
+import { ITEMS } from '../../src/content/officeItems';
 import { buildRoomShell, buildDesk, buildBookshelf, buildPlant, buildChair, buildPoster } from '../../src/render/models/furniture';
 
 describe('voxel mesher', () => {
@@ -52,6 +55,26 @@ describe('Empirian model', () => {
   });
 });
 
+describe('catalog models', () => {
+  it('every catalog item has a non-empty voxel model that fits its footprint', () => {
+    for (const d of ITEMS) {
+      if (d.layer === 'mount') {
+        const parts = d.category === 'computer' ? computerModel(d.id).parts : chairModel(d.id);
+        expect(parts.reduce((n, p) => n + p.grid.count(), 0), d.id).toBeGreaterThan(0);
+        continue;
+      }
+      const m = itemModel(d.model);
+      expect(m.parts.length, d.id).toBeGreaterThan(0);
+      for (const p of m.parts) {
+        expect(p.grid.count(), d.id).toBeGreaterThan(0);
+        // Models may overhang their footprint by a voxel at most.
+        expect(p.at[0] + p.grid.sx, d.id).toBeLessThanOrEqual(d.size.w * 6 + 1.5);
+        expect(p.at[2] + p.grid.sz, d.id).toBeLessThanOrEqual(d.size.d * 6 + 1.5);
+      }
+    }
+  });
+});
+
 describe('room', () => {
   it('furniture models are non-empty and within budget', () => {
     let tris = 0;
@@ -61,9 +84,12 @@ describe('room', () => {
     }
     expect(tris).toBeLessThan(150_000); // ARCHITECTURE §9.2 budget for the whole scene
   });
-  it('paths avoid blocked cells (desk)', () => {
-    const path = findPath([6, 18], [30, 6 + 0]); // to a desk cell
-    for (const [x, z] of path.slice(0, -1)) expect(`${Math.floor(x / 12)},${Math.floor(z / 12)}`).not.toBe('1,0');
-    expect(path[path.length - 1]).toEqual([30, 6]);
+  it('paths avoid furniture (blocked cells from the office) and end on the exact target', () => {
+    const office = createNewGame(1).office;
+    const blocked = blockedCells(office);
+    const path = findPath([3, 3], [57, 39], blocked, office.w, office.d); // back-left corner to the armchair seat
+    for (const [x, z] of path.slice(0, -1)) expect(blocked[Math.floor(x / 6) + Math.floor(z / 6) * office.w], `${x},${z}`).toBe(0);
+    expect(path[path.length - 1]).toEqual([57, 39]);
+    expect(path.length).toBeGreaterThan(5);
   });
 });

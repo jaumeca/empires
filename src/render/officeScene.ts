@@ -1,24 +1,28 @@
 import {
-  BoxGeometry, CanvasTexture, Color, DirectionalLight, DynamicDrawUsage, HemisphereLight, InstancedMesh, Matrix4,
-  Mesh, MeshBasicMaterial, MeshLambertMaterial, NearestFilter, Object3D, OrthographicCamera, PCFSoftShadowMap,
-  PlaneGeometry, PointLight, Raycaster, Scene, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
+  BoxGeometry, BufferGeometry, CanvasTexture, Color, DirectionalLight, DynamicDrawUsage, Float32BufferAttribute, Group, HemisphereLight,
+  InstancedMesh, LineBasicMaterial, LineSegments, Matrix4, Mesh, MeshBasicMaterial, MeshLambertMaterial, NearestFilter, Object3D,
+  OrthographicCamera, PCFSoftShadowMap, Plane, PlaneGeometry, PointLight, Raycaster, Scene, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
 } from 'three';
 import type { SimEvent } from '../sim/core/events';
-import type { Activity, Appearance, GameState, Project } from '../sim/model/state';
+import type { Activity, Appearance, GameState, Office, PlacedItem, Project, Rot } from '../sim/model/state';
+import { blockedCells, founderDesk, getItemDef, rotatedSize, useSpot } from '../sim/systems/office';
+import { OFFICE_GRID } from '../content/officeItems';
+import { chairModel, computerModel, itemModel } from './models/catalogModels';
 import { EmpirianView, VOXEL_MATERIAL, type Pose } from './empirianView';
 import { BubbleSystem } from './bubbles';
-import {
-  buildArmchair, buildBookshelf, buildChair, buildCorkBoard, buildDesk, buildDeskLamp, buildKeyboard, buildMonitor, buildMug,
-  buildPlant, buildPoster, buildProductBox, buildRoomShell, buildRug, ROOM,
-} from './models/furniture';
+import { buildCorkBoard, buildPoster, buildProductBox, buildRoomShell, ROOM } from './models/furniture';
 import { CLOTH_COLORS, P, PALETTE_HEX } from './palette';
 import { meshVoxels, VOXEL, type VoxelGrid } from './voxel';
 
 export type CameraMode = 'iso' | 'dim';
 export type TapTarget =
   | { kind: 'empirian'; id: string }
-  | { kind: 'computer' | 'shelf' | 'poster' | 'plant' | 'window' | 'beanbag' | 'floor' }
+  | { kind: 'computer' | 'shelf' | 'poster' | 'plant' | 'window' | 'beanbag' | 'news' }
+  | { kind: 'floor'; cell?: [number, number] }
+  | { kind: 'item'; uid: string; cell?: [number, number] }
   | { kind: 'product'; id: string };
+
+const CELL = OFFICE_GRID.cellVoxels;
 
 const WALL = ROOM.wallT;
 const FLOOR_Y = ROOM.floorT;
@@ -32,54 +36,56 @@ interface Poi {
   pose: Pose;
 }
 
-const POIS: Record<string, Poi> = {
-  seat: { x: 24.5, z: 17.5, heading: Math.PI, pose: 'sit' },
-  window: { x: 46, z: 17, heading: Math.PI, pose: 'think' },
-  shelf: { x: 13, z: 28, heading: -Math.PI / 2, pose: 'think' },
-  beanbag: { x: 51.5, z: 39, heading: 0, pose: 'lounge' },
+const FIXED_POIS: Record<string, Poi> = {
+  window: { x: 46, z: 15, heading: Math.PI, pose: 'think' },
   center: { x: 30, z: 31, heading: Math.PI * 0.25, pose: 'stand' },
-  plant: { x: 44, z: 13, heading: Math.atan2(10, -7), pose: 'stand' },
-  side: { x: 38, z: 22, heading: Math.PI * 0.25, pose: 'raise' },
 };
 
-// Walkable cell grid (12×12 voxels per cell).
-const CELLS_X = 5, CELLS_Z = 4;
-const BLOCKED = new Set(['1,0', '2,0', '4,0', '0,1', '0,2', '4,3']);
-
-function cellOf(x: number, z: number): [number, number] {
-  return [Math.max(0, Math.min(CELLS_X - 1, Math.floor(x / 12))), Math.max(0, Math.min(CELLS_Z - 1, Math.floor(z / 12)))];
-}
-
-/** BFS over free cells; returns waypoint centers (floor voxels). */
-export function findPath(from: [number, number], to: [number, number]): [number, number][] {
-  const [sx, sz] = cellOf(...from);
-  const [tx, tz] = cellOf(...to);
-  const key = (x: number, z: number) => `${x},${z}`;
-  const prev = new Map<string, string | null>([[key(sx, sz), null]]);
-  const queue: [number, number][] = [[sx, sz]];
-  while (queue.length) {
-    const [x, z] = queue.shift()!;
+/**
+ * BFS over the office grid (1 cell = 6 voxels). The target cell may be blocked
+ * (sofas, armchairs: you sit *in* them). Returns waypoints in floor voxels.
+ */
+export function findPath(from: [number, number], to: [number, number], blocked: Uint8Array, w: number, d: number): [number, number][] {
+  const cell = (v: number, max: number) => Math.max(0, Math.min(max - 1, Math.floor(v / CELL)));
+  const sx = cell(from[0], w), sz = cell(from[1], d), tx = cell(to[0], w), tz = cell(to[1], d);
+  const idx = (x: number, z: number) => x + z * w;
+  const prev = new Int32Array(w * d).fill(-2);
+  prev[idx(sx, sz)] = -1;
+  const queue = [idx(sx, sz)];
+  for (let qi = 0; qi < queue.length; qi++) {
+    const c = queue[qi]!;
+    const x = c % w, z = Math.floor(c / w);
     if (x === tx && z === tz) break;
     for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
       const nx = x + dx, nz = z + dz;
-      const k = key(nx, nz);
-      if (nx < 0 || nz < 0 || nx >= CELLS_X || nz >= CELLS_Z || prev.has(k)) continue;
-      if (BLOCKED.has(k) && !(nx === tx && nz === tz)) continue;
-      prev.set(k, key(x, z));
-      queue.push([nx, nz]);
+      if (nx < 0 || nz < 0 || nx >= w || nz >= d) continue;
+      const k = idx(nx, nz);
+      if (prev[k] !== -2) continue;
+      if (blocked[k] && !(nx === tx && nz === tz)) continue;
+      prev[k] = c;
+      queue.push(k);
     }
   }
+  if (prev[idx(tx, tz)] === -2) return [to];
   const path: [number, number][] = [];
-  let cur: string | null | undefined = key(tx, tz);
-  if (!prev.has(cur)) return [to];
-  while (cur) {
-    const [x, z] = cur.split(',').map(Number) as [number, number];
-    path.unshift([x * 12 + 6, z * 12 + 6]);
-    cur = prev.get(cur);
-  }
+  for (let c = idx(tx, tz); c !== -1; c = prev[c]!) path.unshift([(c % w) * CELL + CELL / 2, Math.floor(c / w) * CELL + CELL / 2]);
   path.shift(); // drop the starting cell center
+  path.pop(); // replace the last cell center by the exact target
   path.push(to);
   return path;
+}
+
+const GHOST_MATERIAL = new MeshLambertMaterial({ color: 0x9ff0c8, transparent: true, opacity: 0.55, depthWrite: false });
+
+/** What a tap on a piece of furniture means outside decoration mode. */
+function tapKindFor(category: string): string {
+  switch (category) {
+    case 'desk': case 'computer': case 'chair': return 'computer';
+    case 'storage': return 'shelf';
+    case 'plant': return 'plant';
+    case 'comfort': return 'beanbag';
+    default: return 'item';
+  }
 }
 
 class EmpirianActor {
@@ -88,6 +94,8 @@ class EmpirianActor {
   target: Poi;
   targetName = 'center';
   nextWander = 0;
+  /** Cosmetic coffee break (real time) triggered by the sim's morning coffee. */
+  coffeeUntil = 0;
 
   constructor(readonly view: EmpirianView, start: Poi) {
     this.pos = [start.x, start.z];
@@ -95,12 +103,12 @@ class EmpirianActor {
     this.view.heading = start.heading;
   }
 
-  goTo(name: string): void {
-    const poi = POIS[name];
-    if (!poi || name === this.targetName) return;
+  goTo(name: string, pois: Record<string, Poi>, blocked: Uint8Array, w: number, d: number, force = false): void {
+    const poi = pois[name];
+    if (!poi || (name === this.targetName && !force)) return;
     this.targetName = name;
     this.target = poi;
-    this.path = findPath(this.pos, [poi.x, poi.z]);
+    this.path = findPath(this.pos, [poi.x, poi.z], blocked, w, d);
   }
 
   /** Returns true while walking. */
@@ -149,6 +157,20 @@ export class OfficeScene {
   private focus = false;
   private zoomLevel = 1;
   private lastState: GameState | null = null;
+  private pois: Record<string, Poi> = { ...FIXED_POIS };
+  private blocked: Uint8Array = new Uint8Array(OFFICE_GRID.w * OFFICE_GRID.d);
+  private officeW: number = OFFICE_GRID.w;
+  private officeD: number = OFFICE_GRID.d;
+  private officeKey = '';
+  private itemGroups = new Map<string, { key: string; group: Group; pick: Object3D[] }>();
+  private screenMesh!: Mesh;
+  private screenAnchor: Group | null = null;
+  private showcase: Group | null = null;
+  private rugRects: [number, number, number, number][] = [];
+  private decorGrid: LineSegments | null = null;
+  private ghost: Group | null = null;
+  private ghostKey = '';
+  decorMode = false;
   /** Debug/gallery only: frame a specific floor-voxel point at a given view height. */
   private shot: { x: number; y: number; z: number; viewH: number } | null = null;
 
@@ -178,9 +200,6 @@ export class OfficeScene {
     sun.shadow.bias = -0.0008;
     sun.shadow.normalBias = 0.02;
     this.scene.add(sun, sun.target);
-    const lamp = new PointLight(0xffc670, 1.2, 3.2, 1.5);
-    lamp.position.copy(fw(16, 19, 4));
-    this.scene.add(lamp);
     const windowGlow = new PointLight(0xcfe6ff, 0.9, 4, 1.5);
     windowGlow.position.copy(fw(48, 24, 6));
     this.scene.add(windowGlow);
@@ -196,12 +215,10 @@ export class OfficeScene {
     this.screenTex.magFilter = NearestFilter;
     this.screenTex.minFilter = NearestFilter;
     this.screenTex.colorSpace = SRGBColorSpace;
-    const screen = new Mesh(new PlaneGeometry(10 * VOXEL, 6 * VOXEL), new MeshBasicMaterial({ map: this.screenTex }));
-    screen.position.copy(fw(24, 17, 6.02));
-    screen.rotation.y = 0; // faces +z (toward the sitter and the camera)
-    screen.userData.kind = 'computer';
-    this.scene.add(screen);
-    this.pickables.push(screen);
+    // The screen is attached to the founder's computer when the office syncs.
+    this.screenMesh = new Mesh(new PlaneGeometry(1, 1), new MeshBasicMaterial({ map: this.screenTex }));
+    this.screenMesh.userData.kind = 'computer';
+    this.pickables.push(this.screenMesh);
     this.drawScreen();
 
     // Confetti pool
@@ -238,18 +255,228 @@ export class OfficeScene {
     shell.userData.kind = 'floor';
     this.scene.add(shell);
     this.pickables.push(shell);
-    this.place(buildRug(), 16, 0, 22, 'floor', 0.02).castShadow = false;
-    this.place(buildDesk(), 12, 0, 1, 'computer');
-    this.place(buildMonitor(), 18, 10, 3, 'computer');
-    this.place(buildKeyboard(), 20, 10, 8, 'computer');
-    this.place(buildMug(), 31, 10, 6);
-    this.place(buildDeskLamp(), 13, 10, 2);
-    this.place(buildChair(), 20, 0, 13);
-    this.place(buildPlant(), 47, 0, 0, 'plant');
-    this.place(buildBookshelf(), 0, 0, 20, 'shelf');
+    // Wall fixtures (not part of the catalog yet).
     this.place(buildPoster(), 2, 18, 0, 'poster', 0.01);
-    this.place(buildCorkBoard(), 0, 16, 5, 'poster', 0.01);
-    this.place(buildArmchair(), 45, 0, 33, 'beanbag');
+    this.place(buildCorkBoard(), 0, 16, 5, 'news', 0.01);
+  }
+
+  // ------------------------------------------------------------------ office
+  /** World position of an office cell coordinate (cells may be fractional). */
+  private cellToWorld(x: number, z: number, y = 0): Vector3 {
+    return fw(x * CELL, y, z * CELL);
+  }
+
+  private buildItemGroup(item: PlacedItem, opts: { ghost?: boolean } = {}): { group: Group; pick: Object3D[]; screenAnchor?: Group } {
+    const def = getItemDef(item.defId);
+    const model = itemModel(def.model);
+    const outer = new Group();
+    const inner = new Group();
+    outer.add(inner);
+    const size = def.size;
+    // Rotate around the footprint centre: inner holds the model at rot 0 centred on the origin.
+    inner.position.set((-size.w * CELL * VOXEL) / 2, 0, (-size.d * CELL * VOXEL) / 2);
+    const rs = rotatedSize(def, item.rot);
+    outer.position.copy(this.cellToWorld(item.x + rs.w / 2, item.z + rs.d / 2));
+    outer.rotation.y = (item.rot * Math.PI) / 2;
+    const pick: Object3D[] = [];
+    const material = opts.ghost ? GHOST_MATERIAL : VOXEL_MATERIAL;
+    const addPart = (grid: VoxelGrid, at: [number, number, number], parent: Object3D) => {
+      const m = new Mesh(meshVoxels(grid, { jitter: def.layer === 'floor' ? 0.02 : 0.04 }), material);
+      m.position.set(at[0] * VOXEL, at[1] * VOXEL, at[2] * VOXEL);
+      m.castShadow = !opts.ghost && def.layer !== 'floor';
+      m.receiveShadow = !opts.ghost;
+      m.userData.itemUid = item.uid;
+      m.userData.kind = tapKindFor(def.category);
+      parent.add(m);
+      pick.push(m);
+    };
+    for (const part of model.parts) addPart(part.grid, part.at, inner);
+    let screenAnchor: Group | undefined;
+    if (model.anchor && item.mounts) {
+      const mx = model.anchor.monitorX;
+      if (item.mounts.computer) {
+        const pc = computerModel(item.mounts.computer);
+        for (const part of pc.parts) addPart(part.grid, [part.at[0] + mx, part.at[1], part.at[2]], inner);
+        screenAnchor = new Group();
+        screenAnchor.position.set((pc.screen.x + mx) * VOXEL, pc.screen.y * VOXEL, pc.screen.z * VOXEL);
+        screenAnchor.scale.set(pc.screen.w * VOXEL, pc.screen.h * VOXEL, 1);
+        inner.add(screenAnchor);
+      }
+      if (item.mounts.chair) for (const part of chairModel(item.mounts.chair)) addPart(part.grid, [part.at[0] + model.anchor.chairX, part.at[1], part.at[2]], inner);
+    }
+    if (model.light && !opts.ghost) {
+      const light = new PointLight(0xffc670, 1.1, 3.2, 1.5);
+      light.position.set(model.light[0] * VOXEL, model.light[1] * VOXEL, model.light[2] * VOXEL);
+      inner.add(light);
+    }
+    return { group: outer, pick, screenAnchor };
+  }
+
+  /** Rebuilds the furniture that changed (cheap when nothing did). */
+  syncOffice(office: Office): void {
+    const key = JSON.stringify(office.items);
+    if (key === this.officeKey) return;
+    this.officeKey = key;
+    this.officeW = office.w;
+    this.officeD = office.d;
+    const desk = founderDesk(office);
+    const seen = new Set<string>();
+    for (const item of office.items) {
+      seen.add(item.uid);
+      const k = JSON.stringify(item) + (desk?.uid === item.uid ? '*' : '');
+      const old = this.itemGroups.get(item.uid);
+      if (old && old.key === k) continue;
+      if (old) this.removeItemGroup(item.uid);
+      const built = this.buildItemGroup(item);
+      this.scene.add(built.group);
+      this.pickables.push(...built.pick);
+      this.itemGroups.set(item.uid, { key: k, group: built.group, pick: built.pick });
+      if (desk?.uid === item.uid && built.screenAnchor) {
+        this.screenAnchor = built.screenAnchor;
+        built.screenAnchor.add(this.screenMesh);
+      }
+    }
+    for (const uid of [...this.itemGroups.keys()]) if (!seen.has(uid)) this.removeItemGroup(uid);
+    const showcaseItem = office.items.find((i) => getItemDef(i.defId).showcase);
+    const showcaseGroup = showcaseItem ? this.itemGroups.get(showcaseItem.uid)?.group ?? null : null;
+    if (showcaseGroup !== this.showcase) {
+      this.showcase = showcaseGroup;
+      for (const m of this.productBoxes.values()) m.removeFromParent();
+      this.productBoxes.clear();
+      if (this.lastState) this.syncProducts(this.lastState.projects);
+    }
+    // Walkability, rug areas and points of interest for the Empirians.
+    this.blocked = blockedCells(office);
+    this.rugRects = office.items
+      .filter((i) => getItemDef(i.defId).layer === 'floor')
+      .map((i) => { const rs = rotatedSize(getItemDef(i.defId), i.rot); return [i.x * CELL, i.z * CELL, (i.x + rs.w) * CELL, (i.z + rs.d) * CELL]; });
+    this.computePois(office);
+    for (const a of this.actors.values()) a.goTo(a.targetName, this.pois, this.blocked, this.officeW, this.officeD, true);
+  }
+
+  private removeItemGroup(uid: string): void {
+    const g = this.itemGroups.get(uid);
+    if (!g) return;
+    if (this.screenAnchor && g.group.getObjectById(this.screenAnchor.id)) {
+      this.screenMesh.removeFromParent();
+      this.screenAnchor = null;
+    }
+    g.group.removeFromParent();
+    g.group.traverse((o) => { if (o instanceof Mesh && o !== this.screenMesh) o.geometry.dispose(); });
+    this.pickables = this.pickables.filter((p) => !g.pick.includes(p));
+    this.itemGroups.delete(uid);
+  }
+
+  private nearestFreeCell(vx: number, vz: number, exclude?: [number, number]): [number, number] {
+    let best: [number, number] = [vx, vz];
+    let bestD = Infinity;
+    for (let z = 0; z < this.officeD; z++)
+      for (let x = 0; x < this.officeW; x++) {
+        if (this.blocked[x + z * this.officeW]) continue;
+        const cx = x * CELL + CELL / 2, cz = z * CELL + CELL / 2;
+        if (exclude && Math.abs(cx - exclude[0]) < CELL && Math.abs(cz - exclude[1]) < CELL) continue;
+        const dd = (cx - vx) ** 2 + (cz - vz) ** 2;
+        if (dd < bestD) { bestD = dd; best = [cx, cz]; }
+      }
+    return best;
+  }
+
+  private computePois(office: Office): void {
+    const pois: Record<string, Poi> = {};
+    const center = this.nearestFreeCell(30, 31);
+    pois.center = { x: center[0], z: center[1], heading: Math.PI * 0.25, pose: 'stand' };
+    const win = this.nearestFreeCell(46, 15);
+    pois.window = { x: win[0], z: win[1], heading: Math.PI, pose: 'think' };
+    const desk = founderDesk(office);
+    const seat = desk ? useSpot(desk) : null;
+    if (seat) {
+      pois.seat = { x: seat.vx, z: seat.vz, heading: seat.heading, pose: 'sit' };
+      const side = this.nearestFreeCell(seat.vx + 8, seat.vz + 4, [seat.vx, seat.vz]);
+      pois.side = { x: side[0], z: side[1], heading: Math.PI * 0.25, pose: 'raise' };
+    } else {
+      pois.seat = pois.side = { ...pois.center, pose: 'raise' };
+    }
+    let bestRest = -1;
+    for (const it of office.items) {
+      const def = getItemDef(it.defId);
+      const sp = useSpot(it);
+      const e = def.effects ?? {};
+      if (sp && e.rest !== undefined && e.rest > bestRest) {
+        bestRest = e.rest;
+        pois.beanbag = { x: sp.vx, z: sp.vz, heading: sp.heading + Math.PI, pose: 'lounge' };
+      }
+      if (sp && e.coffee) pois.coffee = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'stand' };
+      if (sp && e.inspiration && e.inspiration > 1) pois.whiteboard = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'think' };
+      if (sp && def.showcase) pois.shelf = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'think' };
+      if (sp && def.id === 'arcade') pois.arcade = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'stand' };
+      if (def.category === 'plant' && !pois.plant) {
+        const rs = rotatedSize(def, it.rot);
+        const c = this.nearestFreeCell((it.x + rs.w / 2) * CELL, (it.z + rs.d + 0.5) * CELL);
+        const dx = (it.x + rs.w / 2) * CELL - c[0], dz = (it.z + rs.d / 2) * CELL - c[1];
+        pois.plant = { x: c[0], z: c[1], heading: Math.atan2(dx, dz), pose: 'stand' };
+      }
+    }
+    this.pois = pois;
+  }
+
+  // ----------------------------------------------------------- decor mode
+  setDecorMode(on: boolean): void {
+    this.decorMode = on;
+    if (on && !this.decorGrid) {
+      const pts: number[] = [];
+      const y = (FLOOR_Y + 0.08) * VOXEL;
+      for (let x = 0; x <= this.officeW; x++) { const a = fw(x * CELL, 0, 0), b = fw(x * CELL, 0, this.officeD * CELL); pts.push(a.x, y, a.z, b.x, y, b.z); }
+      for (let z = 0; z <= this.officeD; z++) { const a = fw(0, 0, z * CELL), b = fw(this.officeW * CELL, 0, z * CELL); pts.push(a.x, y, a.z, b.x, y, b.z); }
+      const geo = new BufferGeometry();
+      geo.setAttribute('position', new Float32BufferAttribute(pts, 3));
+      this.decorGrid = new LineSegments(geo, new LineBasicMaterial({ color: 0x6e4530, transparent: true, opacity: 0.6 }));
+      this.scene.add(this.decorGrid);
+    }
+    if (this.decorGrid) this.decorGrid.visible = on;
+    if (!on) this.setGhost(null);
+  }
+
+  /** Shows a translucent preview of an item; tinted by validity. */
+  setGhost(g: { defId: string; x: number; z: number; rot: Rot; valid: boolean; hideUid?: string } | null): void {
+    const key = g ? `${g.defId}|${g.x}|${g.z}|${g.rot}|${g.valid}|${g.hideUid ?? ''}` : '';
+    if (key === this.ghostKey) return;
+    this.ghostKey = key;
+    if (this.ghost) {
+      this.ghost.removeFromParent();
+      this.ghost.traverse((o) => { if (o instanceof Mesh) o.geometry.dispose(); });
+      this.ghost = null;
+    }
+    for (const [uid, v] of this.itemGroups) v.group.visible = !(g?.hideUid && uid === g.hideUid);
+    if (!g) return;
+    const def = getItemDef(g.defId);
+    const built = this.buildItemGroup({ uid: '__ghost', defId: g.defId, x: g.x, z: g.z, rot: g.rot, ...(def.category === 'desk' ? { mounts: { computer: 'pc_basic', chair: 'chair_basic' } } : {}) }, { ghost: true });
+    GHOST_MATERIAL.color.setHex(g.valid ? 0x9ff0c8 : 0xff8a7a);
+    // Footprint tile under the ghost.
+    const rs = rotatedSize(def, g.rot);
+    const tile = new Mesh(new PlaneGeometry(rs.w * CELL * VOXEL, rs.d * CELL * VOXEL), new MeshBasicMaterial({ color: g.valid ? 0x4fae95 : 0xe2675a, transparent: true, opacity: 0.45, depthWrite: false }));
+    tile.rotation.x = -Math.PI / 2;
+    tile.position.copy(this.cellToWorld(g.x + rs.w / 2, g.z + rs.d / 2, 0.15));
+    this.ghost = new Group();
+    this.ghost.add(built.group, tile);
+    this.scene.add(this.ghost);
+  }
+
+  /** Screen position (CSS px) of the centre of an office cell (tests / debug). */
+  cellScreenPos(x: number, z: number): { x: number; y: number } {
+    return this.project(this.cellToWorld(x + 0.5, z + 0.5));
+  }
+
+  /** Office cell under a screen point (null if outside the floor). */
+  floorCellAt(clientX: number, clientY: number): [number, number] | null {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const ndc = new Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.camera);
+    const hit = new Vector3();
+    if (!this.raycaster.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), -FLOOR_Y * VOXEL), hit)) return null;
+    const vx = hit.x / VOXEL - WALL, vz = hit.z / VOXEL - WALL;
+    const cx = Math.floor(vx / CELL), cz = Math.floor(vz / CELL);
+    if (cx < 0 || cz < 0 || cx >= this.officeW || cz >= this.officeD) return null;
+    return [cx, cz];
   }
 
   // ------------------------------------------------------------------ camera
@@ -297,7 +524,7 @@ export class OfficeScene {
     const existing = this.actors.get(id);
     if (existing) return existing.view;
     const view = new EmpirianView(appearance, id);
-    const actor = new EmpirianActor(view, POIS.center!);
+    const actor = new EmpirianActor(view, this.pois.center ?? FIXED_POIS.center!);
     this.actors.set(id, actor);
     this.scene.add(view.root);
     view.root.traverse((o) => {
@@ -325,6 +552,7 @@ export class OfficeScene {
   /** Reads the latest simulation state. Cheap: call whenever state changes. */
   sync(state: GameState): void {
     this.lastState = state;
+    this.syncOffice(state.office);
     for (const e of state.empirians) this.ensureEmpirian(e.id, e.appearance);
     this.syncProducts(state.projects);
   }
@@ -388,6 +616,13 @@ export class OfficeScene {
         case 'sales_week':
           this.bubbles.spawn(head, off, 'coin', now, { cooldown: 0.5 });
           break;
+        case 'coffee':
+          if (this.pois.coffee) {
+            actor.goTo('coffee', this.pois, this.blocked, this.officeW, this.officeD);
+            actor.coffeeUntil = now + 4;
+          }
+          this.bubbles.spawn(head, off, 'sweat', now, { cooldown: 5 });
+          break;
         case 'skill_up':
           this.bubbles.spawn(head, off, 'star', now, { cooldown: 0.3, life: 2.4 });
           actor.view.flash('joyful', 1.4, now);
@@ -413,7 +648,11 @@ export class OfficeScene {
 
   // ---------------------------------------------------------------- products
   private syncProducts(projects: Project[]): void {
-    const slots: [number, number, number][] = [[1.5, 25, 21.5], [1.5, 25, 26], [1.5, 25, 30.5], [1.5, 9 + 7, 30], [2.5, 32, 22], [2.5, 32, 27]];
+    if (!this.showcase) return;
+    // Slots on the showcase shelf, item-local voxels (rot 0, front +z).
+    const slots: [number, number, number][] = [[2.5, 25, 1.5], [7, 25, 1.5], [11.5, 25, 1.5], [11, 16, 1.5], [3, 32, 2.5], [8, 32, 2.5]];
+    const inner = this.showcase.children[0];
+    if (!inner) return;
     const released = projects.filter((p) => p.phase === 'released');
     released.forEach((p, i) => {
       if (this.productBoxes.has(p.id) || i >= slots.length) return;
@@ -421,9 +660,17 @@ export class OfficeScene {
       for (const ch of p.name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
       const cover = CLOTH_COLORS[h % CLOTH_COLORS.length]!;
       const accent = h % 2 ? P.white : P.ink;
+      const box = buildProductBox(cover, accent, h);
+      const m = new Mesh(meshVoxels(box, { jitter: 0.02 }), VOXEL_MATERIAL);
       const [x, y, z] = slots[i]!;
-      const m = this.place(buildProductBox(cover, accent, h), x, y, z, 'product', 0.02);
+      // The box model faces +x: turn it to face the shelf front (+z).
+      m.rotation.y = -Math.PI / 2;
+      m.position.set(x * VOXEL, y * VOXEL, (z + 2) * VOXEL);
+      m.castShadow = true;
+      m.userData.kind = 'product';
       m.userData.productId = p.id;
+      inner.add(m);
+      this.pickables.push(m);
       this.productBoxes.set(p.id, m);
     });
   }
@@ -492,29 +739,39 @@ export class OfficeScene {
       const e = state?.empirians.find((x) => x.id === id);
       const activity: Activity = e?.activity ?? 'idle';
       const energy = e?.energy ?? 100;
+      const center = this.pois.center ?? FIXED_POIS.center!;
+      const go = (name: string) => actor.goTo(name, this.pois, this.blocked, this.officeW, this.officeD);
       if (this.focus) {
-        actor.pos = [POIS.center!.x, POIS.center!.z];
+        actor.pos = [center.x, center.z];
         actor.path = [];
         actor.targetName = 'center';
-        actor.target = { ...POIS.center!, pose: 'stand' };
+        actor.target = { ...center, pose: 'stand' };
+      } else if (actor.targetName.startsWith('pin:')) {
+        // gallery/debug pin: stay
+      } else if (t < actor.coffeeUntil && activity !== 'raising_hand' && activity !== 'celebrating') {
+        go('coffee');
       } else {
-        const wanted = this.behaviourFor(activity);
-        if (wanted) actor.goTo(wanted);
+        let wanted = this.behaviourFor(activity);
+        // Concept work at the whiteboard when there is one (visible effect of the item).
+        if (activity === 'thinking' && this.pois.whiteboard) wanted = 'whiteboard';
+        if (wanted) go(wanted);
         else if (t > actor.nextWander) {
-          const options = ['window', 'shelf', 'center', 'plant', 'beanbag', 'seat'];
-          actor.goTo(options[Math.floor(Math.random() * options.length)]!);
+          const options = Object.keys(this.pois).filter((k) => !['side', 'center'].includes(k) || k === 'center');
+          go(options[Math.floor(Math.random() * options.length)]!);
           actor.nextWander = t + 5 + Math.random() * 5;
         }
       }
       const moving = actor.step(dt, speedFactor);
       actor.view.pose = actor.target.pose;
       actor.view.animate(t, dt, activity, energy, moving, speedFactor);
-      const onRug = actor.pos[0] >= 16 && actor.pos[0] <= 42 && actor.pos[1] >= 22 && actor.pos[1] <= 40;
-      actor.view.root.position.copy(fw(actor.pos[0], onRug && actor.targetName !== 'beanbag' ? 1 : 0, actor.pos[1]));
+      const [px, pz] = actor.pos;
+      const onRug = this.rugRects.some(([x0, z0, x1, z1]) => px >= x0 && px <= x1 && pz >= z0 && pz <= z1);
+      actor.view.root.position.copy(fw(px, onRug && actor.target.pose !== 'lounge' && actor.target.pose !== 'sit' ? 1 : 0, pz));
       // Sticky bubble while waiting for the player.
       this.bubbles.setSticky(actor.view.head, 1.05, activity === 'raising_hand' ? 'alert' : null, t);
       if (id === state?.founderId) {
         const seated = !moving && actor.targetName === 'seat';
+        if (actor.targetName === 'whiteboard' && !moving) actor.view.pose = 'think';
         this.screenMode = activity === 'celebrating' ? 'party' : seated && activity === 'coding' ? 'code' : seated && activity === 'designing' ? 'design' : seated && activity === 'testing' ? 'test' : seated && activity === 'thinking' ? 'design' : 'off';
       }
     }
@@ -626,9 +883,17 @@ export class OfficeScene {
     const ndc = new Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(ndc, this.camera);
     const hits = this.raycaster.intersectObjects(this.pickables, false);
+    let target: TapTarget | null = null;
+    if (this.decorMode) {
+      // Decoration: furniture is selectable; everything else means "this floor cell".
+      const item = hits.find((h) => h.object.userData.itemUid);
+      const cell = this.floorCellAt(clientX, clientY) ?? undefined;
+      target = item ? { kind: 'item', uid: item.object.userData.itemUid as string, cell } : { kind: 'floor', cell };
+      this.onTap(target);
+      return target;
+    }
     // Empirians are small: prefer them if hit at all.
     const emp = hits.find((h) => h.object.userData.empirianId);
-    let target: TapTarget | null = null;
     if (emp) target = { kind: 'empirian', id: emp.object.userData.empirianId as string };
     else {
       const h = hits[0];

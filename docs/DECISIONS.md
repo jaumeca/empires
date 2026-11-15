@@ -247,6 +247,16 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
   - La velocidad por habilidad pasa de proporcional (nivel 7,5 = ×1,5) a suave (`1 + 0,1·(nivel − 5)`, nivel 7,5 = ×1,25): con la anterior el aprendizaje se retroalimentaba (más velocidad → más pulido → más calidad) y la nota subía > 2 puntos.
   - El marketing satura dentro de un proyecto (`hypeSaturation` 4) y el impulso de productividad del presupuesto baja de 0,45 a 0,30: con juegos algo mejores, el presupuesto máximo volvía a ser lo más rentable. La velocidad de trabajo pasará a venir sobre todo del equipamiento de la oficina (LS.4). Ajuste final en LS.9.
 
+### D-038 — Oficina por catálogo: cuadrícula, reglas y efectos
+- **Fecha:** 2026-11-15 · **Estado:** Aplicada (provisional hasta LS.9 y pruebas de juego)
+- **Cuadrícula:** medias baldosas de 6 vóxeles; la habitación inicial mide 10 × 8. Rotación en pasos de 90° alrededor del centro de la huella.
+- **Capas:** muebles sólidos, alfombras (se pisan y admiten muebles encima) y piezas montadas (ordenador y silla van en un escritorio; un escritorio nuevo incluye los básicos).
+- **Reglas de colocación** (en la simulación, compartidas con la vista previa): dentro de la habitación; sin solapes; respetar la **zona de acceso** de cada mueble (delante del escritorio, del sofá, de la cafetera…); y que **todo el suelo libre quede conectado** (sin rincones inaccesibles). No se puede vender el último escritorio ni la última estantería (guarda las cajas de los juegos). Vender devuelve el 50 %.
+- **Efectos sin acumulación:** ordenador y silla solo cuentan en el puesto del fundador (el escritorio con mejor ordenador); de pizarras, sitios de descanso y cafeteras cuenta solo el mejor; la decoración mejora el ambiente con saturación fuerte (`1 − e^(−x/3)`), que arrastra el ánimo hacia 52–78.
+- **Contrapartidas:** la estación de trabajo acelera la programación (+16 %) pero no el diseño (−2 %) y gasta 6 €/día; el equipo creativo, al revés; el ordenador de desarrollo mejora un poco ambos; la cafetera da energía cada mañana a cambio de 5 €/día; la silla ergonómica reduce el cansancio un 15 %.
+- **Medido por pruebas:** en un juego técnico la estación de trabajo supera al equipo creativo y en uno de diseño ocurre lo contrario; ningún ordenador se amortiza en un solo juego (inversión a largo plazo); dos pizarras valen lo mismo que una.
+- **La habitación de la v0.1 es la oficina inicial** con efectos neutros: el equilibrio anterior no cambia (todas las pruebas previas siguen pasando).
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

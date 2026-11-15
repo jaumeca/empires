@@ -17,6 +17,7 @@ import {
   ACCESSORY_COUNT, CLOTH_COLORS, HAIR_COLORS, HAIR_STYLE_COUNT, hexToCss, PALETTE_HEX, PANTS_COLORS, SKIN_TONES, TOP_COUNT,
 } from '../render/palette';
 import { clear, h } from './dom';
+import { DecorUI } from './decorUI';
 import { fmtMoney, fmtNum1, fmtPrice, getLocale, LOCALE_NAMES, setLocale, t, tr, type Locale } from '../i18n/i18n';
 
 export interface UIServices {
@@ -47,6 +48,7 @@ export class GameUI {
   private lastHudKey = '';
   private shownResultFor = new Set<string>();
   private diag: HTMLElement | null = null;
+  readonly decor: DecorUI;
 
   constructor(private root: HTMLElement, private game: Game, private scene: OfficeScene, private services: UIServices, private debug = false) {
     this.hud = h('div');
@@ -56,7 +58,24 @@ export class GameUI {
       this.diag = h('div.diag');
       root.append(this.diag);
     }
-    scene.onTap = (target) => this.onTap(target);
+    scene.onTap = (target) => (this.decor.active ? this.decor.onTap(target) : this.onTap(target));
+    this.decor = new DecorUI(root, scene, {
+      state: () => this.game.state,
+      dispatch: (cmd) => this.game.dispatch(cmd),
+      toast: (text, ic) => this.toast(text, ic),
+      save: () => this.services.save(),
+      pause: () => {
+        const before = this.game.clock.speed;
+        this.game.clock.setSpeed(0);
+        this.hud.classList.add('hidden');
+        return () => {
+          this.hud.classList.remove('hidden');
+          if (before !== 0) this.game.clock.setSpeed(before);
+          this.renderHud(true);
+        };
+      },
+      refreshHud: () => this.renderHud(true),
+    });
     for (const p of game.state.projects) if (p.result) this.shownResultFor.add(p.id);
   }
 
@@ -128,6 +147,7 @@ export class GameUI {
       ),
       h('div.hud-tr', null,
         h('div.pill.speeds', null, speedBtn(0, icon('pause', 18)), speedBtn(1, '1x'), speedBtn(2, '2x'), speedBtn(4, '4x'), speedBtn(8, '8x')),
+        h('button.icon-btn', { 'aria-label': t('decor.button'), id: 'hud-decor', onclick: () => this.decor.open() }, icon('decor')),
         h('button.icon-btn', { 'aria-label': t('hud.menu'), id: 'hud-menu', onclick: () => this.showMenu() }, icon('menu')),
       ),
     );
@@ -155,7 +175,7 @@ export class GameUI {
   frame(fps: number): void {
     const s = this.state;
     const founder = s.setupComplete ? getFounder(s) : null;
-    const want = founder && !this.modal && !getActiveProject(s) && founder.activity !== 'celebrating' ? (s.projects.length ? t('speech.again') : t('speech.first')) : null;
+    const want = founder && !this.modal && !this.decor.active && !getActiveProject(s) && founder.activity !== 'celebrating' ? (s.projects.length ? t('speech.again') : t('speech.first')) : null;
     if (want && founder) {
       if (!this.speechEl) {
         this.speechEl = h('div.speech', { onclick: () => this.showNewProject() });
