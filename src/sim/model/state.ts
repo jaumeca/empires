@@ -54,7 +54,7 @@ export interface DecisionOption {
 
 export interface PendingDecision {
   id: string;
-  kind: 'big_idea' | 'deadline';
+  kind: 'big_idea' | 'deadline' | 'exhausted' | 'running_late' | 'polish_plan';
   speakerId: string;
   text: TextRef;
   options: DecisionOption[];
@@ -111,6 +111,11 @@ export interface Project {
   testFocus: number;
   decisionsTaken: string[];
   bigIdeaOffered: boolean;
+  /** Contextual moments already offered in this project (systems/moments.ts). */
+  momentsOffered?: string[];
+  lastMomentDay?: number;
+  /** The team is taking days off until this day (no work, extra recovery). */
+  restUntilDay?: number;
   /** Set once its routine history has been archived (systems/history.ts). */
   historyCompacted?: boolean;
   result?: ProjectResult;

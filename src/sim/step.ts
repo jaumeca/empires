@@ -2,7 +2,7 @@ import { SIM_CONFIG } from './config';
 import type { EventSink } from './core/events';
 import type { GameState } from './model/state';
 import { getActiveProject, getFounder } from './state';
-import { projectDay, workTick } from './systems/project';
+import { isResting, projectDay, workTick } from './systems/project';
 import { maybeDeadlineDecision } from './systems/decisions';
 import { marketWeek } from './systems/market';
 
@@ -20,7 +20,7 @@ export function step(state: GameState, emit: EventSink): void {
   }
 
   // Energy drains while working (not while waiting for a decision).
-  if (project && !state.pendingDecision) {
+  if (project && !state.pendingDecision && !isResting(state, project)) {
     const before = founder.energy;
     founder.energy = Math.max(0, founder.energy - (C.energy.drainPerTick[project.pace] ?? 0.7));
     if (before >= 25 && founder.energy < 25) emit({ type: 'energy_low', empirianId: founder.id, severity: 'important' });
@@ -37,7 +37,7 @@ function dayBoundary(state: GameState, emit: EventSink): void {
 
   state.day += 1;
   state.company.money -= C.economy.dailyLivingCost;
-  const relaxedBonus = project?.pace === 'relaxed' ? 2 : project ? 0 : 6;
+  const relaxedBonus = project && isResting(state, project) ? 8 : project?.pace === 'relaxed' ? 2 : project ? 0 : 6;
   founder.energy = Math.min(C.energy.max, founder.energy + C.energy.overnightRecovery + relaxedBonus);
   if (!project) founder.morale = Math.min(100, founder.morale + 0.5);
 

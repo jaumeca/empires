@@ -5,6 +5,7 @@ import type { Empirian, GameState, Project } from '../model/state';
 import { getTopic } from '../../content/topics';
 import { record } from '../core/ledger';
 import { maybeOfferBigIdea } from './decisions';
+import { maybeOfferMoment } from './moments';
 
 const C = SIM_CONFIG;
 
@@ -84,8 +85,18 @@ function bugRate(p: Project, e: Empirian): number {
 // Per-tick work
 // ---------------------------------------------------------------------------
 
+export function isResting(state: GameState, p: Project): boolean {
+  return p.restUntilDay !== undefined && state.day < p.restUntilDay;
+}
+
 export function workTick(state: GameState, p: Project, founder: Empirian, emit: EventSink): void {
   if (p.phase === 'released' || state.pendingDecision) return;
+  if (isResting(state, p)) {
+    founder.activity = 'resting';
+    return;
+  }
+  maybeOfferMoment(state, p, founder, emit);
+  if (state.pendingDecision) return;
   const pts = pointsPerTick(p, founder);
   const rngW = state.rng.work;
 

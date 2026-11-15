@@ -5,6 +5,7 @@ import { newId, record } from '../core/ledger';
 import type { Empirian, GameState, PendingDecision, Project, TextRef } from '../model/state';
 import { productionProgress } from './project';
 import { releaseProject } from './market';
+import { resolveMoment } from './moments';
 
 /**
  * Decisive Moments for the MVP. They are triggered by real simulation state
@@ -77,7 +78,9 @@ export function resolveDecision(
   founder.activity = 'idle';
   p.decisionsTaken.push(`${d.kind}:${optionId}`);
 
-  if (d.kind === 'big_idea') {
+  if (resolveMoment(state, p, founder, d.kind, optionId)) {
+    // handled by systems/moments.ts
+  } else if (d.kind === 'big_idea') {
     const extraDays = p.size === 'small' ? 10 : 14;
     if (optionId === 'approve') {
       const cfg = SIM_CONFIG.bigIdea.approve;

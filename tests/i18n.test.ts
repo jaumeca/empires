@@ -7,6 +7,8 @@ import { setLocale, t, tr } from '../src/i18n/i18n';
 import { autoplay } from '../src/sim/autoplay';
 import { TOPICS } from '../src/content/topics';
 import { OUTLETS } from '../src/sim/systems/market';
+import { Game } from '../src/sim/game';
+import { createNewGame, DEFAULT_APPEARANCE } from '../src/sim/state';
 
 function files(dir: string): string[] {
   return readdirSync(dir).flatMap((f) => {
@@ -40,6 +42,7 @@ describe('i18n catalogs', () => {
       ...Array.from({ length: 8 }, (_, i) => `hair.${i}`), ...Array.from({ length: 5 }, (_, i) => `top.${i}`), ...Array.from({ length: 6 }, (_, i) => `acc.${i}`),
       ...['idle', 'coding', 'designing', 'testing', 'thinking', 'raising_hand', 'celebrating', 'resting'].map((a) => `emp.activity.${a}`),
       ...['relaxed', 'normal', 'crunch'].map((p) => `ledger.pace.${p}`),
+      ...['test', 'balanced', 'improve'].map((o) => `ledger.moment.polish_plan.${o}`),
     ];
     const src = readFileSync('src/sim/commands.ts', 'utf8') + readFileSync('src/sim/systems/decisions.ts', 'utf8');
     for (const m of src.matchAll(/error: '([a-z_]+)'|fail\('([a-z_]+)'\)/g)) keys.push(`error.${m[1] ?? m[2]}`);
@@ -65,6 +68,28 @@ describe('i18n catalogs', () => {
       }
     }
     setLocale('es');
+  });
+  it('every option and hint of every contextual moment is translated', () => {
+    // Drive games that trigger each moment and translate whatever the sim builds.
+    const seen = new Set<string>();
+    for (const plan of [{ days: 21, pace: 'crunch' as const }, { days: 42, pace: 'normal' as const }, { days: 100, pace: 'crunch' as const }]) {
+      const g = new Game(createNewGame(5));
+      g.dispatch({ type: 'setup_founder', name: 'A', companyName: 'A', appearance: DEFAULT_APPEARANCE });
+      g.dispatch({ type: 'start_project', name: 'X', topicId: 'kart', size: 'small', focus: 1, budget: 0, days: plan.days, price: 9.99 });
+      g.dispatch({ type: 'adjust_project', pace: plan.pace });
+      for (let i = 0; i < 3000 && g.state.activeProjectId; i++) {
+        const d = g.state.pendingDecision;
+        if (d) {
+          seen.add(d.kind);
+          for (const ref of [d.text, ...d.options.flatMap((o) => [o.label, ...o.hints])]) {
+            for (const loc of ['es', 'en'] as const) { setLocale(loc); expect(tr(ref), ref.key).not.toBe(ref.key); expect(tr(ref)).not.toMatch(/\{\w+/); }
+          }
+          g.dispatch({ type: 'choose_option', decisionId: d.id, optionId: d.options[d.options.length - 1]!.id });
+        } else g.tick();
+      }
+    }
+    setLocale('es');
+    for (const kind of ['big_idea', 'deadline', 'exhausted', 'running_late', 'polish_plan']) expect([...seen], kind).toContain(kind);
   });
   it('formats numbers, money and plurals per locale', () => {
     setLocale('es');

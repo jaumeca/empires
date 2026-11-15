@@ -20,7 +20,7 @@ function playWithFrames(frameMs: number, seed = 5) {
   for (let guard = 0; guard < 100000 && !released(); guard++) {
     const d = game.state.pendingDecision;
     if (d) {
-      game.dispatch({ type: 'choose_option', decisionId: d.id, optionId: d.kind === 'big_idea' ? 'approve' : 'release' });
+      game.dispatch({ type: 'choose_option', decisionId: d.id, optionId: d.kind === 'big_idea' ? 'approve' : d.kind === 'deadline' ? 'release' : d.options[0]!.id });
       if (!released()) game.clock.setSpeed(4);
       continue;
     }

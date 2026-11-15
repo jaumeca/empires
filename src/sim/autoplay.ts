@@ -18,6 +18,8 @@ export interface AutoplayPlan {
   pace?: Pace;
   testFocus?: number;
   bigIdea?: 'approve' | 'simple' | 'postpone' | 'keep';
+  /** Answers to contextual moments by kind (defaults are the neutral options). */
+  moments?: Partial<Record<string, string>>;
   /** Human-like burst: switch to crunch when this many days remain before the deadline. */
   crunchLastDays?: number;
   /** Rest policy: switch to relaxed pace while energy is below this, back to `pace` above +25. */
@@ -37,6 +39,17 @@ export interface AutoplayResult {
   shippedBugs: number;
   profit: number;
   releaseDay: number;
+}
+
+
+const MOMENT_DEFAULTS: Record<string, string> = { exhausted: 'rest', running_late: 'carry_on', polish_plan: 'balanced' };
+
+/** Picks the autoplay answer for any pending decision. */
+function answerFor(kind: string, plan: Omit<AutoplayPlan, 'seed'>, extensions: number): string {
+  if (kind === 'big_idea') return plan.bigIdea ?? 'keep';
+  if (kind === 'deadline') return extensions >= 2 ? 'release' : (plan.atDeadline ?? 'release');
+  if (kind === 'polish_plan' && !plan.moments?.polish_plan && plan.testFocus !== undefined) return plan.testFocus >= 0.8 ? 'test' : plan.testFocus <= 0.3 ? 'improve' : 'balanced';
+  return plan.moments?.[kind] ?? MOMENT_DEFAULTS[kind] ?? 'keep';
 }
 
 export function autoplay(plan: AutoplayPlan): AutoplayResult {
@@ -64,15 +77,15 @@ export function autoplay(plan: AutoplayPlan): AutoplayResult {
   while (game.state.activeProjectId && guard++ < 20000) {
     const d = game.state.pendingDecision;
     if (d) {
-      const opt = d.kind === 'big_idea' ? (plan.bigIdea ?? 'keep') : (plan.atDeadline ?? 'release');
-      // Never extend forever: after two extensions, release.
       const extensions = getProject(game.state, projectId)!.decisionsTaken.filter((x) => x.startsWith('deadline:extend')).length;
-      const finalOpt = d.kind === 'deadline' && extensions >= 2 ? 'release' : opt;
+      const finalOpt = answerFor(d.kind, plan, extensions);
       if (d.kind === 'deadline' && finalOpt === 'release') {
         const p = getProject(game.state, projectId)!;
         shippedBugs = p.bugs.hidden + p.bugs.known;
       }
       must(game.dispatch({ type: 'choose_option', decisionId: d.id, optionId: finalOpt }));
+      // An exact testFocus in the plan wins over the coarse polish-plan answer.
+      if (d.kind === 'polish_plan' && plan.testFocus !== undefined) game.dispatch({ type: 'adjust_project', testFocus: plan.testFocus });
       continue;
     }
     if (game.state.tick % 8 === 0 && (plan.crunchLastDays || plan.restBelowEnergy)) {
@@ -137,7 +150,7 @@ export function autoplayCareer(
       if (d) {
         const p = getProject(game.state, pid)!;
         const ext = p.decisionsTaken.filter((x) => x.startsWith('deadline:extend')).length;
-        const opt = d.kind === 'big_idea' ? (plan.bigIdea ?? 'keep') : ext >= 2 ? 'release' : (plan.atDeadline ?? 'release');
+        const opt = answerFor(d.kind, plan, ext);
         must(game.dispatch({ type: 'choose_option', decisionId: d.id, optionId: opt }));
         continue;
       }

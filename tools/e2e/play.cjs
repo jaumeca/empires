@@ -65,6 +65,7 @@ const check = (name, ok, detail = '') => { checks.push({ name, ok, detail }); co
 
   let decisionShot = false;
   let decisions = 0;
+  const kinds = new Set();
   for (let i = 0; i < 400; i++) {
     s = await st();
     const p = s.projects[0];
@@ -72,7 +73,8 @@ const check = (name, ok, detail = '') => { checks.push({ name, ok, detail }); co
     if (await page.isVisible('.decision')) {
       if (!decisionShot) { await shot('05-decision.png'); decisionShot = true; }
       const kind = s.pendingDecision && s.pendingDecision.kind;
-      await page.click(kind === 'big_idea' ? '[data-option="approve"]' : '[data-option="release"]');
+      await page.click(kind === 'big_idea' ? '[data-option="approve"]' : kind === 'deadline' ? '[data-option="release"]' : '.option >> nth=0');
+      kinds.add(kind);
       decisions++;
       await page.waitForTimeout(300);
       continue;
@@ -89,6 +91,7 @@ const check = (name, ok, detail = '') => { checks.push({ name, ok, detail }); co
     await page.waitForTimeout(60);
   }
   check('at least one decision was taken through the UI', decisions >= 1, `decisions=${decisions}`);
+  check('contextual moments appear (polish plan)', kinds.has('polish_plan'), [...kinds].join(','));
   const ledgerKinds = (await st()).ledger.map((e) => e.kind);
   check('decision recorded in the causal ledger', ledgerKinds.includes('decision') || ledgerKinds.includes('delay'), ledgerKinds.join(','));
   await page.waitForTimeout(700);

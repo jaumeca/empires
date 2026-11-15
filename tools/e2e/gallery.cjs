@@ -102,9 +102,15 @@ const VARIANTS = [
   await page.click('[data-option="approve"]');
 
   // finish production, polish a bit, release
+  let polishShot = false;
   for (let i = 0; i < 400; i++) {
     const s = await ev(() => { const st = window.__empires.game.state; const p = st.projects[0]; return { phase: p.phase, polish: p.polishDone, pend: !!st.pendingDecision }; });
-    if (s.pend) { await page.waitForTimeout(900); if (await page.isVisible('[data-option="release"]')) await page.click('[data-option="release"]'); continue; }
+    if (s.pend) {
+      await page.waitForTimeout(900);
+      if (await page.isVisible('[data-option="release"]')) await page.click('[data-option="release"]');
+      else if (await page.isVisible('.option')) { if (!polishShot && await page.isVisible('[data-option="balanced"]')) { await shot('g21-moment-polish-plan'); polishShot = true; } await page.click('.option >> nth=1'); }
+      continue;
+    }
     if (s.phase === 'released' || (s.phase === 'polish' && s.polish > 40)) break;
     await ev(() => window.__empires.advance(30));
   }
