@@ -7,6 +7,7 @@ import { record } from '../core/ledger';
 import { maybeOfferBigIdea } from './decisions';
 import { maybeOfferMoment } from './moments';
 import { gainTopicXp, gainXp, topicBonus } from './progression';
+import { officeEffects, type OfficeEffects } from './office';
 
 const C = SIM_CONFIG;
 
@@ -73,6 +74,17 @@ export function efficiency(e: Empirian): number {
   return energyEff * moraleEff;
 }
 
+/** Office multiplier for a kind of work (LS.4): computer at the founder's desk + whiteboard. */
+export function officeWorkMultiplier(fx: OfficeEffects | null, kind: 'tech' | 'design' | 'concept' | 'mixed', focus = 0.5): number {
+  if (!fx) return 1;
+  const tech = fx.techSpeed;
+  const design = fx.designSpeed * fx.inspiration;
+  if (kind === 'tech') return tech;
+  if (kind === 'design') return design;
+  if (kind === 'concept') return design * (1 + (fx.inspiration - 1) * 0.5);
+  return tech * focus + design * (1 - focus);
+}
+
 export function pointsPerTick(p: Project, e: Empirian): number {
   return (
     C.work.basePointsPerTick *
@@ -107,11 +119,13 @@ export function workTick(state: GameState, p: Project, founder: Empirian, emit: 
   }
   maybeOfferMoment(state, p, founder, emit);
   if (state.pendingDecision) return;
-  const pts = pointsPerTick(p, founder);
+  const fx = officeEffects(state.office);
+  const basePts = pointsPerTick(p, founder);
   const rngW = state.rng.work;
 
   if (p.phase === 'concept' || p.phase === 'production') {
     const isTech = nextFloat(rngW) < p.focus;
+    const pts = basePts * officeWorkMultiplier(fx, p.phase === 'concept' && !isTech ? 'concept' : isTech ? 'tech' : 'design');
     if (isTech) p.workDone.tech += pts;
     else p.workDone.design += pts;
     founder.activity = p.phase === 'concept' && nextFloat(rngW) < 0.4 ? 'thinking' : isTech ? 'coding' : 'designing';
@@ -158,6 +172,7 @@ export function workTick(state: GameState, p: Project, founder: Empirian, emit: 
   }
 
   // Polish phase: split between testing/fixing and polishing.
+  const pts = basePts * officeWorkMultiplier(fx, 'mixed', p.focus);
   let testPts = pts * p.testFocus;
   const polishPts = pts - testPts;
   if (p.bugs.known > 0 && testPts > 0) {

@@ -91,6 +91,13 @@ export const SIM_CONFIG = {
     speedPerLevel: 0.1,
   },
 
+  /** Office atmosphere (LS.4): morale drifts towards base + fromAmbiance · ambianceLevel. */
+  office: {
+    moraleBase: 52,
+    moraleFromAmbiance: 26,
+    moraleDrift: 0.05,
+  },
+
   pace: {
     workMultiplier: { relaxed: 0.8, normal: 1.0, crunch: 1.45 } as Record<string, number>,
     bugMultiplier: { relaxed: 0.85, normal: 1.0, crunch: 1.5 } as Record<string, number>,

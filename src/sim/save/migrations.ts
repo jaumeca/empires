@@ -6,6 +6,8 @@
  * money lived at the root (`money`) and there was no `topicTrends` / `setupComplete`.
  * It is kept as a real example of how migrations work.
  */
+import { createStartingOffice } from '../systems/office';
+
 type AnyState = Record<string, unknown>;
 
 export const MIGRATIONS: Record<number, (s: AnyState) => AnyState> = {
@@ -56,5 +58,10 @@ export const MIGRATIONS: Record<number, (s: AnyState) => AnyState> = {
       return { ...e, skills, baseSkills: { ...skills }, xp: { tech: 0, design: 0, creativity: 0, management: 0 }, topicXp: {} };
     });
     return { ...s, schemaVersion: 3, empirians };
+  },
+  /** 3 → 4 (LS.2): the bedroom becomes a catalog-based office with the same furniture. */
+  3: (s) => {
+    let uid = 0;
+    return { ...s, schemaVersion: 4, office: createStartingOffice(() => `I-start-${++uid}`) };
   },
 };

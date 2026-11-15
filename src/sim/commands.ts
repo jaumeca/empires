@@ -1,7 +1,8 @@
 import { SIM_CONFIG, type Pace } from './config';
 import type { EventSink } from './core/events';
 import { newId, record } from './core/ledger';
-import type { Appearance, GameState, Project, ProjectSize } from './model/state';
+import type { Appearance, GameState, Project, ProjectSize, Rot } from './model/state';
+import { canPlace, getItemDef, SELL_REFUND } from './systems/office';
 import { getActiveProject, getFounder } from './state';
 import { getTopic } from '../content/topics';
 import { resolveDecision } from './systems/decisions';
@@ -23,7 +24,11 @@ export type Command =
     }
   | { type: 'adjust_project'; budget?: number; deadlineDay?: number; pace?: Pace; testFocus?: number; price?: number }
   | { type: 'choose_option'; decisionId: string; optionId: string }
-  | { type: 'release' };
+  | { type: 'release' }
+  | { type: 'buy_item'; defId: string; x: number; z: number; rot: Rot }
+  | { type: 'mount_item'; defId: string; deskUid: string }
+  | { type: 'move_item'; uid: string; x: number; z: number; rot: Rot }
+  | { type: 'sell_item'; uid: string };
 
 /** `error` is a stable code; the UI translates it as `error.<code>`. */
 export type CommandResult = { ok: true } | { ok: false; error: string };
@@ -140,6 +145,73 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
 
     case 'choose_option': {
       return resolveDecision(state, cmd.decisionId, cmd.optionId, emit);
+    }
+
+    case 'buy_item': {
+      let def;
+      try { def = getItemDef(cmd.defId); } catch { return fail('unknown_item'); }
+      if (def.locked) return fail('item_locked');
+      if (def.layer === 'mount') return fail('not_placeable');
+      if (state.company.money < def.price) return fail('not_enough_money');
+      const err = canPlace(state.office, def.id, cmd.x, cmd.z, cmd.rot);
+      if (err) return fail(`place_${err}`);
+      if (!def.rotatable && cmd.rot !== 0) return fail('place_not_rotatable');
+      const uid = newId(state, 'I');
+      state.office.items.push({ uid, defId: def.id, x: cmd.x, z: cmd.z, rot: cmd.rot, ...(def.category === 'desk' ? { mounts: { computer: 'pc_basic', chair: 'chair_basic' } } : {}) });
+      // A new desk comes with the basic computer and chair (their price is included).
+      state.company.money -= def.price + (def.category === 'desk' ? getItemDef('pc_basic').price + getItemDef('chair_basic').price : 0);
+      record(state, { kind: 'office', text: { key: 'ledger.office.bought', params: { item: def.id, price: def.price } }, causes: [], tone: 0 });
+      emit({ type: 'office_changed', severity: 'info' });
+      return { ok: true };
+    }
+
+    case 'mount_item': {
+      let def;
+      try { def = getItemDef(cmd.defId); } catch { return fail('unknown_item'); }
+      if (def.layer !== 'mount') return fail('not_mountable');
+      const desk = state.office.items.find((i) => i.uid === cmd.deskUid);
+      if (!desk || getItemDef(desk.defId).category !== 'desk') return fail('no_desk');
+      const slot = def.category === 'computer' ? 'computer' : 'chair';
+      const old = desk.mounts?.[slot];
+      if (old === def.id) return fail('already_mounted');
+      if (state.company.money < def.price) return fail('not_enough_money');
+      const refund = old ? Math.round(getItemDef(old).price * SELL_REFUND) : 0;
+      desk.mounts = { ...desk.mounts, [slot]: def.id };
+      state.company.money += refund - def.price;
+      record(state, { kind: 'office', text: { key: 'ledger.office.mounted', params: { item: def.id, price: def.price, refund } }, causes: [], tone: 0 });
+      emit({ type: 'office_changed', severity: 'info' });
+      return { ok: true };
+    }
+
+    case 'move_item': {
+      const it = state.office.items.find((i) => i.uid === cmd.uid);
+      if (!it) return fail('unknown_item');
+      const def = getItemDef(it.defId);
+      if (!def.rotatable && cmd.rot !== 0) return fail('place_not_rotatable');
+      const err = canPlace(state.office, def.id, cmd.x, cmd.z, cmd.rot, it.uid);
+      if (err) return fail(`place_${err}`);
+      it.x = cmd.x;
+      it.z = cmd.z;
+      it.rot = cmd.rot;
+      emit({ type: 'office_changed', severity: 'info' });
+      return { ok: true };
+    }
+
+    case 'sell_item': {
+      const idx = state.office.items.findIndex((i) => i.uid === cmd.uid);
+      const it = state.office.items[idx];
+      if (!it) return fail('unknown_item');
+      const def = getItemDef(it.defId);
+      const same = (pred: (d: ReturnType<typeof getItemDef>) => boolean) => state.office.items.filter((i) => pred(getItemDef(i.defId))).length;
+      if (def.category === 'desk' && same((d) => d.category === 'desk') <= 1) return fail('last_desk');
+      if (def.showcase && same((d) => !!d.showcase) <= 1) return fail('last_showcase');
+      let refund = Math.round(def.price * SELL_REFUND);
+      for (const m of [it.mounts?.computer, it.mounts?.chair]) if (m) refund += Math.round(getItemDef(m).price * SELL_REFUND);
+      state.office.items.splice(idx, 1);
+      state.company.money += refund;
+      record(state, { kind: 'office', text: { key: 'ledger.office.sold', params: { item: def.id, refund } }, causes: [], tone: 0 });
+      emit({ type: 'office_changed', severity: 'info' });
+      return { ok: true };
     }
 
     case 'release': {

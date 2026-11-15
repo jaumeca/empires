@@ -15,12 +15,12 @@ export interface PlanEstimate {
   verdict: 'too_short' | 'tight' | 'ok' | 'generous';
 }
 
-export function estimatePlan(founder: Empirian, size: ProjectSize, focus: number, budget: number, days: number): PlanEstimate {
+export function estimatePlan(founder: Empirian, size: ProjectSize, focus: number, budget: number, days: number, officeSpeed = 1): PlanEstimate {
   const required = SIM_CONFIG.work.requiredPoints[size] ?? 220;
   const fake = {
     focus, pace: 'normal', budget, spent: 0, startDay: 0, originalDeadlineDay: days,
   } as unknown as Project;
-  const perDay = pointsPerTick(fake, { ...founder, energy: 80 }) * SIM_CONFIG.ticksPerDay;
+  const perDay = pointsPerTick(fake, { ...founder, energy: 80 }) * officeSpeed * SIM_CONFIG.ticksPerDay;
   const mid = required / Math.max(0.1, perDay);
   const productionDays: [number, number] = [Math.round(mid * 0.85), Math.round(mid * 1.25)];
   const polishDays = Math.round(days - mid);

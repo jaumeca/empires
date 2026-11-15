@@ -142,6 +142,25 @@ export interface LedgerEntry {
   projectId?: string;
 }
 
+export type Rot = 0 | 1 | 2 | 3;
+
+/** A catalog item placed in the office (LS.2). Coordinates are grid cells. */
+export interface PlacedItem {
+  uid: string;
+  defId: string;
+  x: number;
+  z: number;
+  rot: Rot;
+  /** Desks hold a computer and a chair (catalog ids). */
+  mounts?: { computer?: string; chair?: string };
+}
+
+export interface Office {
+  w: number;
+  d: number;
+  items: PlacedItem[];
+}
+
 export interface GameState {
   schemaVersion: number;
   seed: number;
@@ -164,4 +183,5 @@ export interface GameState {
   topicTrends: Record<string, number>;
   /** Set until the founder has been customized. */
   setupComplete: boolean;
+  office: Office;
 }

@@ -1,5 +1,6 @@
 import type { Pace } from './config';
 import { Game } from './game';
+import type { Command } from './commands';
 import type { GameState, ProjectSize } from './model/state';
 import { createNewGame, DEFAULT_APPEARANCE, getProject } from './state';
 
@@ -18,6 +19,10 @@ export interface AutoplayPlan {
   pace?: Pace;
   testFocus?: number;
   bigIdea?: 'approve' | 'simple' | 'postpone' | 'keep';
+  /** Commands run right after founder setup (e.g. office purchases). */
+  setup?: Command[];
+  /** Starting money override (tests of spending decisions). */
+  money?: number;
   /** Answers to contextual moments by kind (defaults are the neutral options). */
   moments?: Partial<Record<string, string>>;
   /** Human-like burst: switch to crunch when this many days remain before the deadline. */
@@ -54,8 +59,10 @@ function answerFor(kind: string, plan: Omit<AutoplayPlan, 'seed'>, extensions: n
 
 export function autoplay(plan: AutoplayPlan): AutoplayResult {
   const game = new Game(createNewGame(plan.seed));
-  const startMoney = game.state.company.money;
+  const startMoney = plan.money ?? game.state.company.money;
   must(game.dispatch({ type: 'setup_founder', name: 'Test', companyName: 'Test Studio', appearance: DEFAULT_APPEARANCE }));
+  if (plan.money !== undefined) game.state.company.money = plan.money;
+  for (const c of plan.setup ?? []) must(game.dispatch(c));
   must(
     game.dispatch({
       type: 'start_project',

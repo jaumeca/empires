@@ -69,6 +69,7 @@ export function t(key: string, params: Record<string, string | number> = {}): st
       case 'topic': return t(`topic.${v}.name`);
       case 'size': return t(`size.${v}`);
       case 'skill': return t(`skill.${v}`);
+      case 'item': return t(`item.${v}.name`);
       default: return String(v);
     }
   });

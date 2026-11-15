@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { autoplay } from '../../src/sim/autoplay';
 import { Game } from '../../src/sim/game';
 import { deserialize, SaveError, serialize, checksum } from '../../src/sim/save/save';
-import { createNewGame, DEFAULT_APPEARANCE } from '../../src/sim/state';
+import { createNewGame, DEFAULT_APPEARANCE, SCHEMA_VERSION } from '../../src/sim/state';
 
 const meta = { gameVersion: 'test', savedAt: '2026-01-01T00:00:00Z' };
 
@@ -42,7 +42,7 @@ describe('save / load', () => {
     const v0 = { ...rest, schemaVersion: 0, money: 1234, companyName: 'Old Co' };
     const file = { format: 'empires-save', schemaVersion: 0, gameVersion: 'old', savedAt: '', checksum: checksum(JSON.stringify(v0)), state: v0 };
     const migrated = deserialize(JSON.stringify(file));
-    expect(migrated.schemaVersion).toBe(3);
+    expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
     expect(migrated.company.money).toBe(1234);
     expect(migrated.company.name).toBe('Old Co');
     void company;
@@ -52,7 +52,7 @@ describe('save / load', () => {
 describe('schema 1 → 2 migration (real saves produced by the pre-i18n build)', () => {
   it('migrates a finished game: ledger and reviews become TextRefs, outlets become ids', () => {
     const st = deserialize(readFileSync('tests/fixtures/save-v1-released.empires', 'utf8'));
-    expect(st.schemaVersion).toBe(3);
+    expect(st.schemaVersion).toBe(SCHEMA_VERSION);
     for (const e of st.ledger) expect(typeof e.text.key).toBe('string');
     const r = st.projects[0]!.result!;
     expect(r.reviews.map((x) => x.outlet)).toEqual(['pixelpost', 'tecla', 'bitacora', 'arcade']);

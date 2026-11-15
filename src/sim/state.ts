@@ -2,8 +2,9 @@ import { SIM_CONFIG } from './config';
 import { createRngStreams } from './core/rng';
 import type { Appearance, Empirian, GameState, Project } from './model/state';
 import { TOPICS } from '../content/topics';
+import { createStartingOffice } from './systems/office';
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export const DEFAULT_APPEARANCE: Appearance = {
   skin: 2,
@@ -30,6 +31,8 @@ export function createNewGame(seed: number): GameState {
   };
   const topicTrends: Record<string, number> = {};
   for (const t of TOPICS) topicTrends[t.id] = 1;
+  let uid = 0;
+  const office = createStartingOffice(() => `I-start-${++uid}`);
   return {
     schemaVersion: SCHEMA_VERSION,
     seed,
@@ -46,6 +49,7 @@ export function createNewGame(seed: number): GameState {
     ledger: [],
     topicTrends,
     setupComplete: false,
+    office,
   };
 }
 
