@@ -4,7 +4,7 @@ Cada versión estable publicada en la rama `production-web`. El propietario deci
 
 | Versión | Fecha | Commit en `production-web` | Commit de desarrollo de origen | Guardado | Contenido | Comprobaciones |
 |---|---|---|---|---|---|---|
-| 0.5.1 | 2026-11-16 | (commit de esta entrada) | igual | v8 | 0.5.0 + **la pausa congela el mundo** (Empirians, burbujas, confeti y pantallas quietos; interfaz, cámara y decoración activas; sin saltos al reanudar) | 130 pruebas; e2e pause 16/16, play 21/21, decor 10/10, contracts 10/10, persistence 10/10, desktop 15/15, team 13/13 |
+| 0.5.1 | 2026-11-16 | `69518f2` | `69518f2` (mismo commit) | v8 | 0.5.0 + **la pausa congela el mundo** (Empirians, burbujas, confeti y pantallas quietos; interfaz, cámara y decoración activas; sin saltos al reanudar) | 130 pruebas; e2e pause 16/16, play 21/21, decor 10/10, contracts 10/10, persistence 10/10, desktop 15/15, team 13/13 |
 | 0.5.0 | 2026-11-16 | `7710f0c` | `7710f0c` (mismo commit) | v8 (carga v0–v8) | Todo lo de 0.4.0 + GT.1: candidatos, contratar y despedir, sueldo semanal, rasgos, trabajo en equipo, escritorio propio por empleado | Ver entrada |
 | 0.4.0 | 2026-11-16 | `3dc2cb8` | `3dc2cb8` (mismo commit) | v7 (carga v0–v7) | Primera versión web estable: A Living Studio completo (experiencia del fundador, oficina personalizable, Empires Daily, eventos, encargos), revisión económica, web para ordenador (teclado/ratón), guardado blindado | Ver entrada |
 
