@@ -16,8 +16,10 @@ Todo recurso que entre en el repositorio (modelos, texturas, animaciones, fuente
 | A-008 | Iconos pixel-art 8×8 (19) y burbuja voxel | `src/render/icons.ts`, `bubbles.ts` | Claude Code | Código | Todos los derechos reservados | Original | 2026-11-14 |
 | A-009 | Animaciones procedurales del Empirian | `src/render/empirianView.ts` | Claude Code | Código | Todos los derechos reservados | Original | 2026-11-14 |
 | A-010 | Temas de juego ficticios y nombres de medios ficticios (PixelPost, Tecla Crítica, Bitácora Lúdica, Modo Arcade) | `src/content/topics.ts`, `systems/market.ts` | Claude Code | Código | Todos los derechos reservados | Ficticios (D-021); comprobar antes del lanzamiento que no coinciden con medios reales | 2026-11-14 |
-
 | A-011 | Textos del juego en español e inglés (borrador) | `src/i18n/es.ts`, `en.ts` | Claude Code | Código | Todos los derechos reservados | Originales | 2026-11-15 |
+| A-012 | Modelos voxel del catálogo de oficina (escritorio amplio, 4 ordenadores, silla ergonómica, sofá, cafetera, pizarra, planta alta, lámpara de pie, alfombra, recreativa, armario de servidores) | `src/render/models/catalogModels.ts` | Claude Code | Código (definición voxel) | Todos los derechos reservados | Original; la recreativa es genérica, sin marca ni juego reconocible | 2026-11-16 |
+| A-013 | Iconos pixel-art: decoración, girar, periódico | `src/render/icons.ts` | Claude Code | Código | Todos los derechos reservados | Original | 2026-11-16 |
+| A-014 | Nombres ficticios: competidores (PixelForge, ByteBakery, Nimbus Games, LoopLab), periódico "Empires Daily", clientes (Panadería, Gimnasio, Museo, Startup, Escuela, Floristería Pétalo) | `src/sim/systems/world.ts`, `contracts.ts`, `src/i18n/*` | Claude Code | Código | Todos los derechos reservados | Ficticios (D-021); comprobar antes del lanzamiento que no coinciden con marcas reales | 2026-11-16 |
 
 Tipografía: la interfaz usa la fuente del sistema (`system-ui`/`ui-rounded`); no se incluye ningún archivo de fuente. Sin sonidos ni música todavía.
 

@@ -28,6 +28,14 @@ Capturas generadas automáticamente con `npm run gallery` (Chromium sin pantalla
 | 20 | [g19-phone-decision.jpg](g19-phone-decision.jpg) | Momento decisivo en móvil horizontal (opciones en 2 columnas). |
 | 21 | [g20-english-decision.jpg](g20-english-decision.jpg) | Interfaz en inglés (borrador) para comprobar la internacionalización. |
 | 22 | [g21-moment-polish-plan.jpg](g21-moment-polish-plan.jpg) | Momento decisivo contextual "plan de pulido" (F3.1), al terminar la producción. |
+| 23 | [g22-decor-catalog.jpg](g22-decor-catalog.jpg) | **Modo decoración** (LS.3): catálogo por categorías, efectos explicados con palabras, gasto diario de la oficina. |
+| 24 | [g23-decor-placing.jpg](g23-decor-placing.jpg) | Colocando un sofá: objeto fantasma verde (cabe) o rojo (no cabe, con el motivo), girar y confirmar con el precio. |
+| 25 | [g24-office-furnished.jpg](g24-office-furnished.jpg) | **Oficina amueblada**: ordenador de desarrollo, silla ergonómica, cafetera, pizarra, planta alta, lámpara y sofá. |
+| 26 | [g25-empires-daily.jpg](g25-empires-daily.jpg) | **Empires Daily** (LS.5): titulares generados por cambios reales del mundo (tendencias, herramientas…). |
+| 27 | [g26-skills-card.jpg](g26-skills-card.jpg) | **Ficha del Empirian** (LS.1): programación, diseño, creatividad, gestión y especialidades. |
+| 28 | [g27-contract-offers.jpg](g27-contract-offers.jpg) | **Encargos de clientes** (LS.8): pago, plazo del cliente y estimación honesta. |
+| 29 | [g28-contract-working.jpg](g28-contract-working.jpg) | Trabajando en un encargo: píldora de progreso y días restantes. |
+| 30 | [g29-phone-decor.jpg](g29-phone-decor.jpg) | Modo decoración en móvil horizontal 844×390 (el catálogo ocupa la mitad inferior; los avisos se limitan a uno). |
 
 ## Qué decidir en la revisión (F1.12)
 

@@ -1,6 +1,6 @@
 # EMPIRES — Roadmap
 
-> Versión 0.3 · 2026-11-15 (consolidación de la v0.1 y desglose de F3) · Roadmap incremental. Se puede reorganizar con motivo justificado, pero **no** se eliminan funcionalidades ni se reduce la visión sin consultar al propietario.
+> Versión 0.4 · 2026-11-16 ("A Living Studio" LS.1–LS.9 terminada) · Roadmap incremental. Se puede reorganizar con motivo justificado, pero **no** se eliminan funcionalidades ni se reduce la visión sin consultar al propietario.
 >
 > Estados: ⬜ Pendiente · 🟦 En curso · ✅ Hecho · ⏸ Bloqueado (esperando aprobación)
 
@@ -95,7 +95,7 @@ Medido en el entorno (Chromium headless con renderizado por software SwiftShader
 
 **Consolidación (3.ª sesión, hecha):** npm sin `--legacy-peer-deps` (D-028), internacionalización (D-031), historial y guardado robusto (D-029), ventanas para móvil horizontal, galería de revisión, revisión de gameplay (D-030).
 
-**Próximos pasos recomendados:** F1.12 (revisión visual con la galería) y F2.12 (prueba de juego) del propietario → F3.2 → F1.11 (dispositivos).
+**Próximos pasos recomendados (2026-11-16):** prueba en el móvil del propietario (F1.11) y respuesta a Q-011 (uso del dinero acumulado) → según la respuesta, primer empleado con salario (F4 adelantado) o F3.2 (funcionalidades y alcance). F1.12 y F2.12 ya hechas (D-032, D-033); "A Living Studio" terminada (LS.1–LS.9).
 
 ---
 
@@ -113,7 +113,7 @@ Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, of
 | LS.6 | **Productos con vida propia (1.ª parte)**: ventas residuales tras el lanzamiento, resurgimientos y relación con noticias; caja → historia del producto | F5 (adelantado, parcial) | Cajas de la estantería | Ventas a largo plazo acotadas; un resurgimiento afecta de verdad a un producto antiguo | LS.5 | ✅ 1.ª parte (cola de ventas y resurgimientos). Pendiente: historia del producto al tocar su caja (F3.9/F5) |
 | LS.7 | **Eventos dinámicos** (proyecto, energía, calidad, economía, tendencias, reputación, productos antiguos, oportunidades), con condiciones, frecuencia, opciones y efectos diferidos; base para cadenas | F3/F9 | El Empirian levanta la mano / burbuja de alerta | Cada opción cambia el resultado (prueba); efectos diferidos programados y registrados; frecuencia limitada | LS.5, LS.6 | ✅ 4 eventos + cola de efectos diferidos (`systems/events.ts`), guardado v6, `tests/sim/events.test.ts` (D-040) |
 | LS.8 | **Contratos externos** como primera actividad alternativa | F8 (adelantado) | El Empirian trabaja en el ordenador con pantalla de "cliente"; tablón/tarjeta de ofertas | Ingresos previsibles a cambio de tiempo y compromiso; retrasos penalizan; da experiencia; no domina a hacer juegos (prueba) | LS.1 | ✅ `systems/contracts.ts`, guardado v7, `tests/sim/contracts.test.ts`, `tools/e2e/contracts.cjs` (10/10) (D-041) |
-| LS.9 | **Revisión económica conjunta** (ingresos, gastos recurrentes, inversión, progresión) con simulaciones de estrategias | F3.10 / D-034 | — | Informe antes/después; el dinero tiene usos; estudio pequeño viable; sin compras obligatorias en cadena | LS.1–LS.8 | ⬜ |
+| LS.9 | **Revisión económica conjunta** (ingresos, gastos recurrentes, inversión, progresión) con simulaciones de estrategias | F3.10 / D-034 | — | Informe antes/después; el dinero tiene usos; estudio pequeño viable; sin compras obligatorias en cadena | LS.1–LS.8 | ✅ medición de 9 estrategias × 20 semillas × 1 año (`GAMEPLAY_REVIEW.md` §9, D-042); sin estrategias dominantes; excedente de dinero → Q-011 |
 
 **Orden de implementación:** el del propietario (LS.1 → LS.2–LS.4 → LS.5 → LS.7 → LS.8 → LS.9), con LS.6 junto a LS.5 porque los resurgimientos y las ventas residuales dependen de las noticias y alimentan los eventos sobre productos antiguos. F3.2 (funcionalidades y alcance) y el resto de F3 continúan después de LS o intercalados si el tiempo lo permite; no hay tareas de F3 a medio hacer (F3.1 está terminada).
 

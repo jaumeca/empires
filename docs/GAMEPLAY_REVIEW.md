@@ -98,6 +98,41 @@ Planes dentro del 5 % del mejor beneficio: de 2 (todos "normal") a 8, repartidos
 - **Efecto lateral medido:** el crunch con descanso al agotarse supera al ritmo normal con plazo corto (17 178 € frente a 14 645 € a 28 días) y es casi igual con plazo cómodo (84 días). El crunch ignorando el agotamiento sigue siendo peor que el ritmo normal.
 - **Descartado:** un momento "bugs acumulados" se retiró porque casi nunca se disparaba y ninguna de sus opciones mejoraba el resultado frente a no hacer nada: se retomará con la deuda técnica (F3.4).
 
+## 9. Economía y progresión con los sistemas de "A Living Studio" (LS.9, 2026-11-16)
+
+Carreras completas de **un año (365 días)**, 20 semillas, con políticas sencillas parecidas a las de una persona (descansa a ritmo relajado con energía < 35, 5 días libres entre trabajos, compra entre proyectos solo si le quedan > 12 000 €). Herramienta: `tools/sim-runner/careers.ts` + `economy.report.ts` (`npm run sim`). Invariantes protegidos por `tests/sim/economy.test.ts`.
+
+| Estrategia | Dinero al año (media) | Peor 10 % | Juegos | Nota media | Encargos (tarde) | Gasto oficina | Reputación |
+|---|---|---|---|---|---|---|---|
+| A Solo juegos pequeños | 238 801 € | 190 165 € | 7,0 | 6,41 | — | 0 € | 79 |
+| B Crecer a mediano (98 días) | 230 727 € | 169 589 € | 4,0 | 6,37 | — | 0 € | 58 |
+| C Solo encargos | 136 952 € | 130 779 € | — | — | 19,1 (10 %) | 0 € | 49 |
+| D Juegos + encargo tras un fracaso o con poca caja | 249 940 € | 197 894 € | 6,6 | 6,47 | 3,4 (0) | 0 € | 85 |
+| E Juegos + oficina sensata (ordenador dev, silla, cafetera, pizarra) | 259 939 € | 187 362 € | 7,0 | 6,62 | — | 2 610 € | 84 |
+| F Juegos + oficina cara (estación de trabajo, sofá, recreativa…) | 264 913 € | 199 347 € | 7,0 | 6,70 | — | 7 090 € | 87 |
+| I Crecer + oficina | 280 558 € | 211 944 € | 4,0 | 6,70 | — | 3 670 € | 62 |
+| H Realista: crecer + oficina + encargos tras fracasos | 310 221 € | 264 145 € | 4,0 | 6,83 | 1,6 (0) | 3 670 € | 67 |
+| G Anticiparse a tendencias + crecer | 206 886 € | 131 104 € | 4,0 | 6,36 | — | 0 € | 58 |
+
+**Rentabilidad.** Los juegos siguen siendo la fuente principal. Los encargos rinden ≈ 57 % de "solo juegos", con la menor dispersión entre semillas: son la opción segura, no la óptima. Mezclarlos tras un fracaso mejora un 5 % y sube el peor caso.
+
+**Inversión.** Una oficina sensata (2 610 €) devuelve ≈ +21 000 € al año (+9 %); la oficina cara (7 090 €) apenas añade 5 000 € más: rendimientos decrecientes, lo caro no domina. La oficina **importa más en proyectos largos**: sin silla ni cafetera, el ritmo normal agota al fundador (gasta 6,8 de energía al día y recupera 5), así que los juegos medianos sin oficina rinden igual que los pequeños (B ≈ A) y con oficina un 22 % más (I frente a B). Es un uso del dinero con representación visible (el Empirian toma café, se sienta en la silla nueva) y con razón jugable.
+
+**Progresión.** Crecer a juegos medianos compensa **si se planifica**: con 70 días un mediano es una trampa (nota 5,0, 22 bugs); con 98 días rinde +26 % por día frente al pequeño. Las tendencias, anticipándose, rinden −10 % con más riesgo (peor 10 % = 131 000 €): alternativa arriesgada, coherente con D-039. Tras un año, programación ≈ 6,8 y el resto ≈ 5,6–5,8; los encargos desarrollan más el diseño (6,5).
+
+**Riesgo.** Ninguna estrategia baja de 0 € en el primer año; el mínimo típico es ≈ 4 500 € durante el primer juego (la primera decisión de presupuesto sigue importando).
+
+**Tiempo.** 7 juegos pequeños o 4 medianos al año (~52 o ~90 días por juego, incluidos descansos).
+
+**Diversidad.** Siete estrategias distintas quedan dentro de un ±15 % de la mejor razonable (A, B, D, E, F, I, H); ninguna opción aislada domina. La mejor (H) combina varios sistemas, que es lo que se busca.
+
+### Hallazgo principal: el dinero se acumula
+Tras un año todas las estrategias terminan con **137 000–310 000 €** partiendo de 8 000 €, y el catálogo completo de la oficina absorbe como mucho ≈ 3 %. Los nuevos usos del dinero existen y funcionan, pero **no son suficientes** para dar tensión económica a largo plazo. Recortar ingresos ahora no lo arreglaría (solo retrasaría el momento del excedente) y el propietario pidió no recortar todavía (D-034). Los usos grandes que faltan son los de F4: **contratar (salarios), oficinas más grandes y formación**. Ver D-042 y Q-011.
+
+### Cambios aplicados en LS.9
+- La estimación al crear un proyecto ahora incluye la velocidad de la oficina (antes el ordenador comprado no se reflejaba en "Producción: X–Y días").
+- Sin cambios de constantes: las mediciones no muestran estrategias dominantes nuevas ni opciones huecas; el excedente se resuelve con usos del dinero (F4), no con recortes.
+
 ## Datos completos
 
 - Antes de D-030: sección "2026-11-15" de `DEVELOPMENT_LOG.md` y tabla de arriba.

@@ -397,3 +397,23 @@ Node ≥ 22.12 y npm ≥ 11 (`packageManager` en `package.json`). Versiones exac
 
 ### 14.6 Herramientas de análisis
 `npm run sim` ejecuta todos los informes de `tools/sim-runner/*.report.ts`: balance básico, crecimiento del historial, revisión de estrategias (`review.report.ts`) y palancas de ritmo y momentos (`pace.report.ts`).
+
+## 15. "A Living Studio" (2026-11-16)
+
+Todos los sistemas nuevos viven en `src/sim/systems/`, son deterministas (flujos aleatorios propios en `state.rng`), no importan nada de la vista y tienen pruebas sin renderizado. Guardado **v7** con migraciones 2→3→…→7 encadenadas (las partidas v1 de `tests/fixtures/` siguen cargando).
+
+| Sistema | Archivo | Estado guardado | Migración | Pruebas |
+|---|---|---|---|---|
+| Experiencia del fundador | `progression.ts` | `empirian.skills/baseSkills/xp/topicXp` | 2→3 | `progression.test.ts` |
+| Oficina (catálogo, colocación, efectos) | `content/officeItems.ts`, `office.ts` | `state.office {w,d,items}` | 3→4 | `office.test.ts` |
+| Mundo / Empires Daily | `world.ts` | `state.world`, `rng.world` | 4→5 | `world.test.ts` |
+| Eventos dinámicos y efectos diferidos | `events.ts` | `state.scheduled`, `state.eventLog` | 5→6 | `events.test.ts` |
+| Encargos externos | `contracts.ts` | `state.contracts` | 6→7 | `contracts.test.ts` |
+
+- **Oficina:** cuadrícula 10×8 (celdas de 6 vóxeles), capas sólido/suelo/montaje, celdas de acceso y regla de conectividad (BFS) en `canPlace`, que usan a la vez la simulación y la vista previa del modo decoración. Los efectos se calculan con `officeEffects` (sin acumulación) y llegan al trabajo por `officeWorkMultiplier`.
+- **Vista:** `render/officeScene.ts` sincroniza los objetos con `state.office` (`syncOffice`), calcula rutas con `findPath` sobre las celdas bloqueadas y muestra la cuadrícula y el objeto fantasma; `ui/decorUI.ts` traduce toques a comandos `buy_item`/`move_item`/`mount_item`/`sell_item`.
+- **Una sola actividad a la vez:** `step.ts` llama a `contractTick` o al trabajo del proyecto; `start_project` y `accept_contract` se excluyen mutuamente.
+- **Eventos:** definiciones `{kind, cooldownDays, chance, trigger, build, resolve}`; las consecuencias diferidas son datos serializables (`ScheduledEffect`) que `applyScheduled` aplica al cambiar de día y enlaza en el registro causal.
+- **Análisis:** `tools/sim-runner/careers.ts` juega carreras completas (juegos, encargos, compras) y alimenta `economy.report.ts` y `tests/sim/economy.test.ts`; `trends.report.ts` mide las estrategias de tendencias.
+- **E2E:** `tools/e2e/decor.cjs` (modo decoración con toques) y `tools/e2e/contracts.cjs` (encargos) se suman a `play.cjs`.
+

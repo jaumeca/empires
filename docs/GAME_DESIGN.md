@@ -477,14 +477,14 @@ Especificación detallada y criterios de aceptación: `ROADMAP.md` (fases F1 y F
 
 El jugador deja de encadenar juegos: gestiona un estudio que evoluciona. Toda mecánica tiene representación en la oficina. Nada de paneles permanentes.
 
-### 23.1 El fundador aprende `[CONFIRMADO]` (D-035)
+### 23.1 El fundador aprende `[IMPLEMENTADO]` (D-035, D-037)
 - Habilidades: **programación, diseño, creatividad, gestión** y **especialización por tema**.
 - Se aprende **haciendo**: programar sube programación, diseñar sube diseño, idear y pulir sube creatividad, planificar y cerrar proyectos o contratos sube gestión, trabajar en un tema da especialización en ese tema.
 - Rendimientos decrecientes y techo: cada punto cuesta más que el anterior; no hay crecimiento infinito.
 - Se percibe: burbuja de estrella y aviso al subir de nivel; ficha del Empirian con niveles.
 - Ampliable a empleados, personalidades y equipos (F4).
 
-### 23.2 Catálogo y personalización de la oficina `[CONFIRMADO]`
+### 23.2 Catálogo y personalización de la oficina `[IMPLEMENTADO]` (D-038)
 - Catálogo de objetos como **datos**: id, nombre traducible, precio, tamaño en cuadrícula, categoría, requisitos, efectos, coste recurrente, modelo voxel.
 - Categorías: ordenadores, escritorios, sillas, plantas, lámparas, cafeteras, pizarras, estanterías, decoración, sofás, tecnología, servidores (más adelante).
 - **Comprar, colocar, mover, girar y vender** sobre cuadrícula, respetando colisiones y el acceso del Empirian. Táctil.
@@ -492,27 +492,29 @@ El jugador deja de encadenar juegos: gestiona un estudio que evoluciona. Toda me
 - Efectos explicados con palabras e iconos, no con estadísticas.
 - `[FUTURO]` Garaje, estudio, oficina, edificio y campus (§3.3); servidores; objetos de pared; museo.
 
-### 23.3 Empires Daily: noticias y tendencias `[CONFIRMADO]`
+### 23.3 Empires Daily: noticias y tendencias `[IMPLEMENTADO]` (D-039)
 - El mundo evoluciona solo, con el reloj y la semilla: **tendencias** de temas (empiezan, alcanzan un pico y desaparecen), **competidores ficticios** que publican juegos, **economía** con cambios moderados, **noticias tecnológicas** con efectos temporales, **resurgimientos** de temas antiguos.
 - **Cada noticia corresponde a un cambio real** del estado simulado; no hay titulares decorativos.
 - Anticiparse a una tendencia puede compensar; llegar tarde enfrenta a más competencia. Perseguir siempre la tendencia no debe ser lo óptimo.
 - Se consulta desde el corcho de la oficina (y un pequeño botón); solo los acontecimientos importantes generan aviso.
 
-### 23.4 Eventos dinámicos `[CONFIRMADO]`
+### 23.4 Eventos dinámicos `[IMPLEMENTADO]` (1.er conjunto de 4 eventos, D-040)
 - Disparados por el estado: proyecto, energía, calidad, economía, tendencias, reputación, productos anteriores, oportunidades externas.
 - Cada evento: condiciones, frecuencia, opciones con consecuencias distintas y, cuando procede, **efectos diferidos** (programados y registrados en el registro causal). Base preparada para eventos encadenados.
 - Ejemplos: creador de contenido que quiere una versión anticipada; competidor que anuncia un juego similar; cliente que descubre un error grave en un juego publicado; oferta de contrato; nueva tecnología; resurgimiento de un juego antiguo.
 
 ### 23.5 Actividades además de crear juegos
-- `[CONFIRMADO]` **Contratos externos** (primera actividad alternativa): ingresos previsibles a cambio de tiempo, esfuerzo y compromisos; penalizaciones por retraso; dan experiencia.
+- `[IMPLEMENTADO]` (D-041) **Contratos externos** (primera actividad alternativa): ingresos previsibles a cambio de tiempo, esfuerzo y compromisos; penalizaciones por retraso; dan experiencia.
 - `[FUTURO]` Investigación tecnológica (F6), mantenimiento y actualizaciones, expansiones y secuelas, portabilidad a plataformas, descanso y formación, ferias, gestión de productos antiguos (venta, licencia).
 
 ### 23.6 Productos con vida propia
-- `[CONFIRMADO]` (1.ª parte) Ventas residuales tras el lanzamiento y resurgimientos vinculados a las noticias.
+- `[IMPLEMENTADO]` (1.ª parte) Ventas residuales tras el lanzamiento y resurgimientos vinculados a las noticias.
 - `[FUTURO]` Comunidad/usuarios, mantenimiento, actualizaciones, expansiones, secuelas, valor comercial, venta o licencia; tocar la caja de la estantería para ver la historia del producto y actuar sobre él.
 
 ### 23.7 Economía `[CONFIRMADO]` (D-034)
 Primero usos para el dinero (equipamiento, costes recurrentes, formación, investigación, mantenimiento, contratación, expansión) y después equilibrio conjunto. Debe seguir siendo viable un estudio pequeño y rentable; sin cadenas de compras obligatorias.
+
+`[IMPLEMENTADO]` Primera revisión conjunta (LS.9, D-042): sin estrategias dominantes; el dinero se acumula a largo plazo y los grandes usos (contratación, ampliación) llegan con F4 (pregunta Q-011).
 
 ## 22. Contradicciones y tensiones identificadas
 

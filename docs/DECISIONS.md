@@ -139,6 +139,11 @@ Tomadas por el propietario en el documento fundador (2026-11-14).
 
 _(Ninguna abierta tras la 3.ª sesión salvo las marcadas como provisionales más abajo; D-020 se conserva aquí por trazabilidad.)_
 
+### Q-011 — ¿Cómo dar uso al dinero acumulado? `[PREGUNTA]` (4.ª sesión, D-042)
+- **Contexto:** tras un año de juego el estudio acumula 137 000–310 000 €; la oficina absorbe ≤ 3 %.
+- **Opciones:** (a) **recomendada:** adelantar de F4 la contratación del primer empleado con salario (el gran uso del dinero y el siguiente paso natural del estudio) y la ampliación de la oficina; reequilibrar ingresos después; (b) recortar ahora los ingresos de los juegos ≈ 30–40 % (más tensión pronto, pero el excedente vuelve en el segundo año); (c) dejarlo así hasta F4 y priorizar F3.2+.
+- **Necesita:** decisión del propietario.
+
 ### D-020 — Ubicación de los documentos
 - **Fecha:** 2026-11-14 · **Estado:** Confirmada (propietario, 2026-11-14 — 3.ª sesión): documentos en `docs/`, `CLAUDE.md` en la raíz.
 - **Decisión propuesta:** `CLAUDE.md` en la raíz (lo lee Claude Code automáticamente); el resto de documentos maestros en `docs/`.
@@ -280,6 +285,14 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Consecuencias:** −4 % del pago por día de retraso (máximo −60 %) y −1 a −3 de reputación; +10 % y +2 de reputación si entregas con un cuarto del plazo de margen; cancelar cuesta 4 de reputación y no cobra nada. Dan experiencia de programación/diseño y +8 de gestión.
 - **Equilibrio medido (autoplay, varias semillas):** encargos ≈ 377 €/día frente a ≈ 839 €/día haciendo juegos (≈ 45 %), ≈ 9 % de entregas tardías. Son ingresos **seguros** para tapar huecos o reponerse tras un fracaso, no la estrategia dominante (prueba `contracts are a safe alternative, not a dominant strategy`).
 - **Representación:** botón "Encargos" con contador en la oficina, tarjeta de ofertas, píldora de progreso abajo y el Empirian trabajando en su escritorio; aviso al entregar.
+
+### D-042 — Revisión económica conjunta tras "A Living Studio" (LS.9)
+- **Fecha:** 2026-11-16 · **Estado:** Aplicada (medición); la respuesta al excedente queda como pregunta Q-011
+- **Medición:** carreras de un año con 9 estrategias y 20 semillas (`docs/GAMEPLAY_REVIEW.md` §9). Juegos ≈ 239 000 €/año; encargos ≈ 57 % de eso con menos riesgo; oficina sensata +9 %, oficina cara apenas +2 % más; crecer a mediano con oficina +22 %; tendencias −10 % y más riesgo; ninguna estrategia baja de 0 €.
+- **Conclusión:** no hay estrategias dominantes ni opciones huecas nuevas; **no se cambian constantes**. Se corrige la estimación de proyecto para incluir la oficina.
+- **Problema abierto:** el dinero se acumula (137 000–310 000 € al año; la oficina absorbe ≤ 3 %). Recortar ingresos ahora no lo resuelve.
+- **Propuesta `[PROPUESTA]`:** resolverlo con los grandes usos del dinero de F4 (contratar con salarios, ampliar la oficina, formación) y **después** reequilibrar ingresos con el mismo informe (`economy.report.ts`) como referencia. Pendiente de aprobación (Q-011).
+- **Observación de diseño:** el ritmo normal no es sostenible en proyectos de más de ~40 días sin silla ni cafetera (gasta 6,8 de energía al día, recupera 5). Se mantiene: da una razón visible para invertir en la oficina y para alternar ritmos.
 
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 

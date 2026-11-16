@@ -4,6 +4,65 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-16 — Cuarta sesión: "A Living Studio"
+
+### Resumen
+El estudio pasa de encadenar juegos a ser un pequeño mundo vivo: el fundador aprende haciendo, la oficina se compra, coloca y mueve con efectos reales, el mundo publica su periódico (Empires Daily) con tendencias, competidores y economía, aparecen eventos dinámicos con consecuencias diferidas y la primera actividad alternativa (encargos de clientes). Cierra con una revisión económica de un año con 9 estrategias. Sin cambios de motor, arquitectura ni identidad visual; guardado v1→v7 con migraciones.
+
+### Commits
+| Commit | Contenido |
+|---|---|
+| `60ad307` | Respuestas del propietario (D-032–D-036) y plan "A Living Studio" |
+| `829a215` | LS.1 Experiencia y habilidades del fundador (D-037) |
+| `302360e` | LS.2–LS.4 (simulación): catálogo, reglas de colocación, efectos, guardado v4 (D-038) |
+| `aecdf0d` | LS.2–LS.4 (vista): oficina dinámica, modo decoración táctil, modelos voxel |
+| `9c33358` | LS.5–LS.6 Empires Daily, tendencias, competidores, cola de ventas, resurgimientos (D-039) |
+| `e097045` | LS.7 Eventos dinámicos con efectos diferidos (D-040) |
+| `081dde9` | LS.8 Encargos externos (D-041) |
+| (este) | LS.9 Revisión económica (D-042, Q-011), galería ampliada, avisos en móvil, documentación |
+
+### Pruebas ejecutadas (realmente, en este entorno)
+- `npx vitest run`: **17 archivos, 122 pruebas, todas pasan** (nuevas: progresión, oficina, mundo, eventos, encargos, economía; actualizadas: guardado, i18n, arquitectura).
+- `npx tsc --noEmit` y `npm run build`: sin errores.
+- E2E en Chromium (SwiftShader, escritorio 1280×720): `play.cjs` 21/21, `decor.cjs` 10/10 (con toques), `contracts.cjs` 10/10.
+- `npm run gallery`: 30 capturas (8 nuevas, g22–g29).
+- **No** hay pruebas en dispositivos móviles reales (F1.11 sigue pendiente).
+
+### Mediciones de balance (detalle en `GAMEPLAY_REVIEW.md` §9 y D-037–D-042)
+- Aprendizaje: ≈ +1,3 de nota media tras 10 juegos; programación ≈ 6,8 tras un año.
+- Oficina: sensata +9 % al año, cara solo +2 % más; imprescindible para proyectos largos (energía).
+- Tendencias: perseguir cualquiera −37 %; anticiparse −10 % con más riesgo.
+- Eventos: ninguna opción domina en todos los contextos.
+- Encargos: ≈ 57 % de los ingresos de "solo juegos", menos riesgo, ≈ 10 % de entregas tarde.
+- **Excedente de dinero**: 137 000–310 000 € al año en todas las estrategias → Q-011.
+
+### Problemas encontrados y cómo se resolvieron
+- El aprendizaje hacía las especializaciones demasiado rápidas y la velocidad se acumulaba → xp en horas y velocidad suavizada (D-037).
+- Las tendencias no premiaban a nadie → los rivales reaccionan en el pico y las tendencias son más fuertes (D-039).
+- Eventos demasiado frecuentes y opciones dominantes; el rival dependía de la nueva fecha del jugador → ritmo limitado y fecha propia del rival (D-040).
+- Encargos poco rentables y tardíos → tarifa, margen de plazo y estimación honesta (D-041).
+- En la revisión: "crecer a mediano" parecía malo porque el plan automático usaba 70 días y nunca descansaba; con 98 días y descanso humano rinde +26 %/día.
+- La estimación de un proyecto ignoraba el ordenador comprado → corregido.
+- En móvil horizontal los avisos de noticias se apilaban y tapaban la oficina → uno a la vez y más compactos en pantallas bajas.
+- La galería esperaba la "gran idea" como primera decisión; ahora responde antes a los eventos dinámicos.
+
+### Limitaciones y deuda técnica conocidas
+- Validación en móviles reales pendiente (F1.11). Las capturas de móvil son de Chromium de escritorio.
+- En móvil horizontal el catálogo de decoración ocupa la mitad inferior de la pantalla; se podría plegar.
+- Se puede colocar un mueble donde está el Empirian en ese momento (se aparta al moverse); solo visual.
+- El inglés de los textos nuevos es borrador.
+- La historia de cada producto al tocar su caja sigue pendiente (F3.9/F5).
+- Los encargos no tienen todavía pantalla de "cliente" propia en el ordenador (usa las animaciones de programar/diseñar).
+
+### Decisiones pendientes del propietario
+- **Q-011**: cómo dar uso al dinero acumulado (recomendado: adelantar contratación y ampliación de F4, reequilibrar después).
+- Validar en juego el ritmo de eventos, noticias y encargos (provisionales D-039–D-041).
+
+### Próxima tarea recomendada
+Probar la versión en el móvil (F1.11) y responder Q-011. Si se aprueba la opción recomendada: primer empleado con salario (F4 adelantado) y, a continuación, F3.2 (funcionalidades y alcance).
+
+---
+
 ## 2026-11-15 — Tercera sesión: consolidación de la v0.1 y arranque de F3
 
 ### Resumen

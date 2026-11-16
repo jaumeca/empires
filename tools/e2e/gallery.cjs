@@ -90,8 +90,13 @@ const VARIANTS = [
   await shot('g09-bubbles-closeup', 1200);
   await frame(null);
 
-  // 10/11 decisive moment
-  for (let i = 0; i < 300 && !(await ev(() => !!window.__empires.game.state.pendingDecision)); i++) await ev(() => window.__empires.advance(20));
+  // 10/11 decisive moment (answer any earlier dynamic event first)
+  for (let i = 0; i < 300; i++) {
+    const kind = await ev(() => window.__empires.game.state.pendingDecision?.kind ?? null);
+    if (kind === 'big_idea') break;
+    if (kind) { await page.waitForTimeout(600); await page.click('.option >> nth=-1'); await page.waitForTimeout(400); }
+    else await ev(() => window.__empires.advance(20));
+  }
   await page.waitForTimeout(1500);
   await shot('g10-decision');
   await page.addStyleTag({ content: '.backdrop{display:none!important}' });
@@ -158,6 +163,57 @@ const VARIANTS = [
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto(`${base}/?debug&lang=en`);
   await shot('g20-english-decision', 2500);
+
+  // 22-28 "A Living Studio" (LS.1–LS.8)
+  await page.goto(`${base}/?fresh&debug&seed=42`);
+  await page.waitForTimeout(1500);
+  await page.click('#start-game');
+  await ev(() => { window.__empires.game.state.company.money = 30000; });
+  await ev(() => window.__empires.advance(8 * 40));
+  await page.waitForTimeout(500);
+  await page.click('#hud-decor');
+  await shot('g22-decor-catalog', 800);
+  await ev(() => {
+    const g = window.__empires.game;
+    const desk = g.state.office.items.find((i) => i.defId === 'desk_basic');
+    for (const c of [
+      { type: 'mount_item', defId: 'pc_dev', deskUid: desk.uid },
+      { type: 'mount_item', defId: 'chair_ergo', deskUid: desk.uid },
+      { type: 'buy_item', defId: 'coffee_machine', x: 6, z: 0, rot: 0 },
+      { type: 'buy_item', defId: 'whiteboard', x: 0, z: 0, rot: 1 },
+      { type: 'buy_item', defId: 'lamp_floor', x: 9, z: 3, rot: 0 },
+    ]) { const r = g.dispatch(c); if (!r.ok) console.log('gallery buy failed', c.defId, r.error); }
+    for (const [x, z] of [[0, 6], [1, 7], [9, 7], [5, 7]]) if (g.dispatch({ type: 'buy_item', defId: 'plant_tall', x, z, rot: 0 }).ok) break;
+  });
+  await page.click('[data-cat="comfort"]');
+  await page.click('[data-buy="sofa"]');
+  for (const [cx, cz] of [[4, 4], [3, 4], [2, 4], [4, 5], [3, 5]]) {
+    const cell = await ev(([x, z]) => window.__empires.scene.cellScreenPos(x, z), [cx, cz]);
+    await page.mouse.click(cell.x, cell.y);
+    await page.waitForTimeout(250);
+    if (await page.isEnabled('#decor-confirm')) break;
+  }
+  await shot('g23-decor-placing', 700);
+  await page.click('#decor-confirm');
+  await page.click('#decor-done');
+  await shot('g24-office-furnished', 2000);
+  await page.click('#hud-news');
+  await shot('g25-empires-daily', 800);
+  await page.click('.card .close');
+  await ev(() => window.__empires.ui.showEmpirian(window.__empires.game.state.empirians[0].id));
+  await shot('g26-skills-card', 800);
+  await page.click('.card .close');
+  await ev(() => window.__empires.advance(8 * 7));
+  await page.click('#hud-contracts');
+  await shot('g27-contract-offers', 800);
+  await page.click('[data-accept]');
+  await ev(() => window.__empires.advance(8 * 3));
+  await shot('g28-contract-working', 2500);
+  await page.setViewportSize({ width: 844, height: 390 });
+  await ev(() => window.__empires.advance(8 * 60));
+  await page.waitForTimeout(800);
+  await page.click('#hud-decor');
+  await shot('g29-phone-decor', 1000);
 
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });

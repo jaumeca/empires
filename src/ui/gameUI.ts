@@ -7,7 +7,8 @@ import type { Game } from '../sim/game';
 import type { Appearance, GameState, PendingDecision, Project, ProjectSize, SkillId } from '../sim/model/state';
 import { progressToNext, SKILLS, specializations } from '../sim/systems/progression';
 import { getActiveProject, getFounder, getProject } from '../sim/state';
-import { productionProgress } from '../sim/systems/project';
+import { officeWorkMultiplier, productionProgress } from '../sim/systems/project';
+import { officeEffects } from '../sim/systems/office';
 import { TOPICS } from '../content/topics';
 import { drawFace } from '../render/face';
 import { iconUrl, type IconName } from '../render/icons';
@@ -280,7 +281,9 @@ export class GameUI {
   toast(text: string, ic: IconName = 'alert'): void {
     const t = h('div.toast', null, icon(ic, 18), text);
     this.toastBox.append(t);
-    while (this.toastBox.children.length > 3) this.toastBox.firstChild?.remove();
+    // Short (phone landscape) screens show fewer toasts so they never cover the office.
+    const max = window.innerHeight < 500 ? 1 : 3;
+    while (this.toastBox.children.length > max) this.toastBox.firstChild?.remove();
     setTimeout(() => t.remove(), 3800);
   }
 
@@ -433,7 +436,7 @@ export class GameUI {
     const daysLbl = h('span');
     const focusLbl = h('span');
     const refresh = () => {
-      const e = estimatePlan(founder, plan.size, plan.focus, plan.budget, plan.days);
+      const e = estimatePlan(founder, plan.size, plan.focus, plan.budget, plan.days, officeWorkMultiplier(officeEffects(s.office), 'mixed', plan.focus));
       clear(est);
       const verdict = { too_short: 'bad', tight: 'warn', ok: 'good', generous: 'warn' }[e.verdict];
       est.append(
