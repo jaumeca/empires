@@ -176,6 +176,8 @@ export const es: Record<string, string> = {
 
   // ---- Menu
   'menu.title': 'Menú',
+  'menu.version': 'EMPIRES v{version} · {commit} · {date}',
+  'menu.debug_sandbox': 'Modo de pruebas: esta partida se guarda aparte y no afecta a tu partida normal.',
   'menu.sub': 'La partida se guarda sola al pausar, al decidir y cada semana.',
   'menu.save': 'Guardar ahora',
   'menu.export': 'Exportar partida',

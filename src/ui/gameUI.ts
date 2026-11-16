@@ -9,6 +9,7 @@ import { progressToNext, SKILLS, specializations } from '../sim/systems/progress
 import { getActiveProject, getFounder, getProject } from '../sim/state';
 import { officeWorkMultiplier, productionProgress } from '../sim/systems/project';
 import { officeEffects } from '../sim/systems/office';
+import type { BuildInfo } from '../app/buildInfo';
 import { TOPICS } from '../content/topics';
 import { drawFace } from '../render/face';
 import { iconUrl, type IconName } from '../render/icons';
@@ -53,7 +54,7 @@ export class GameUI {
   private diag: HTMLElement | null = null;
   readonly decor: DecorUI;
 
-  constructor(private root: HTMLElement, private game: Game, private scene: OfficeScene, private services: UIServices, private debug = false) {
+  constructor(private root: HTMLElement, private game: Game, private scene: OfficeScene, private services: UIServices, private debug = false, private build: BuildInfo = { version: '0.0.0-dev', commit: 'dev', date: '' }) {
     this.hud = h('div');
     this.toastBox = h('div.toasts');
     root.append(this.hud, this.toastBox);
@@ -787,6 +788,8 @@ export class GameUI {
         h('button.big-btn.ghost', { id: 'menu-language', onclick: () => { const next: Locale = getLocale() === 'es' ? 'en' : 'es'; this.services.setLocale(next); setLocale(next); this.renderHud(true); this.showMenu(); } }, t('menu.language', { lang: LOCALE_NAMES[getLocale()] })),
         h('button.big-btn.coral', { onclick: () => { if (confirm(t('menu.new_game_confirm'))) this.services.newGame(); } }, t('menu.new_game')),
       ),
+      h('p.hint.version', { id: 'menu-version' }, t('menu.version', { version: this.build.version, commit: this.build.commit, date: this.build.date })),
+      this.debug ? h('p.hint.version', null, t('menu.debug_sandbox')) : null,
     );
     this.openModal('menu', card);
   }

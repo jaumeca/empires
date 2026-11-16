@@ -152,13 +152,13 @@ const check = (name, ok, detail = '') => { checks.push({ name, ok, detail }); co
   // from another page of the same origin, like a crash or a bad disk write would.
   const cssAsset = require('fs').readdirSync('dist/assets').find((f) => f.endsWith('.css'));
   await page.goto(`${base}/assets/${cssAsset}`); // a static file of the same origin (no game code)
-  await page.evaluate(() => { const k = 'empires.save.auto'; localStorage.setItem(k, localStorage.getItem(k).replace('"money":', '"money":7')); });
+  await page.evaluate(() => { const k = 'empires.debug.save.auto'; localStorage.setItem(k, localStorage.getItem(k).replace('"money":', '"money":7')); });
   await page.goto(`${base}/?debug`);
   await page.waitForTimeout(2500);
   const recovered = await st();
   const toastText = await page.locator('.toast').allInnerTexts();
   check('corrupted autosave is recovered from a backup', recovered.tick > 0 && recovered.tick <= beforeCorrupt.tick && toastText.some((x) => x.includes('copia de seguridad')), `tick ${recovered.tick} / ${beforeCorrupt.tick}`);
-  check('damaged save is kept in quarantine', await page.evaluate(() => !!localStorage.getItem('empires.save.quarantine.auto')));
+  check('damaged save is kept in quarantine', await page.evaluate(() => !!localStorage.getItem('empires.debug.save.quarantine.auto')));
 
   // Portrait/phone sizes
   await page.setViewportSize({ width: 844, height: 390 });

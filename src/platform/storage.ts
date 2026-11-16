@@ -24,19 +24,22 @@ export class MemoryStorage implements SaveStorage {
   remove(slot: string) { this.m.delete(slot); }
 }
 
-const PREFIX = 'empires.save.';
+/** Normal saves. Debug/test sessions use a separate prefix so they can never touch real games. */
+export const SAVE_PREFIX = 'empires.save.';
+export const DEBUG_SAVE_PREFIX = 'empires.debug.save.';
 
 export class LocalSaveStorage implements SaveStorage {
+  constructor(private readonly prefix = SAVE_PREFIX) {}
   read(slot: string): string | null {
     try {
-      return localStorage.getItem(PREFIX + slot);
+      return localStorage.getItem(this.prefix + slot);
     } catch {
       return null;
     }
   }
   write(slot: string, data: string): boolean {
     try {
-      localStorage.setItem(PREFIX + slot, data);
+      localStorage.setItem(this.prefix + slot, data);
       return true;
     } catch (e) {
       console.warn('Save failed', e);
@@ -45,7 +48,7 @@ export class LocalSaveStorage implements SaveStorage {
   }
   remove(slot: string): void {
     try {
-      localStorage.removeItem(PREFIX + slot);
+      localStorage.removeItem(this.prefix + slot);
     } catch {
       /* ignore */
     }

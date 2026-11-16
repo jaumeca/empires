@@ -164,6 +164,8 @@ export const en: Record<string, string> = {
   'emp.morale': 'Morale {n:int}',
 
   'menu.title': 'Menu',
+  'menu.version': 'EMPIRES v{version} · {commit} · {date}',
+  'menu.debug_sandbox': 'Test mode: this game is saved separately and does not affect your normal game.',
   'menu.sub': 'The game saves itself when paused, after decisions and every week.',
   'menu.save': 'Save now',
   'menu.export': 'Export game',

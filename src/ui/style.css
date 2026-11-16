@@ -287,3 +287,4 @@ input[type=range] { width: 100%; accent-color: var(--mint-dark); height: 28px; }
   .grid2 { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+.version { text-align: center; font-size: 11px; opacity: 0.6; margin-top: 10px; user-select: text; }

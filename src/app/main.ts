@@ -5,13 +5,19 @@ import { SaveManager } from '../platform/saveManager';
 import type { SimEvent } from '../sim/core/events';
 import { OfficeScene, type CameraMode } from '../render/officeScene';
 import { GameUI } from '../ui/gameUI';
-import { downloadText, LocalSaveStorage, onAppHidden, pickTextFile } from '../platform/storage';
+import { DEBUG_SAVE_PREFIX, downloadText, LocalSaveStorage, onAppHidden, pickTextFile, SAVE_PREFIX } from '../platform/storage';
+import { BUILD_INFO } from './buildInfo';
 import { CATALOGS, setLocale, t, type Locale } from '../i18n/i18n';
 
-const GAME_VERSION = '0.1.0-dev';
+const GAME_VERSION = BUILD_INFO.version;
 const params = new URLSearchParams(location.search);
 const debug = params.has('debug');
-const storage = new LocalSaveStorage();
+/**
+ * Debug/test sessions (?debug) play in a sandbox with their own save slots, so
+ * test URLs (?debug&fresh, ?seed…) can never overwrite a real game. In a normal
+ * session every URL parameter except lang/cam is ignored.
+ */
+const storage = new LocalSaveStorage(debug ? DEBUG_SAVE_PREFIX : SAVE_PREFIX);
 
 // Language: ?lang=en > saved preference > Spanish (default).
 const savedLocale = (() => { try { return localStorage.getItem('empires.locale'); } catch { return null; } })();
@@ -25,7 +31,7 @@ let startupNotice: string | null = null;
 let reloading = false;
 
 function loadOrCreate(): Game {
-  if (!params.has('fresh')) {
+  if (!(debug && params.has('fresh'))) {
     const res = saves.load();
     if (res.problems.length) console.warn('Save problems', res.problems, 'quarantined', res.quarantined);
     if (res.state) {
@@ -33,7 +39,7 @@ function loadOrCreate(): Game {
       return new Game(res.state);
     }
   }
-  const seed = params.has('seed') ? Number(params.get('seed')) : (Date.now() % 2147483647);
+  const seed = debug && params.has('seed') ? Number(params.get('seed')) : (Date.now() % 2147483647);
   return new Game(createNewGame(seed));
 }
 
@@ -78,7 +84,7 @@ const services = {
   },
 };
 
-const ui = new GameUI(document.getElementById('ui')!, game, scene, services, debug);
+const ui = new GameUI(document.getElementById('ui')!, game, scene, services, debug, BUILD_INFO);
 let pending: SimEvent[] = [];
 game.onUpdate((events) => pending.push(...events));
 
@@ -92,7 +98,7 @@ try {
 } catch { /* ignore */ }
 
 // F1.10 stress scene: extra cosmetic Empirians (render only, not in the simulation).
-const stress = Math.min(30, Number(params.get('stress') ?? 0));
+const stress = debug ? Math.min(30, Number(params.get('stress') ?? 0)) : 0;
 for (let i = 0; i < stress; i++) {
   const r = (n: number) => Math.floor(Math.random() * n);
   scene.ensureEmpirian(`stress-${i}`, { skin: r(8), hairStyle: r(8), hairColor: r(12), top: r(5), topColor: r(10), pantsColor: r(6), accessory: r(6) });
