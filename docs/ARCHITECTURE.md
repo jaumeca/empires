@@ -417,3 +417,10 @@ Todos los sistemas nuevos viven en `src/sim/systems/`, son deterministas (flujos
 - **Análisis:** `tools/sim-runner/careers.ts` juega carreras completas (juegos, encargos, compras) y alimenta `economy.report.ts` y `tests/sim/economy.test.ts`; `trends.report.ts` mide las estrategias de tendencias.
 - **E2E:** `tools/e2e/decor.cjs` (modo decoración con toques) y `tools/e2e/contracts.cjs` (encargos) se suman a `play.cjs`.
 
+## 16. Web de producción (2026-11-16)
+
+- **Compilación:** `vite build` → `dist/` (estático, `base: './'`). `vite.config.ts` inyecta `__EMPIRES_VERSION__` (de `package.json`), `__EMPIRES_COMMIT__` (`git rev-parse` o `EMPIRES_COMMIT`) y la fecha; `src/app/buildInfo.ts` los expone y el menú los muestra. `public/.htaccess` se copia a `dist/`.
+- **Guardado:** `LocalSaveStorage(prefix)`; `main.ts` usa `empires.debug.save.*` con `?debug` y `empires.save.*` en el resto. Los parámetros de prueba solo se leen con `?debug`.
+- **Entrada de escritorio:** `OfficeScene.onHover` (ratón sin botones en modo decoración, un pick por frame) y `lastPointerType`; `DecorUI.onHover/handleKey`; `GameUI.onKey` traduce teclas a las mismas acciones de la interfaz (nunca comandos nuevos). Estilos de escritorio bajo `@media (pointer: fine)` y `(min-width: 1180px) and (min-height: 640px)`.
+- **E2E web:** `tools/e2e/persistence.cjs`, `tools/e2e/desktop.cjs`.
+

@@ -25,11 +25,11 @@ Capturas generadas automáticamente con `npm run gallery` (Chromium sin pantalla
 | 17 | [g16-small-phone-new-project.jpg](g16-small-phone-new-project.jpg) | Lo mismo en un móvil pequeño 667×375 (requiere un pequeño desplazamiento). |
 | 18 | [g17-phone-menu.jpg](g17-phone-menu.jpg) | Menú en móvil horizontal (guardar, exportar, importar, cámara, idioma). |
 | 19 | [g18-phone-results.jpg](g18-phone-results.jpg) | Resultados en móvil horizontal. |
-| 20 | [g19-phone-decision.jpg](g19-phone-decision.jpg) | Momento decisivo en móvil horizontal (opciones en 2 columnas). |
+| 20 | [g19-phone-decision.jpg](g19-phone-decision.jpg) | Momento decisivo en móvil horizontal (opciones en 2 columnas). Los números de atajo aparecen porque la captura se hace con ratón; en un móvil real no se muestran. |
 | 21 | [g20-english-decision.jpg](g20-english-decision.jpg) | Interfaz en inglés (borrador) para comprobar la internacionalización. |
 | 22 | [g21-moment-polish-plan.jpg](g21-moment-polish-plan.jpg) | Momento decisivo contextual "plan de pulido" (F3.1), al terminar la producción. |
 | 23 | [g22-decor-catalog.jpg](g22-decor-catalog.jpg) | **Modo decoración** (LS.3): catálogo por categorías, efectos explicados con palabras, gasto diario de la oficina. |
-| 24 | [g23-decor-placing.jpg](g23-decor-placing.jpg) | Colocando un sofá: objeto fantasma verde (cabe) o rojo (no cabe, con el motivo), girar y confirmar con el precio. |
+| 24 | [g23-decor-placing.jpg](g23-decor-placing.jpg) | Colocando un sofá con el ratón: el objeto fantasma (verde si cabe, rojo con el motivo si no) sigue al cursor y un clic lo coloca; con el dedo, tocar el suelo y confirmar. |
 | 25 | [g24-office-furnished.jpg](g24-office-furnished.jpg) | **Oficina amueblada**: ordenador de desarrollo, silla ergonómica, cafetera, pizarra, planta alta, lámpara y sofá. |
 | 26 | [g25-empires-daily.jpg](g25-empires-daily.jpg) | **Empires Daily** (LS.5): titulares generados por cambios reales del mundo (tendencias, herramientas…). |
 | 27 | [g26-skills-card.jpg](g26-skills-card.jpg) | **Ficha del Empirian** (LS.1): programación, diseño, creatividad, gestión y especialidades. |

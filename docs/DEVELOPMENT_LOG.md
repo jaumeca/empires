@@ -4,6 +4,43 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-16 — Quinta sesión (1.ª parte): versión web estable 0.4.0
+
+### Resumen
+LS.9 cerrada (sesión anterior) y verificada; preparación de una versión web estable para que el propietario la despliegue desde Hostinger: guardado blindado, versión visible, experiencia de ordenador, guía de despliegue y rama `production-web`. Nueva etapa "Growing Together" documentada.
+
+### Estado real verificado
+- **Hechas:** LS.1, LS.2, LS.3, LS.4, LS.5, LS.7, LS.8, LS.9, F3.1, WEB.1–WEB.6.
+- **Parcial:** LS.6 (cola de ventas y resurgimientos hechos; falta la historia del producto al tocar su caja → GT.6/F3.9).
+- **Pendientes:** F3.2–F3.10; F1.11/WEB.7 (móviles reales, del propietario); GT.1–GT.7.
+
+### Cambios
+- **Guardado a salvo (D-045):** `?debug` usa ranuras propias; `?fresh`/`?seed`/`?stress` solo con `?debug`. Antes, abrir `?fresh` sobrescribía la partida real al autoguardar: **riesgo de pérdida eliminado**.
+- **Versión 0.4.0** y commit en el menú (inyectados por Vite).
+- **`public/.htaccess`** opcional (caché correcta tras actualizar).
+- **Ordenador (D-043):** atajos de teclado, fantasma que sigue al ratón y clic para colocar, diálogos laterales en pantallas grandes, pistas de teclado solo con ratón. Corregido: Espacio no reanudaba tras pausar.
+- **Estimación de proyecto** con la velocidad de la oficina (de LS.9).
+- **Docs:** `DEPLOY_WEB.md`, `WEB_RELEASES.md`, D-043–D-045, Q-011 respondida, ROADMAP (WEB, GT), GAME_DESIGN §18 y §24, README.
+
+### Pruebas ejecutadas (realmente)
+- `npx vitest run`: 17 archivos, 122 pruebas, todas pasan. `tsc` y `npm run build` sin errores.
+- `npm ci` limpio desde el lockfile con npm 10.9.9 y con npm 11.21.1, seguido de compilación: correcto.
+- `dist/` servido con un servidor estático simple (Python) en una subcarpeta: carga sin errores ni peticiones fallidas; el bundle no hace peticiones a otros dominios.
+- E2E (Chromium): `play` 21/21, `decor` (táctil) 10/10, `contracts` 10/10, `persistence` 10/10 (partida v1 tras actualizar, guardado al ocultar, `?fresh` inofensivo, sandbox, exportar/importar, versión en el menú), `desktop` 15/15 (teclado, ratón, 1280×720 a 2560×1440).
+- Galería regenerada (30 capturas).
+- **No** probado en móviles reales.
+
+### Problemas encontrados
+- `?fresh` podía borrar la partida real (corregido, ver arriba).
+- Espacio pausaba pero no reanudaba (la pausa manual se recordaba a propósito para los menús): velocidad de juego separada para el atajo.
+- El panel de proyecto (dos columnas) no cabía como diálogo lateral en 1366×768: se queda centrado.
+- La galería esperaba la "gran idea" como primera decisión y colocaba muebles con clics que ahora confirman: actualizada.
+
+### Pendiente
+- Validación en móviles reales; inglés en borrador; GT.1 (contratar) es lo siguiente.
+
+---
+
 ## 2026-11-16 — Cuarta sesión: "A Living Studio"
 
 ### Resumen

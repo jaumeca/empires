@@ -270,7 +270,7 @@ export class DecorUI {
       const err = this.placementError();
       const def = getItemDef(this.placement.defId);
       el.append(h('div.decor-place', null,
-        h('div.decor-hint', null, err ? t(`error.place_${err}`) : t('decor.place_hint')),
+        h('div.decor-hint', null, err ? t(`error.place_${err}`) : t(finePointer() ? 'decor.place_hint_mouse' : 'decor.place_hint')),
         h('div.row', null,
           def.rotatable ? h('button.big-btn.ghost', { id: 'decor-rotate', onclick: () => this.rotatePlacement() }, icon('rotate'), ` ${t('decor.rotate')}`) : null,
           h('button.big-btn.ghost', { onclick: () => this.cancelPlacement() }, t('decor.cancel')),
@@ -330,4 +330,9 @@ export class DecorUI {
       h('div.hint', null, t('decor.hint')),
     ));
   }
+}
+
+/** True on devices with a mouse/trackpad (desktop web). */
+function finePointer(): boolean {
+  try { return matchMedia('(pointer: fine)').matches; } catch { return false; }
 }

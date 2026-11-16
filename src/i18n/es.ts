@@ -426,6 +426,7 @@ export const es: Record<string, string> = {
   "decor.price": "{price:money}",
   "decor.upkeep": "+{upkeep:money}/día",
   "decor.place_hint": "Toca el suelo para colocarlo.",
+  "decor.place_hint_mouse": "Mueve el ratón y haz clic para colocarlo · R gira · Esc cancela.",
   "decor.rotate": "Girar",
   "decor.confirm": "Aquí",
   "decor.cancel": "Cancelar",

@@ -407,6 +407,7 @@ export const en: Record<string, string> = {
   "decor.price": "{price:money}",
   "decor.upkeep": "+{upkeep:money}/day",
   "decor.place_hint": "Tap the floor to place it.",
+  "decor.place_hint_mouse": "Move the mouse and click to place it · R rotates · Esc cancels.",
   "decor.rotate": "Rotate",
   "decor.confirm": "Here",
   "decor.cancel": "Cancel",

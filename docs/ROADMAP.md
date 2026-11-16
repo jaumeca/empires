@@ -11,7 +11,9 @@
 | F0 | Fundación | ✅ Hecho | Documentos maestros + decisiones aprobadas |
 | F1 | El primer Empirian | 🟦 Casi completa (solo falta F1.11, móviles reales) | Habitación voxel con un Empirian animado (falta medir en móviles reales) |
 | F2 | El primer proyecto | 🟦 Jugable | **v0.1 — primera versión jugable** (falta prueba de juego del propietario) |
-| LS | A Living Studio (adelanta partes de F4, F5, F8) | 🟦 En curso | Oficina personalizable, fundador que aprende, Empires Daily, eventos, contratos |
+| LS | A Living Studio (adelanta partes de F4, F5, F8) | ✅ Hecho (LS.6 parcial) | Oficina personalizable, fundador que aprende, Empires Daily, eventos, contratos |
+| WEB | Versión web estable (D-043, D-044) | ✅ 0.4.0 en `production-web` | Web para ordenador con soporte táctil, guardado seguro entre versiones, guía de despliegue |
+| GT | Growing Together (adelanta F4, F5, F7) | 🟦 En curso | Del desarrollador solitario a un estudio: contratar, equipo, oficinas, apps y herramientas, productos con mantenimiento |
 | F3 | Consecuencias y personalización | 🟦 En curso (F3.1) | Proyectos más ricos, decisiones dinámicas, registro causal visible |
 | F4 | Empleados y oficinas | ⬜ | Contratación, personalidades, decoración, garaje |
 | F5 | Mercado vivo | ⬜ | Productos persistentes, competidores, mantenimiento |
@@ -95,11 +97,11 @@ Medido en el entorno (Chromium headless con renderizado por software SwiftShader
 
 **Consolidación (3.ª sesión, hecha):** npm sin `--legacy-peer-deps` (D-028), internacionalización (D-031), historial y guardado robusto (D-029), ventanas para móvil horizontal, galería de revisión, revisión de gameplay (D-030).
 
-**Próximos pasos recomendados (2026-11-16):** prueba en el móvil del propietario (F1.11) y respuesta a Q-011 (uso del dinero acumulado) → según la respuesta, primer empleado con salario (F4 adelantado) o F3.2 (funcionalidades y alcance). F1.12 y F2.12 ya hechas (D-032, D-033); "A Living Studio" terminada (LS.1–LS.9).
+**Próximos pasos (2026-11-16, 5.ª sesión):** versión web 0.4.0 en `production-web` (WEB); siguiente etapa: Growing Together (GT.1 contratar al primer Empirian). Anterior: prueba en el móvil del propietario (F1.11) y respuesta a Q-011 (uso del dinero acumulado) → según la respuesta, primer empleado con salario (F4 adelantado) o F3.2 (funcionalidades y alcance). F1.12 y F2.12 ya hechas (D-032, D-033); "A Living Studio" terminada (LS.1–LS.9).
 
 ---
 
-## LS — "A Living Studio" (actualización en curso, D-036)
+## LS — "A Living Studio" (terminada, D-036)
 
 Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, oficina personalizable, fundador que aprende, mundo que cambia, varias actividades), sin convertir la oficina en un panel. **Toda mecánica nueva tiene representación en el mundo** (objeto, animación, burbuja o reacción del Empirian).
 
@@ -118,6 +120,39 @@ Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, of
 **Orden de implementación:** el del propietario (LS.1 → LS.2–LS.4 → LS.5 → LS.7 → LS.8 → LS.9), con LS.6 junto a LS.5 porque los resurgimientos y las ventas residuales dependen de las noticias y alimentan los eventos sobre productos antiguos. F3.2 (funcionalidades y alcance) y el resto de F3 continúan después de LS o intercalados si el tiempo lo permite; no hay tareas de F3 a medio hacer (F3.1 está terminada).
 
 **Ideas registradas para fases posteriores (sin implementar ahora):** investigación tecnológica (F6), mantenimiento y actualizaciones de productos, expansiones y secuelas, portabilidad a nuevas plataformas (F5/F7), formación y descanso como actividades (F4), ferias y oportunidades comerciales (F9), gestión de productos antiguos y venta/licencia (F5/F8), historia del producto al tocar su caja (F3.9/F5), servidores en etapas posteriores de la oficina (F4/F8), eventos encadenados largos y crisis (F9).
+
+---
+
+## WEB — Versión web estable (D-043, D-044, D-045)
+
+| ID | Tarea | Estado |
+|---|---|---|
+| WEB.1 | Compilación estática en `dist/`, rutas relativas, sin backend ni servidor de Vite; `npm ci` desde el lockfile (npm 10 y 11) | ✅ comprobado (servidor estático en raíz y subcarpeta) |
+| WEB.2 | Guardado a salvo de direcciones de prueba (`?debug` aislado), guardado al cerrar, migraciones v0→v7, exportar/importar | ✅ `tools/e2e/persistence.cjs` 10/10 |
+| WEB.3 | Versión y commit visibles en el menú | ✅ 0.4.0 |
+| WEB.4 | Experiencia de ordenador: atajos de teclado, colocación con ratón, diálogos laterales en pantallas grandes, formularios en dos columnas | ✅ `tools/e2e/desktop.cjs` 15/15 |
+| WEB.5 | Guía de despliegue en Hostinger (`docs/DEPLOY_WEB.md`) y registro de versiones (`docs/WEB_RELEASES.md`) | ✅ |
+| WEB.6 | Rama `production-web` con versiones estables | ✅ 0.4.0 |
+| WEB.7 | Validación en móviles y tabletas reales | ⏸ pendiente del propietario (F1.11) |
+| WEB.8 | `[FUTURO]` Aplicaciones nativas iOS/Android con Capacitor (adaptador de guardado en archivos, zonas seguras, pausa del sistema) | ⬜ |
+
+---
+
+## GT — "Growing Together": de desarrollador solitario a estudio (5.ª sesión)
+
+Objetivo: el fundador deja de estar solo. Contratar, convivir y trabajar en equipo, ampliar la oficina, hacer otros tipos de software y cuidar productos que siguen vivos. Es también la respuesta a Q-011: **el dinero gana usos** (sueldos, puestos, ampliaciones) en lugar de recortar ingresos. Toda mecánica se ve en la oficina; nada de paneles empresariales.
+
+| ID | Tarea | Fase de origen | Representación en el mundo | Criterios de aceptación | Depende de | Estado |
+|---|---|---|---|---|---|---|
+| GT.1 | **Contratar al primer Empirian**: candidatos generados por semilla con habilidades, rasgo de personalidad y sueldo; hace falta un puesto libre; despedir/dimitir con consecuencias | F4 | El candidato entra por la puerta para la entrevista; el contratado ocupa un escritorio y trabaja | Contratar aumenta la capacidad y el gasto (prueba); sin puesto no se puede contratar; determinista; partidas antiguas migran | LS.1, LS.3 | ⬜ Siguiente |
+| GT.2 | **Empleados vivos**: experiencia por actividad (mismo modelo que el fundador), energía y ánimo propios, rasgos con efecto y expresión visual, sueldo semanal | F4 | Burbujas, caras y animaciones propias; ficha de cada Empirian | Cada rasgo cambia algo medible (prueba de no-dominancia); el sueldo se paga y se registra | GT.1 | ⬜ |
+| GT.3 | **Trabajo en equipo y asignación**: repartir programación, diseño y pruebas; coordinación con rendimientos decrecientes | F4 | Cada Empirian va a su puesto y hace su actividad | Dos personas no son el doble de rápidas (prueba); asignar bien rinde más que asignar mal | GT.2 | ⬜ |
+| GT.4 | **Ampliar la oficina y nuevas ubicaciones** (habitación → garaje/estudio más grande) | F4 | Mudanza con cajas; habitación más grande | Inversión grande con beneficio claro (más puestos, más ambiente) y coste recurrente | GT.1 | ⬜ |
+| GT.5 | **Otros tipos de software: aplicaciones y herramientas** con factores de éxito propios | F7 | Pantallas y cajas distintas | Cada tipo tiene ≥ 2 factores propios que cambian la estrategia (prueba) | F3.2 | ⬜ |
+| GT.6 | **Productos persistentes**: mantenimiento, actualizaciones y parches; usuarios; abandono con consecuencias | F5 | Tocar la caja de la estantería abre la historia del producto y sus acciones | Un producto mantenido vende más tiempo; uno abandonado pierde reputación (prueba) | LS.6, GT.3 | ⬜ |
+| GT.7 | **Reequilibrio económico** con sueldos y ampliaciones (cierra Q-011) | D-034 | — | `economy.report.ts` antes/después; estudio pequeño viable; el dinero tiene usos con sentido | GT.1–GT.4 | ⬜ |
+
+**Antes y en paralelo (pendientes de F3 y LS):** F3.2 funcionalidades y alcance, LS.6 historia del producto (2.ª parte, se une a GT.6), F3.4 deuda técnica, F3.8 consecuencias persistentes, F3.9 historia del proyecto. Se intercalan cuando sus dependencias estén resueltas; GT.1 va primero porque es lo más pedido y lo que da usos al dinero.
 
 ---
 

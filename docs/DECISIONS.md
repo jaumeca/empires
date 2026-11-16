@@ -139,7 +139,7 @@ Tomadas por el propietario en el documento fundador (2026-11-14).
 
 _(Ninguna abierta tras la 3.ª sesión salvo las marcadas como provisionales más abajo; D-020 se conserva aquí por trazabilidad.)_
 
-### Q-011 — ¿Cómo dar uso al dinero acumulado? `[PREGUNTA]` (4.ª sesión, D-042)
+### Q-011 — ¿Cómo dar uso al dinero acumulado? — **Respondida** (5.ª sesión): no reducir ingresos de forma arbitraria; dar utilidad al dinero con inversiones, equipamiento, actividades y progresión. Se aplica en Growing Together (GT.1–GT.4, reequilibrio en GT.7).
 - **Contexto:** tras un año de juego el estudio acumula 137 000–310 000 €; la oficina absorbe ≤ 3 %.
 - **Opciones:** (a) **recomendada:** adelantar de F4 la contratación del primer empleado con salario (el gran uso del dinero y el siguiente paso natural del estudio) y la ampliación de la oficina; reequilibrar ingresos después; (b) recortar ahora los ingresos de los juegos ≈ 30–40 % (más tensión pronto, pero el excedente vuelve en el segundo año); (c) dejarlo así hasta F4 y priorizar F3.2+.
 - **Necesita:** decisión del propietario.
@@ -293,6 +293,23 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Problema abierto:** el dinero se acumula (137 000–310 000 € al año; la oficina absorbe ≤ 3 %). Recortar ingresos ahora no lo resuelve.
 - **Propuesta `[PROPUESTA]`:** resolverlo con los grandes usos del dinero de F4 (contratar con salarios, ampliar la oficina, formación) y **después** reequilibrar ingresos con el mismo informe (`economy.report.ts`) como referencia. Pendiente de aprobación (Q-011).
 - **Observación de diseño:** el ritmo normal no es sostenible en proyectos de más de ~40 días sin silla ni cafetera (gasta 6,8 de energía al día, recupera 5). Se mantiene: da una razón visible para invertir en la oficina y para alternar ritmos.
+
+### D-043 — Plataformas: web para ordenador primero, una sola base de código
+- **Fecha:** 2026-11-16 · **Estado:** Confirmada (propietario, 5.ª sesión)
+- EMPIRES tendrá tres destinos: **web** (pensada para ordenador, jugable en móvil y tableta), **iOS** y **Android** (más adelante con Capacitor). Una sola base de código, una sola simulación y un solo sistema de guardado; la presentación se adapta al dispositivo sin duplicar lógica.
+- **Web para ordenador:** ratón (el objeto fantasma sigue al cursor, un clic coloca), teclado (atajos que solo llaman a las mismas acciones de la interfaz), diálogos al lado en pantallas grandes para que la oficina siga visible, formularios en dos columnas. Los atajos y las pistas de teclado solo aparecen con puntero fino.
+- **Móvil/tableta:** se mantienen los controles táctiles y el diseño horizontal existentes.
+
+### D-044 — Ramas y despliegue web
+- **Fecha:** 2026-11-16 · **Estado:** Confirmada (propietario, 5.ª sesión)
+- `claude/friendly-ptolemy-klybh8` = desarrollo; **`production-web`** = solo versiones estables, actualizadas por Claude Code sin force push tras pruebas, compilación, migraciones y e2e; `main` no se toca. Cada versión se anota en `docs/WEB_RELEASES.md`.
+- El propietario despliega desde **Hostinger**; Claude Code no publica ni configura proveedores, DNS ni dominio. Sitio estático en `dist/`, rutas relativas, sin backend (`docs/DEPLOY_WEB.md`).
+
+### D-045 — Guardado a salvo de las direcciones de prueba y versión visible
+- **Fecha:** 2026-11-16 · **Estado:** Aplicada (decisión técnica reversible de Claude Code)
+- **Problema:** `?fresh` creaba una partida nueva que el autoguardado escribía encima de la real.
+- **Solución:** con `?debug` el juego usa ranuras separadas (`empires.debug.save.*`); `?fresh`, `?seed` y `?stress` solo funcionan con `?debug`. Una dirección normal ignora todo salvo `lang` y `cam`.
+- La versión (`package.json`), el commit y la fecha de compilación se inyectan al compilar y se ven en el menú. Versión actual: **0.4.0**.
 
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 

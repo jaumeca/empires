@@ -413,6 +413,11 @@ Preferencias iniciales `[CONFIRMADO]`:
 
 `[PROPUESTA]` Orientación **horizontal** (candidata; validar en Fase 1 con prototipo en móvil real — D-011).
 
+`[CONFIRMADO]` (D-043, 5.ª sesión) **Tres destinos con una sola base de código, una sola simulación y un solo guardado:**
+- **Web, pensada primero para ordenador** (pantalla grande, ratón, teclado, sesiones largas) y también jugable en móvil y tableta con controles táctiles. `[IMPLEMENTADO]` v0.4.0: atajos de teclado, colocación con ratón, diálogos laterales que dejan ver la oficina, formularios en dos columnas; despliegue estático en Hostinger desde la rama `production-web` (D-044, `docs/DEPLOY_WEB.md`).
+- **iOS y Android** nativas, más adelante, con Capacitor y las adaptaciones de cada plataforma.
+- En ordenador la interfaz no debe parecer un móvil estirado; en móvil, la escena se prioriza en horizontal, con zonas seguras y botones grandes.
+
 `[PREGUNTA]` Q-005: El dominio indicado es **expires.top**. ¿Es correcto o se refiere a **empires.top**? Uso pendiente (web del juego, versión web, presskit).
 
 `[PREGUNTA]` Q-006: "EMPIRES" es un nombre muy genérico y existen títulos con "Empires" en las tiendas. Recomiendo una búsqueda de marcas y de disponibilidad en tiendas antes de invertir en logotipo/marketing (posible nombre comercial ampliado, p. ej. "EMPIRES: Little People, Big Ideas").
@@ -515,6 +520,37 @@ El jugador deja de encadenar juegos: gestiona un estudio que evoluciona. Toda me
 Primero usos para el dinero (equipamiento, costes recurrentes, formación, investigación, mantenimiento, contratación, expansión) y después equilibrio conjunto. Debe seguir siendo viable un estudio pequeño y rentable; sin cadenas de compras obligatorias.
 
 `[IMPLEMENTADO]` Primera revisión conjunta (LS.9, D-042): sin estrategias dominantes; el dinero se acumula a largo plazo y los grandes usos (contratación, ampliación) llegan con F4 (pregunta Q-011).
+
+## 24. "Growing Together": de desarrollador solitario a estudio `[CONFIRMADO]` (5.ª sesión)
+
+El fundador deja de estar solo. Es la siguiente gran etapa y también la forma de dar **usos con sentido al dinero** (Q-011): sueldos, puestos de trabajo, ampliaciones, equipamiento. No se recortan ingresos de forma arbitraria.
+
+### 24.1 Contratar al primer Empirian `[CONFIRMADO]`
+- Candidatos generados por la semilla, cada uno con nombre, aspecto, habilidades (programación, diseño, creatividad, gestión), un **rasgo de personalidad** y un **sueldo** pedido. Más habilidad, más sueldo.
+- Hace falta un **puesto libre** (escritorio con ordenador y silla): la oficina limita el tamaño del estudio y el catálogo cobra sentido.
+- La entrevista se ve en la oficina: el candidato entra, saluda y espera. Contratar o no es una decisión con consecuencias; despedir cuesta ánimo y reputación.
+
+### 24.2 Empleados vivos `[CONFIRMADO]`
+- Aprenden haciendo con el mismo modelo que el fundador (§23.1), tienen **energía y ánimo propios**, cobran **cada semana** y pueden cansarse, alegrarse o desanimarse.
+- Los rasgos tienen efecto y expresión visual (p. ej. *perfeccionista*: menos bugs y más lento; *noctámbulo*: rinde más con crunch y se agota antes; *sociable*: mejora el ánimo de los demás; *curioso*: aprende más rápido). Ningún rasgo es siempre mejor.
+
+### 24.3 Trabajo en equipo `[CONFIRMADO]`
+- Reparto del trabajo (programar, diseñar, probar) entre los Empirians; la coordinación tiene **rendimientos decrecientes**: dos personas no son el doble de rápidas.
+- Cada Empirian va a su puesto y se le ve hacer su parte.
+
+### 24.4 Oficinas más grandes y nuevas ubicaciones `[CONFIRMADO]`
+- Habitación → garaje → estudio: más espacio, más puestos, más ambiente y más coste mensual. Mudanza visible (cajas, oficina nueva vacía que se amuebla).
+
+### 24.5 Otros tipos de software `[CONFIRMADO]`
+- Primero **aplicaciones** y **herramientas**, con factores de éxito propios (utilidad, estabilidad, soporte) distintos de los juegos (diversión, novedad, encaje del tema). Se amplía después con F7.
+
+### 24.6 Productos persistentes `[CONFIRMADO]`
+- Mantenimiento, actualizaciones y parches; los usuarios esperan arreglos; abandonar un producto tiene consecuencias. Tocar la **caja de la estantería** abre la historia del producto y sus acciones (se une a §23.6).
+
+### 24.7 Reglas de la etapa
+- Todo con representación en la oficina; nada de tablas empresariales.
+- Mantener las ideas anteriores (§23, F4–F10); lo que no entre se queda en `[FUTURO]`.
+- Reequilibrar la economía con `economy.report.ts` cuando existan sueldos y ampliaciones.
 
 ## 22. Contradicciones y tensiones identificadas
 
