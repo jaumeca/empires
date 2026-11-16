@@ -5,6 +5,7 @@ import { canPlace, founderDesk, getItemDef, officeEffects, rotatedSize, SELL_REF
 import { iconUrl, type IconName } from '../render/icons';
 import type { OfficeScene, TapTarget } from '../render/officeScene';
 import { fmtMoney, t } from '../i18n/i18n';
+import { achievementForItem, isUnlocked } from '../sim/systems/story';
 import { clear, h } from './dom';
 
 /**
@@ -23,7 +24,7 @@ interface Host {
 
 type Placement = { mode: 'buy' | 'move'; defId: string; uid?: string; x: number; z: number; rot: Rot };
 
-const CATEGORY_ORDER: ItemCategory[] = ['computer', 'chair', 'desk', 'creative', 'comfort', 'plant', 'light', 'decor', 'storage', 'tech'];
+const CATEGORY_ORDER: ItemCategory[] = ['computer', 'chair', 'desk', 'creative', 'comfort', 'plant', 'light', 'decor', 'awards', 'storage', 'tech'];
 const icon = (name: IconName, size = 20) => h('img.px', { src: iconUrl(name, 32), width: size, height: size, alt: '' });
 
 /** Plain-language effect chips (no numbers, GDD §23.2). */
@@ -313,17 +314,19 @@ export class DecorUI {
     const installed = new Set([desk?.mounts?.computer, desk?.mounts?.chair]);
     el.append(h('div.decor-sheet.card', null,
       h('div.decor-tabs', null, ...cats.map((c) => h('button', { class: c === this.category ? 'on' : '', dataset: { cat: c }, onclick: () => { this.category = c; this.render(); } }, t(`cat.${c}`)))),
-      h('div.decor-items', null, ...ITEMS.filter((d) => d.category === this.category).map((d) => {
+      h('div.decor-items', null, ...ITEMS.filter((d) => d.category === this.category).sort((a, b) => Number(isUnlocked(s, b.id)) - Number(isUnlocked(s, a.id))).map((d) => {
         const isInstalled = d.layer === 'mount' && installed.has(d.id);
-        const label = d.locked ? t('decor.locked') : isInstalled ? t('decor.installed') : d.layer === 'mount' ? t('decor.install') : t('decor.buy');
+        const earned = isUnlocked(s, d.id);
+        const ach = achievementForItem(d.id);
+        const label = d.locked ? t('decor.locked') : !earned ? t('decor.not_earned') : isInstalled ? t('decor.installed') : d.layer === 'mount' ? t('decor.install') : t('decor.buy');
         const affordable = s.company.money >= d.price;
-        return h('div.decor-item', { dataset: { item: d.id } },
-          h('div.t', null, t(`item.${d.id}.name`)),
-          h('div.d', null, t(`item.${d.id}.desc`)),
-          h('div.row', null, ...effectChips(d).map((c) => h('span.chip.good', null, c))),
+        return h(`div.decor-item${earned ? '' : '.unearned'}`, { dataset: { item: d.id } },
+          h('div.t', null, earned ? t(`item.${d.id}.name`) : t('decor.secret')),
+          h('div.d', null, earned ? t(`item.${d.id}.desc`) : t('decor.earn_with', { goal: t(`ach.${ach!.id}.goal`) })),
+          h('div.row', null, ...(earned ? effectChips(d) : []).map((c) => h('span.chip.good', null, c)), d.category === 'awards' && earned ? h('span.chip.trait', null, t('decor.award_chip')) : null),
           h('div.row.between', null,
             h('span.price', null, fmtMoney(d.price), d.upkeep ? h('span.upkeep', null, ` ${t('decor.upkeep', { upkeep: d.upkeep })}`) : null),
-            h('button.big-btn.mint.small', { disabled: !!d.locked || isInstalled || !affordable, dataset: { buy: d.id }, onclick: () => this.buy(d) }, label),
+            h('button.big-btn.mint.small', { disabled: !!d.locked || !earned || isInstalled || !affordable, dataset: { buy: d.id }, onclick: () => this.buy(d) }, label),
           ),
         );
       })),

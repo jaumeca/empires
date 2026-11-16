@@ -195,6 +195,77 @@ function rug(): VoxelGrid {
   return g;
 }
 
+// --- Awards (ML.3): small, warm, collectible.
+function pedestal(g: VoxelGrid, h: number): void {
+  g.box(0, 0, 0, 6, h, 6, P.woodDark);
+  g.box(0, h - 1, 0, 6, h, 6, P.woodMid);
+  g.box(1, 2, 5, 5, 4, 6, P.mustard); // brass label
+}
+
+function trophyGold(): VoxelGrid {
+  const g = new VoxelGrid(6, 20, 6);
+  pedestal(g, 9);
+  g.box(2, 9, 2, 4, 11, 4, P.mustard); // stem
+  g.box(1, 11, 1, 5, 12, 5, P.mustard);
+  g.box(1, 12, 1, 5, 17, 5, (x, y, z) => ((x + y + z) % 4 === 0 ? P.cream : P.mustard)); // cup with shine
+  g.box(0, 14, 2, 1, 16, 4, P.mustard); g.box(5, 14, 2, 6, 16, 4, P.mustard); // handles
+  g.box(2, 16, 2, 4, 17, 4, P.terracottaDark);
+  g.set(2, 17, 2, P.cream);
+  return g;
+}
+
+function plaqueFive(): VoxelGrid {
+  const g = new VoxelGrid(6, 18, 6);
+  g.box(1, 0, 1, 5, 1, 5, P.woodDeep);
+  g.box(2, 1, 2, 4, 8, 4, P.woodDark);
+  g.box(0, 8, 2, 6, 17, 4, P.woodDark); // board
+  g.box(1, 9, 4, 5, 16, 5, P.mustard); // brass plate on the front
+  for (let i = 0; i < 5; i++) g.set(1 + (i % 4), 11 + Math.floor(i / 4) * 3, 5, P.coral); // five little stars
+  return g;
+}
+
+function teamPhoto(): VoxelGrid {
+  const g = new VoxelGrid(6, 16, 6);
+  g.box(0, 0, 1, 1, 9, 2, P.woodDeep); g.box(5, 0, 1, 6, 9, 2, P.woodDeep); g.box(2, 0, 5, 4, 9, 6, P.woodDeep); // easel legs
+  g.box(0, 8, 2, 6, 15, 3, P.woodMid); // frame
+  g.box(1, 9, 3, 5, 14, 4, P.skyLight); // photo
+  g.box(1, 9, 3, 5, 10, 4, P.leaf);
+  g.set(2, 11, 3, P.coral); g.set(2, 12, 3, P.woodDeep); g.set(4, 11, 3, P.mint); g.set(4, 12, 3, P.ink); // two little people
+  return g;
+}
+
+function bonsai(): VoxelGrid {
+  const g = new VoxelGrid(6, 12, 6);
+  g.box(0, 0, 0, 6, 3, 6, P.terracottaDark);
+  g.box(1, 3, 1, 5, 4, 5, P.woodDeep);
+  g.box(2, 3, 2, 3, 8, 3, P.woodDark); g.box(3, 6, 2, 4, 8, 3, P.woodDark); // twisted trunk
+  g.box(0, 8, 1, 4, 10, 4, (x, y, z) => ((x + y + z) % 3 === 0 ? P.leafDark : P.leaf));
+  g.box(3, 9, 2, 6, 11, 5, (x, y, z) => ((x * z + y) % 4 === 0 ? P.leafLight : P.leaf));
+  return g;
+}
+
+function neonSign(): VoxelGrid {
+  const g = new VoxelGrid(12, 22, 6);
+  g.box(2, 0, 2, 3, 12, 3, P.metalDark); g.box(9, 0, 2, 10, 12, 3, P.metalDark); // posts
+  g.box(1, 0, 1, 4, 1, 4, P.metalDark); g.box(8, 0, 1, 11, 1, 4, P.metalDark);
+  g.box(0, 12, 2, 12, 22, 3, P.ink); // backboard
+  // glowing "star + E" shape
+  g.box(2, 14, 3, 3, 20, 4, P.coral); g.box(2, 19, 3, 6, 20, 4, P.coral); g.box(2, 16, 3, 5, 17, 4, P.coral); g.box(2, 14, 3, 6, 15, 4, P.coral);
+  g.set(8, 17, 3, P.mint); g.set(9, 18, 3, P.mint); g.set(10, 17, 3, P.mint); g.set(9, 16, 3, P.mint); g.set(9, 17, 3, P.mustard);
+  return g;
+}
+
+function luckyCactus(): VoxelGrid {
+  const g = new VoxelGrid(6, 13, 6);
+  g.box(1, 0, 1, 5, 4, 5, P.coral);
+  g.box(1, 3, 1, 5, 4, 5, P.coralDark);
+  g.box(2, 4, 2, 4, 11, 4, (x, y) => (y % 2 === 0 ? P.leafDark : P.leaf));
+  g.box(0, 6, 2, 2, 7, 3, P.leaf); g.box(0, 7, 2, 1, 9, 3, P.leaf); // arm
+  g.box(4, 7, 2, 6, 8, 3, P.leaf); g.box(5, 8, 2, 6, 10, 3, P.leaf);
+  g.box(2, 11, 2, 4, 12, 4, P.coral); g.set(2, 12, 2, P.mustard); // flower
+  return g;
+}
+
 /** Desk mounts: computer models (desk-local, relative to `anchor.monitorX`). */
 export function computerModel(id: string): { parts: ModelPart[]; screen: { x: number; y: number; z: number; w: number; h: number } } {
   switch (id) {
@@ -244,6 +315,18 @@ export function itemModel(model: string): ItemModel {
       return { parts: [{ grid: shelfCache, at: [1, 0, 0] }] };
     case 'server_rack':
       return { parts: [{ grid: serverRack(), at: [0, 0, 0] }] };
+    case 'trophy_gold':
+      return { parts: [{ grid: trophyGold(), at: [0, 0, 0] }] };
+    case 'plaque_five':
+      return { parts: [{ grid: plaqueFive(), at: [0, 0, 0] }] };
+    case 'team_photo':
+      return { parts: [{ grid: teamPhoto(), at: [0, 0, 0] }] };
+    case 'bonsai':
+      return { parts: [{ grid: bonsai(), at: [0, 0, 0] }] };
+    case 'neon_sign':
+      return { parts: [{ grid: neonSign(), at: [0, 0, 0] }], light: [6, 17, 5] };
+    case 'lucky_cactus':
+      return { parts: [{ grid: luckyCactus(), at: [0, 0, 0] }] };
     default:
       return { parts: [] };
   }

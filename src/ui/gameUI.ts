@@ -4,8 +4,9 @@ import { PROJECT_LIMITS } from '../sim/commands';
 import { SIM_CONFIG } from '../sim/config';
 import { estimatePlan, estimateProgress, teamSpeedFactor } from '../sim/estimates';
 import { employees, freeWorkstations, hiringUnlocked } from '../sim/systems/team';
+import { ACHIEVEMENTS, memoriesOf } from '../sim/systems/story';
 import type { Game } from '../sim/game';
-import type { Appearance, GameState, PendingDecision, Project, ProjectSize, SkillId } from '../sim/model/state';
+import type { Appearance, GameState, Memory, MemoryKind, PendingDecision, Project, ProjectSize, SkillId } from '../sim/model/state';
 import { progressToNext, SKILLS, specializations } from '../sim/systems/progression';
 import { getActiveProject, getFounder, getProject } from '../sim/state';
 import { productionProgress } from '../sim/systems/project';
@@ -146,6 +147,7 @@ export class GameUI {
       used();
     }
     else if (k === 'f' || k === 'F') { const f = getFounder(s); this.showEmpirian(f.id); used(); }
+    else if (k === 'h' || k === 'H') { this.showStory(); used(); }
     else if ((k === 't' || k === 'T') && (hiringUnlocked(s) || s.empirians.length > 1)) { this.showTeam(); used(); }
   }
 
@@ -311,6 +313,15 @@ export class GameUI {
             if (n) this.toast(t('daily.toast', { title: t(`news.${n.kind}.title`, n.params) }), 'news');
           }
           break;
+        case 'achievement':
+          this.toast(t('toast.achievement', { achievement: t(`ach.${e.achievementId}.name`), item: t(`item.${e.itemId}.name`) }), 'star');
+          this.services.save();
+          break;
+        case 'memory': {
+          const m = this.state.story.memories.find((x) => x.id === e.memoryId);
+          if (m && !['decision', 'achievement', 'founded', 'hire', 'first_hire', 'farewell'].includes(m.kind)) this.toast(t('toast.memory'), 'heart');
+          break;
+        }
         case 'candidates_arrived':
           this.toast(t('toast.candidates', { count: e.count }), 'team');
           break;
@@ -368,11 +379,10 @@ export class GameUI {
       case 'product':
         this.showResults(target.id);
         break;
-      case 'shelf': {
-        const n = s.projects.filter((p) => p.result).length;
-        this.toast(n ? t('toast.shelf', { count: n }) : t('toast.shelf_empty'), 'box');
+      case 'shelf':
+        // The shelf (and the trophies) open the studio's story (ML.2).
+        this.showStory();
         break;
-      }
       case 'poster':
         this.toast(t('toast.poster'), 'rocket');
         break;
@@ -716,9 +726,69 @@ export class GameUI {
           const causes = e.causes.map((c) => ledger.find((x) => x.id === c)).filter((x) => !!x).slice(0, 2);
           return h(`li.${e.tone > 0 ? 'good' : e.tone < 0 ? 'bad' : 'neutral'}`, null, tr(e.text), ...causes.map((c) => h('span.cause', null, `↳ ${tr(c!.text)}`)));
         }))),
+      this.productStory(p),
       h('div.actions', null, h('button.big-btn.mint', { onclick: () => this.closeModal(true) }, t('res.continue'))),
     );
     this.openModal(`results:${projectId}`, card);
+  }
+
+  /** LS.6 (2nd part) / ML.2: the life of a product, from its box on the shelf. */
+  private productStory(p: Project): HTMLElement | null {
+    const r = p.result!;
+    const mems = memoriesOf(this.state, { projectId: p.id });
+    const tail = r.tailWeeks ? t(r.salesEnded ? 'story.product.ended' : 'story.product.tail', { weeks: r.weeklySales.length + r.tailWeeks, units: r.totalUnits }) : null;
+    if (!mems.length && !tail) return null;
+    return h('div.section', null, h('label', null, t('story.product.title')),
+      tail ? h('p.hint', null, tail) : null,
+      h('ul.memories', null, ...mems.map((m) => this.memoryRow(m))));
+  }
+
+  private memoryIcon(kind: MemoryKind): IconName {
+    switch (kind) {
+      case 'founded': return 'rocket';
+      case 'first_release': case 'record': return 'box';
+      case 'first_hit': case 'hit': case 'achievement': return 'star';
+      case 'first_flop': case 'farewell': return 'sweat';
+      case 'comeback': return 'heart';
+      case 'first_hire': case 'hire': return 'team';
+      case 'first_contract': case 'money': return 'coin';
+      case 'skill_master': return 'idea';
+      case 'first_decor': return 'decor';
+      default: return 'alert';
+    }
+  }
+
+  private memoryRow(m: Memory): HTMLElement {
+    const people = (m.empirianIds ?? []).map((id) => this.state.empirians.find((e) => e.id === id)).filter((e): e is NonNullable<typeof e> => !!e);
+    const text = m.kind === 'achievement' ? t('memory.achievement', { achievement: t(`ach.${m.text.params?.achievement}.name`), item: t(`item.${m.text.params?.item}.name`) }) : tr(m.text);
+    return h(`li.memory.${m.tone > 0 ? 'good' : m.tone < 0 ? 'bad' : 'neutral'}`, { dataset: { memory: m.kind } },
+      icon(this.memoryIcon(m.kind), 18),
+      h('span.day', null, t('common.day', { day: m.day })),
+      h('span.txt', null, text),
+      ...people.map((e) => this.portraitOf(e.appearance, 'happy')),
+    );
+  }
+
+  /** ML.2/ML.3: the studio's story — achievements and memories. Opened from the shelf, trophies, H or the menu. */
+  showStory(): void {
+    const s = this.state;
+    const mems = [...s.story.memories].reverse();
+    const card = h('div.card.wide.story', null, this.closeBtn(),
+      h('h2', null, t('story.title', { company: s.company.name })),
+      h('p.sub', null, t('story.sub', { count: s.story.memories.length })),
+      h('div.section', null, h('label', null, t('story.achievements')),
+        h('div.achievements', null, ...ACHIEVEMENTS.map((a) => {
+          const day = s.story.achievements[a.id];
+          return h(`div.achievement${day !== undefined ? '.on' : ''}`, { dataset: { ach: a.id } },
+            icon(day !== undefined ? 'star' : 'box', 22),
+            h('div.t', null, day !== undefined ? t(`ach.${a.id}.name`) : t('story.locked')),
+            h('div.d', null, day !== undefined ? t('story.earned', { day, item: a.item }) : t(`ach.${a.id}.goal`)),
+          );
+        }))),
+      h('div.section', null, h('label', null, t('story.memories')),
+        mems.length ? h('ul.memories', null, ...mems.map((m) => this.memoryRow(m))) : h('p.hint', null, t('story.empty'))),
+    );
+    this.openModal('story', card);
   }
 
   // -------------------------------------------------------------- empirian
@@ -906,6 +976,7 @@ export class GameUI {
       h('p.sub', null, t('menu.sub')),
       h('div.actions', { style: { justifyContent: 'stretch', flexDirection: 'column' } },
         h('button.big-btn.mint', { onclick: () => { this.services.save(); this.toast(t('toast.saved'), 'check'); this.closeModal(true); } }, t('menu.save')),
+        h('button.big-btn.ghost', { id: 'menu-story', onclick: () => this.showStory() }, t('menu.story')),
         h('button.big-btn.ghost', { onclick: () => this.services.exportSave() }, t('menu.export')),
         h('button.big-btn.ghost', { onclick: () => void this.services.importSave() }, t('menu.import')),
         h('button.big-btn.ghost', { onclick: () => { this.services.setCamera(cam === 'iso' ? 'dim' : 'iso'); this.showMenu(); } }, t('menu.camera', { mode: t(`menu.camera.${cam}`) })),

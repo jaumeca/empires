@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { Game } from '../../src/sim/game';
-import { createNewGame, DEFAULT_APPEARANCE, getProject } from '../../src/sim/state';
+import { createNewGame, DEFAULT_APPEARANCE, getProject, SCHEMA_VERSION } from '../../src/sim/state';
 import { coordinationFactor, employees, freeWorkstations, hiringUnlocked } from '../../src/sim/systems/team';
 import { canPlace } from '../../src/sim/systems/office';
 import { deserialize, serialize } from '../../src/sim/save/save';
@@ -174,7 +174,7 @@ describe('team (GT.1)', () => {
     expect(JSON.stringify(back)).toBe(JSON.stringify(g.state));
     for (const f of ['save-v1-released.empires', 'save-v1-pending-decision.empires']) {
       const s = deserialize(readFileSync(new URL(`../fixtures/${f}`, import.meta.url), 'utf8'));
-      expect(s.schemaVersion).toBe(8);
+      expect(s.schemaVersion).toBe(SCHEMA_VERSION);
       expect(s.hiring.candidates).toEqual([]);
       expect(s.rng.hiring).toHaveLength(4);
       expect(employees(s)).toHaveLength(0);

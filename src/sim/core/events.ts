@@ -28,6 +28,8 @@ export type SimEvent =
   | { type: 'candidates_arrived'; count: number; severity: 'important' }
   | { type: 'hired'; empirianId: string; severity: 'important' }
   | { type: 'fired'; empirianId: string; severity: 'important' }
-  | { type: 'payroll'; total: number; severity: 'info' };
+  | { type: 'payroll'; total: number; severity: 'info' }
+  | { type: 'memory'; memoryId: string; severity: 'info' }
+  | { type: 'achievement'; achievementId: string; itemId: string; severity: 'important' };
 
 export type EventSink = (e: SimEvent) => void;

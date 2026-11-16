@@ -428,3 +428,9 @@ Todos los sistemas nuevos viven en `src/sim/systems/`, son deterministas (flujos
 
 `src/sim/systems/team.ts`: candidatos (`state.hiring`, flujo `rng.hiring`), `hire`/`fire`, `payroll` semanal, rasgos (`traitSpeed/traitBugs/traitDrain/traitXp`), `coordinationFactor`, `workstationEffects` (efectos del puesto de cada persona). `project.ts` reparte `workTick` en `contribute()` por persona; `contracts.ts` igual; `estimates.ts/teamSpeedFactor` alimenta las estimaciones. Guardado v8 (migración 7→8: estudio en solitario, sin candidatos). La vista asigna a cada empleado un punto `seat:<id>` en su escritorio y retira a quien se marcha. Pruebas: `tests/sim/team.test.ts`; e2e `tools/e2e/team.cjs`.
 
+## 18. More Life (ML.1–ML.3, 2026-11-16)
+
+- **Relojes:** simulación (ticks, `Game.frame`), mundo (`render/worldClock.ts`, solo avanza si la simulación corre) y real (interfaz, cámara, entrada). `OfficeScene.update(dt, t, …)` recibe tiempo del mundo; `settle()` coloca a todos al cargar. Debug: `scene.worldSnapshot()`.
+- **Historia:** `src/sim/systems/story.ts` (`state.story`: recuerdos con `fact` único, logros, cursor del registro causal, lanzamientos ya evaluados). `storyDay` en el cambio de día; `rememberHire/Farewell/Founding` en sus comandos. Logros → `isUnlocked` en `buy_item`. Guardado v9.
+- **E2E:** `tools/e2e/pause.cjs`, `tools/e2e/story.cjs`.
+

@@ -4,6 +4,26 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-16 — Sexta sesión: More Life, More Fun (ML.1–ML.3) → 0.5.1 y 0.6.0
+
+### Resumen
+- **ML.1 (0.5.1):** la pausa congela el mundo. Causa raíz: la escena animaba con tiempo real; ahora hay un reloj del mundo que solo avanza con la simulación. Publicada enseguida en `production-web` por ser una corrección pedida.
+- **ML.2/ML.3 (0.6.0):** el estudio recuerda (álbum desde la estantería y los trofeos, historia de cada producto desde su caja) y 6 logros desbloquean 6 decoraciones nuevas (pestaña Trofeos).
+
+### Pruebas ejecutadas
+- `npx vitest run`: 20 archivos, **136 pruebas**, todas pasan (nuevas: `tests/render/worldClock.test.ts`, `tests/sim/story.test.ts`).
+- E2E: play 21/21, decor 10/10, contracts 10/10, persistence 10/10, desktop 15/15, team 13/13, **pause 16/16**, **story 10/10**. Galería: 34 capturas.
+
+### Problemas encontrados
+- La prueba de i18n tomaba el campo `key` de los recuerdos por una clave de texto: renombrado a `fact`.
+- Una compra en el tick 0 quedaba fuera del escaneo del registro causal (`<=`): se reescanea el mismo tick (los recuerdos se deduplican).
+- La galería falló una vez por un tiempo de espera; a la segunda, correcta.
+
+### Pendiente (ML)
+ML.4 colores de paredes/suelo y nuevos objetos con zona de descanso; ML.5 editar aspecto/nombre/apodo; ML.6 personalidad visible; ML.7 eventos nuevos.
+
+---
+
 ## 2026-11-16 — Quinta sesión (2.ª parte): Growing Together GT.1 — contratar al primer Empirian (0.5.0)
 
 ### Resumen

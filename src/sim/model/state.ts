@@ -69,6 +69,33 @@ export interface Candidate {
   expiresDay: number;
 }
 
+/** Studio memories (ML.2): meaningful moments, derived from real facts. */
+export type MemoryKind =
+  | 'founded' | 'first_release' | 'first_hit' | 'first_flop' | 'hit' | 'record' | 'comeback'
+  | 'first_hire' | 'hire' | 'farewell' | 'first_contract' | 'skill_master' | 'money' | 'decision' | 'first_decor' | 'achievement';
+
+export interface Memory {
+  id: string;
+  day: number;
+  kind: MemoryKind;
+  text: TextRef;
+  tone: -1 | 0 | 1;
+  empirianIds?: string[];
+  projectId?: string;
+  /** Dedupe id of the fact: a fact becomes a memory only once. */
+  fact: string;
+}
+
+export interface Story {
+  memories: Memory[];
+  /** Achievement id → day it was earned (ML.3). */
+  achievements: Record<string, number>;
+  /** Ledger entries up to this tick were already scanned for big decisions. */
+  scannedTick: number;
+  /** Released projects already evaluated as (possibly) memorable. */
+  seenReleases: string[];
+}
+
 export interface Hiring {
   candidates: Candidate[];
   nextRefreshDay: number;
@@ -303,6 +330,8 @@ export interface GameState {
   contracts: Contracts;
   /** Team growth (GT.1). */
   hiring: Hiring;
+  /** Memories and achievements (ML.2, ML.3). */
+  story: Story;
   /** Deferred consequences (LS.7). */
   scheduled: ScheduledEffect[];
   /** Pacing of dynamic events. */

@@ -243,5 +243,18 @@ const VARIANTS = [
   await page.click('[data-speed="1"]');
   await shot('g31-team-working', 4000);
 
+  // 33-34 More Life (ML.2/ML.3): the studio story and the trophies.
+  await page.click('[data-speed="0"]');
+  await ev(() => { window.__empires.game.state.company.money = 120000; window.__empires.advance(8); });
+  await page.waitForTimeout(400);
+  for (let i = 0; i < 4 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(200); }
+  await page.keyboard.press('h');
+  await shot('g32-studio-story', 800);
+  await page.click('.card .close');
+  await page.keyboard.press('d');
+  await page.click('[data-cat="awards"]');
+  await shot('g33-trophies', 600);
+  await page.click('#decor-done');
+
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });

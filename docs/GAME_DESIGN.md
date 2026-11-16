@@ -553,6 +553,28 @@ El fundador deja de estar solo. Es la siguiente gran etapa y también la forma d
 - Mantener las ideas anteriores (§23, F4–F10); lo que no entre se queda en `[FUTURO]`.
 - Reequilibrar la economía con `economy.report.ts` cuando existan sueldos y ampliaciones.
 
+## 25. "More Life, More Fun": un estudio con vida e historia `[CONFIRMADO]` (6.ª sesión)
+
+Diversión, personalidad y claridad por delante de la complejidad. Conservar la estética voxel.
+
+### 25.1 La pausa congela el mundo `[IMPLEMENTADO]` (D-047)
+Al pausar, los Empirians, las burbujas, el confeti y las pantallas se quedan exactamente como estaban; la interfaz, la cámara y la decoración siguen funcionando; al reanudar todo continúa sin saltos.
+
+### 25.2 Recuerdos `[IMPLEMENTADO]` (D-048)
+El estudio recuerda sus momentos importantes (primer éxito, primer fracaso, contrataciones, grandes decisiones, hitos…), ligados a personas y productos. Se consultan desde la estantería y los trofeos; cada caja de producto cuenta su historia.
+
+### 25.3 Logros y desbloqueos `[IMPLEMENTADO]` (1.er conjunto, D-048)
+Logros opcionales que desbloquean decoraciones especiales. Nunca bloquean mecánicas básicas; se puede disfrutar siendo pequeño o creciendo. `[FUTURO]` Colecciones, tecnologías, especializaciones y retos.
+
+### 25.4 Personalización de oficina `[CONFIRMADO]`
+Colores de paredes y suelo, variantes de muebles, zonas de descanso y ocio con sinergias sencillas, objetos de personalidad. Distinguir lo estético de lo funcional; decorar nunca es obligatorio.
+
+### 25.5 Empirians más personales `[CONFIRMADO]`
+Cambiar aspecto, nombre y apodo del fundador y de los empleados; más peinados, ropa y accesorios; la personalidad se ve en la oficina (reacciones, manías) y tiene consecuencias jugables.
+
+### 25.6 Momentos con más vida `[CONFIRMADO]`
+Eventos contextuales nuevos (idea experimental, negociar un encargo, conflicto en el equipo, responder a una crítica, aprovechar una tendencia, feria, oportunidad inesperada) que dependen del estado real, con consecuencias diferidas y sin interrumpir en exceso.
+
 ## 22. Contradicciones y tensiones identificadas
 
 | # | Tensión | Propuesta de resolución |

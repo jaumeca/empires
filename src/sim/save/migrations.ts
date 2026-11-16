@@ -80,4 +80,15 @@ export const MIGRATIONS: Record<number, (s: AnyState) => AnyState> = {
     const rng = { ...(s.rng as AnyState), hiring: createRngState(s.seed as number, 'hiring') };
     return { ...s, schemaVersion: 8, rng, hiring: { candidates: [], nextRefreshDay: (s.day as number) + 1, hired: 0, salariesPaid: 0 } };
   },
+  /** 8 → 9 (ML.2/ML.3): the studio starts remembering. Past releases and hires become memories on the next day. */
+  8: (s) => ({
+    ...s,
+    schemaVersion: 9,
+    story: {
+      memories: [{ id: 'M-founded', day: 1, kind: 'founded', text: { key: 'memory.founded', params: { company: (s.company as AnyState).name } }, tone: 1, fact: 'founded', empirianIds: [s.founderId] }],
+      achievements: {},
+      scannedTick: s.tick,
+      seenReleases: [],
+    },
+  }),
 };

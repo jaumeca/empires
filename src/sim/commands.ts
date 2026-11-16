@@ -5,6 +5,7 @@ import type { Appearance, GameState, Project, ProjectSize, Rot } from './model/s
 import { canPlace, getItemDef, SELL_REFUND } from './systems/office';
 import { useSavedIdeas } from './systems/events';
 import { fire, hire } from './systems/team';
+import { isUnlocked, rememberFounding } from './systems/story';
 import { acceptContract, cancelContract } from './systems/contracts';
 import { getActiveProject, getFounder } from './state';
 import { getTopic } from '../content/topics';
@@ -59,6 +60,7 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       f.appearance = { ...cmd.appearance };
       state.company.name = cmd.companyName.trim().slice(0, 32) || `${name} Studio`;
       state.setupComplete = true;
+      rememberFounding(state);
       return { ok: true };
     }
 
@@ -161,6 +163,7 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       let def;
       try { def = getItemDef(cmd.defId); } catch { return fail('unknown_item'); }
       if (def.locked) return fail('item_locked');
+      if (!isUnlocked(state, def.id)) return fail('item_not_unlocked');
       if (def.layer === 'mount') return fail('not_placeable');
       if (state.company.money < def.price) return fail('not_enough_money');
       const err = canPlace(state.office, def.id, cmd.x, cmd.z, cmd.rot);

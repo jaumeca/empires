@@ -5,6 +5,7 @@ import { nextFloat, nextInt, nextRange, pick } from '../core/rng';
 import type { Candidate, Empirian, GameState, Hiring, PlacedItem, SkillId, TraitId } from '../model/state';
 import { EMPIRIAN_NAMES } from '../../content/names';
 import { founderDesk, getItemDef, officeEffects, type OfficeEffects } from './office';
+import { rememberFarewell, rememberHire } from './story';
 
 /**
  * Team growth (GT.1–GT.3): applicants, hiring and firing, weekly salaries,
@@ -151,6 +152,7 @@ export function hire(state: GameState, candidateId: string, emit: EventSink): st
   state.hiring.candidates = state.hiring.candidates.filter((x) => x.id !== c.id);
   state.hiring.hired += 1;
   record(state, { kind: 'team', text: { key: 'ledger.team.hired', params: { name: e.name, salary: e.salary!, trait: e.trait! } }, causes: [], tone: 0 });
+  rememberHire(state, e, emit);
   e.activity = 'celebrating';
   emit({ type: 'hired', empirianId: id, severity: 'important' });
   emit({ type: 'office_changed', severity: 'info' });
@@ -161,6 +163,7 @@ export function fire(state: GameState, empirianId: string, emit: EventSink): str
   if (empirianId === state.founderId) return 'cannot_fire_founder';
   const e = state.empirians.find((x) => x.id === empirianId);
   if (!e) return 'unknown_empirian';
+  rememberFarewell(state, e, emit);
   const severance = (e.salary ?? 0) * K().severanceWeeks;
   state.company.money -= severance;
   state.empirians = state.empirians.filter((x) => x.id !== empirianId);

@@ -318,3 +318,17 @@ input[type=range] { width: 100%; accent-color: var(--mint-dark); height: 28px; }
 .chip.trait { background: #efe6ff; border-color: #b9a6e8; }
 .candidate .portrait { margin-right: 10px; }
 .desk-hint { margin-top: 10px; gap: 10px; }
+.decor-item.unearned { opacity: 0.6; border-style: dashed; }
+
+/* Story (ML.2, ML.3) */
+.achievements { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.achievement { background: #fff; border: 3px dashed var(--edge); border-radius: 14px; padding: 8px 10px; opacity: 0.7; }
+.achievement.on { border-style: solid; border-color: var(--mustard); opacity: 1; background: #fffaf0; }
+.achievement .t { font-weight: 900; font-size: 14px; margin-top: 2px; }
+.achievement .d { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.memories { list-style: none; padding: 0; margin: 4px 0 0; max-height: 44vh; overflow: auto; }
+.memory { display: flex; align-items: center; gap: 8px; background: #fff; border-left: 6px solid var(--edge); border-radius: 8px; padding: 6px 10px; margin-top: 6px; font-weight: 700; font-size: 14px; }
+.memory.good { border-left-color: var(--mint-dark); } .memory.bad { border-left-color: var(--coral-dark); }
+.memory .day { font-size: 11.5px; color: var(--ink-soft); white-space: nowrap; }
+.memory .txt { flex: 1; }
+.memory .portrait { width: 28px; height: 28px; }

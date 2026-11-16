@@ -9,7 +9,7 @@
  *  - inspiration (whiteboard), rest, coffee: only the best item of each kind counts.
  *  - ambiance: decoration adds up with strong diminishing returns.
  */
-export type ItemCategory = 'desk' | 'computer' | 'chair' | 'plant' | 'light' | 'comfort' | 'creative' | 'storage' | 'decor' | 'tech';
+export type ItemCategory = 'desk' | 'computer' | 'chair' | 'plant' | 'light' | 'comfort' | 'creative' | 'storage' | 'decor' | 'tech' | 'awards';
 
 export interface ItemEffects {
   /** Multiplier on technical work at this workstation (computer). */
@@ -76,6 +76,13 @@ export const ITEMS: readonly ItemDef[] = [
   { id: 'rug_checker', category: 'decor', price: 90, size: { w: 4, d: 3 }, layer: 'floor', rotatable: true, model: 'rug_checker', effects: { ambiance: 1 } },
   { id: 'arcade', category: 'decor', price: 1100, size: { w: 2, d: 2 }, layer: 'solid', reserve: { w: 2, d: 1 }, spot: { x: 6, z: 15, pose: 'stand' }, rotatable: true, model: 'arcade', effects: { ambiance: 2 } },
   { id: 'bookshelf', category: 'storage', price: 200, size: { w: 3, d: 1 }, layer: 'solid', reserve: { w: 3, d: 1 }, spot: { x: 9, z: 10, pose: 'stand' }, rotatable: true, model: 'bookshelf', showcase: true, effects: { ambiance: 1 } },
+  // --- Awards (ML.3): unlocked by achievements (systems/story.ts), purely decorative.
+  { id: 'trophy_gold', category: 'awards', price: 120, size: { w: 1, d: 1 }, layer: 'solid', rotatable: false, model: 'trophy_gold', effects: { ambiance: 0.8 } },
+  { id: 'plaque_five', category: 'awards', price: 150, size: { w: 1, d: 1 }, layer: 'solid', rotatable: true, model: 'plaque_five', effects: { ambiance: 0.8 } },
+  { id: 'team_photo', category: 'awards', price: 80, size: { w: 1, d: 1 }, layer: 'solid', rotatable: true, model: 'team_photo', effects: { ambiance: 0.8 } },
+  { id: 'bonsai', category: 'awards', price: 140, size: { w: 1, d: 1 }, layer: 'solid', rotatable: false, model: 'bonsai', effects: { ambiance: 1 } },
+  { id: 'neon_sign', category: 'awards', price: 600, upkeep: 2, size: { w: 2, d: 1 }, layer: 'solid', rotatable: true, model: 'neon_sign', effects: { ambiance: 1.6 } },
+  { id: 'lucky_cactus', category: 'awards', price: 50, size: { w: 1, d: 1 }, layer: 'solid', rotatable: false, model: 'lucky_cactus', effects: { ambiance: 0.6 } },
   // --- Later
   { id: 'server_rack', category: 'tech', price: 6000, upkeep: 20, size: { w: 2, d: 1 }, layer: 'solid', rotatable: true, model: 'server_rack', locked: 'later', effects: {} },
 ];

@@ -9,6 +9,7 @@ import { applyScheduled, maybeTriggerEvent } from './systems/events';
 import { contractsDay, contractTick } from './systems/contracts';
 import { gainXp } from './systems/progression';
 import { ambianceLevel, officeEffects } from './systems/office';
+import { storyDay } from './systems/story';
 import { coordinationFactor, hiringDay, payroll, teamMoraleBonus, traitDrain, workstationEffects } from './systems/team';
 
 const C = SIM_CONFIG;
@@ -83,6 +84,7 @@ function dayBoundary(state: GameState, emit: EventSink): void {
   }
   contractsDay(state);
   hiringDay(state, emit);
+  storyDay(state, emit);
   if (state.contracts.active) gainXp(state, founder, 'management', C.progression.managementPerProjectDay, emit);
   applyScheduled(state, emit);
   maybeTriggerEvent(state, emit);

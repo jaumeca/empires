@@ -81,7 +81,7 @@ const GHOST_MATERIAL = new MeshLambertMaterial({ color: 0x9ff0c8, transparent: t
 function tapKindFor(category: string): string {
   switch (category) {
     case 'desk': case 'computer': case 'chair': return 'computer';
-    case 'storage': return 'shelf';
+    case 'storage': case 'awards': return 'shelf';
     case 'plant': return 'plant';
     case 'comfort': return 'beanbag';
     default: return 'item';

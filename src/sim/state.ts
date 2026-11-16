@@ -5,9 +5,10 @@ import { TOPICS } from '../content/topics';
 import { createStartingOffice } from './systems/office';
 import { createWorld } from './systems/world';
 import { createHiring } from './systems/team';
+import { createStory } from './systems/story';
 import { createContracts } from './systems/contracts';
 
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 
 export const DEFAULT_APPEARANCE: Appearance = {
   skin: 2,
@@ -56,6 +57,7 @@ export function createNewGame(seed: number): GameState {
     world: createWorld(),
     contracts: createContracts(),
     hiring: createHiring(),
+    story: createStory(),
     scheduled: [],
     eventLog: { lastDay: null, lastByKind: {} },
   };

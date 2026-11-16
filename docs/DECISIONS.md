@@ -327,6 +327,13 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Carga en pausa:** `scene.settle()` coloca a cada Empirian en su sitio y postura sin avanzar el reloj del mundo.
 - **Mientras decides:** las decisiones también pausan; el Empirian queda congelado con la mano levantada.
 
+### D-048 — Recuerdos del estudio y logros con decoraciones (ML.2, ML.3)
+- **Fecha:** 2026-11-16 · **Estado:** Aplicada (provisional hasta pruebas de juego)
+- **Recuerdos:** se derivan de hechos reales, una sola vez cada uno: fundación, primer lanzamiento, primer éxito (≥ 8), éxitos, primer fracaso (< 5), remontada (≥ 7 tras un < 5), récord del estudio, primera contratación y las siguientes, despedidas, primer encargo, un Empirian que llega a nivel 8, hitos de caja (50 000 €–1 M€), primera compra para la oficina y las grandes decisiones ya escritas en el registro causal (gran idea, rival, error grave, vista previa, idea inesperada). Ligados a Empirians y productos. Máximo 400 (se descartan primero las decisiones antiguas).
+- **Acceso en el mundo:** la estantería y los trofeos abren la "Historia del estudio" (también H y el menú); la caja de cada producto muestra su historia y su vida comercial (cierra LS.6).
+- **Logros (opcionales, nada básico se bloquea):** Juego de oro → trofeo; Cinco juegos → placa; Ya no estás solo → foto del equipo; Clientes felices (5 encargos) → bonsái; Caja fuerte (100 000 €) → cartel luminoso; Remontada → cactus de la suerte. Son decoraciones bonitas con ambiente pequeño (y el cartel gasta 2 €/día): recuerdan, no obligan a optimizar.
+- **Partidas antiguas:** migración 8→9 con el recuerdo de la fundación; al día siguiente se generan los recuerdos de su historia real (lanzamientos, contrataciones…).
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

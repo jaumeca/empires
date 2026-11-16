@@ -38,6 +38,8 @@ Capturas generadas automáticamente con `npm run gallery` (Chromium sin pantalla
 | 30 | [g29-phone-decor.jpg](g29-phone-decor.jpg) | Modo decoración en móvil horizontal 844×390 (el catálogo ocupa la mitad inferior; los avisos se limitan a uno). |
 | 31 | [g30-team-candidates.jpg](g30-team-candidates.jpg) | **Equipo** (GT.1): candidatos con habilidades, rasgo y sueldo semanal; tarjeta lateral en ordenador. |
 | 32 | [g31-team-working.jpg](g31-team-working.jpg) | Segundo Empirian trabajando en su propio escritorio junto al fundador. |
+| 33 | [g32-studio-story.jpg](g32-studio-story.jpg) | **Historia del estudio** (ML.2/ML.3): logros y recuerdos ligados a personas y productos. Se abre desde la estantería o los trofeos. |
+| 34 | [g33-trophies.jpg](g33-trophies.jpg) | Pestaña **Trofeos** en Decorar: decoraciones que se ganan con logros (las no ganadas dicen cómo conseguirlas). |
 
 ## Qué decidir en la revisión (F1.12)
 
