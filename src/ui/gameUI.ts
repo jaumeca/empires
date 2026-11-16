@@ -63,6 +63,8 @@ export class GameUI {
       root.append(this.diag);
     }
     scene.onTap = (target) => (this.decor.active ? this.decor.onTap(target) : this.onTap(target));
+    scene.onHover = (cell) => this.decor.onHover(cell);
+    window.addEventListener('keydown', (ev) => this.onKey(ev));
     this.decor = new DecorUI(root, scene, {
       state: () => this.game.state,
       dispatch: (cmd) => this.game.dispatch(cmd),
@@ -100,6 +102,50 @@ export class GameUI {
     if (!this.state.setupComplete) this.showFounderCreation();
     else if (this.state.pendingDecision) this.showDecision(this.state.pendingDecision);
     this.renderHud(true);
+  }
+
+  // -------------------------------------------------------------- keyboard
+  /**
+   * Desktop shortcuts. Everything they do is also reachable with mouse or touch;
+   * keys only call the same UI actions (never the simulation directly).
+   */
+  private onKey(ev: KeyboardEvent): void {
+    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    const el = ev.target as HTMLElement | null;
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
+    const s = this.state;
+    if (!s.setupComplete) return;
+    const k = ev.key;
+    const used = (): void => ev.preventDefault();
+    if (this.decor.active) {
+      if (this.decor.handleKey(k)) used();
+      return;
+    }
+    if (this.modal) {
+      if (this.modalKind === 'decision' && /^[1-9]$/.test(k)) {
+        const btn = this.modal.querySelectorAll<HTMLButtonElement>('.option')[Number(k) - 1];
+        if (btn && !btn.disabled) { btn.click(); used(); }
+        return;
+      }
+      if (k === 'Escape' && this.modalKind !== 'decision') {
+        const close = this.modal.querySelector<HTMLButtonElement>('button.close');
+        if (close) { close.click(); used(); }
+      }
+      return;
+    }
+    const speeds: Record<string, Speed> = { '1': 1, '2': 2, '3': 4, '4': 8 };
+    if (k === ' ') { this.setSpeed(this.game.clock.speed === 0 ? this.lastPlaySpeed : 0); used(); }
+    else if (speeds[k]) { this.setSpeed(speeds[k]); used(); }
+    else if (k === 'n' || k === 'N') { this.showDaily(); used(); }
+    else if (k === 'd' || k === 'D') { this.decor.open(); used(); }
+    else if (k === 'm' || k === 'M' || k === 'Escape') { this.showMenu(); used(); }
+    else if (k === 'c' || k === 'C') { if (s.contracts.active) this.showContract(); else if (!getActiveProject(s)) this.showContracts(); used(); }
+    else if (k === 'p' || k === 'P') {
+      if (getActiveProject(s)) this.showProjectPanel();
+      else if (!s.contracts.active) this.showNewProject();
+      used();
+    }
+    else if (k === 'f' || k === 'F') { const f = getFounder(s); this.showEmpirian(f.id); used(); }
   }
 
   // ------------------------------------------------------------------- HUD
@@ -145,7 +191,7 @@ export class GameUI {
     }
     const speed = this.game.clock.speed;
     const speedBtn = (v: Speed, label: Node | string) =>
-      h('button', { class: `${speed === v ? 'on' : ''} ${v === 0 ? 'paused' : ''}`, 'aria-label': v === 0 ? t('hud.pause') : t('hud.speed', { n: v }), dataset: { speed: String(v) }, onclick: () => this.setSpeed(v) }, label);
+      h('button', { class: `${speed === v ? 'on' : ''} ${v === 0 ? 'paused' : ''}`, 'aria-label': v === 0 ? t('hud.pause') : t('hud.speed', { n: v }), title: v === 0 ? t('kbd.tip', { label: t('hud.pause'), key: t('kbd.space') }) : t('kbd.tip', { label: t('hud.speed', { n: v }), key: String({ 1: 1, 2: 2, 4: 3, 8: 4 }[v]) }), dataset: { speed: String(v) }, onclick: () => this.setSpeed(v) }, label);
     const r = this.hudRefs;
     r.day = h('span.day');
     r.money = h('span.money');
@@ -156,9 +202,9 @@ export class GameUI {
       ),
       h('div.hud-tr', null,
         h('div.pill.speeds', null, speedBtn(0, icon('pause', 18)), speedBtn(1, '1x'), speedBtn(2, '2x'), speedBtn(4, '4x'), speedBtn(8, '8x')),
-        h('button.icon-btn.badge-host', { 'aria-label': t('daily.button'), id: 'hud-news', onclick: () => this.showDaily() }, icon('news'), this.unreadNews() ? h('span.badge', null, String(Math.min(9, this.unreadNews()))) : null),
-        h('button.icon-btn', { 'aria-label': t('decor.button'), id: 'hud-decor', onclick: () => this.decor.open() }, icon('decor')),
-        h('button.icon-btn', { 'aria-label': t('hud.menu'), id: 'hud-menu', onclick: () => this.showMenu() }, icon('menu')),
+        h('button.icon-btn.badge-host', { 'aria-label': t('daily.button'), title: t('kbd.tip', { label: t('daily.button'), key: 'N' }), id: 'hud-news', onclick: () => this.showDaily() }, icon('news'), this.unreadNews() ? h('span.badge', null, String(Math.min(9, this.unreadNews()))) : null),
+        h('button.icon-btn', { 'aria-label': t('decor.button'), title: t('kbd.tip', { label: t('decor.button'), key: 'D' }), id: 'hud-decor', onclick: () => this.decor.open() }, icon('decor')),
+        h('button.icon-btn', { 'aria-label': t('hud.menu'), title: t('kbd.tip', { label: t('hud.menu'), key: 'M' }), id: 'hud-menu', onclick: () => this.showMenu() }, icon('menu')),
       ),
     );
     const bottom = h('div.hud-bottom');
@@ -226,8 +272,11 @@ export class GameUI {
     this.game.clock.setSpeed(v);
     // Remember the player's choice, including a manual pause: closing a menu must not unpause.
     this.resumeSpeed = v;
+    if (v !== 0) this.lastPlaySpeed = v;
     this.renderHud(true);
   }
+  /** Last non-zero speed chosen by the player (Space toggles between it and pause). */
+  private lastPlaySpeed: Speed = 1;
 
   // ---------------------------------------------------------------- events
   handleEvents(events: SimEvent[]): void {
@@ -604,7 +653,7 @@ export class GameUI {
         this.portrait(d.speakerId),
         h('div', { style: { flex: '1' } }, h('div.label', { style: { fontWeight: '900', marginBottom: '4px' } }, speaker?.name ?? ''), h('div.quote', null, tr(d.text))),
       ),
-      h('div.options', null, ...d.options.map((o) =>
+      h('div.options', null, ...d.options.map((o, i) =>
         h('button.option', { dataset: { option: o.id }, disabled: !!o.disabledReason, onclick: () => {
           const r = this.game.dispatch({ type: 'choose_option', decisionId: d.id, optionId: o.id });
           if (!r.ok) return this.toast(t(`error.${r.error}`));
@@ -612,12 +661,12 @@ export class GameUI {
           this.closeModal(o.id !== 'release');
           this.services.save();
         } },
-          h('div.t', null, tr(o.label)),
+          h('div.t', null, h('kbd.key-hint', null, String(i + 1)), tr(o.label)),
           h('div.hs', null, ...o.hints.map((x) => h('span.chip', null, tr(x)))),
         ),
       )),
     );
-    this.openModal('decision', card);
+    this.openModal('decision', card, { cls: 'desk-side' });
   }
 
   // ---------------------------------------------------------------- results
@@ -725,7 +774,7 @@ export class GameUI {
           }))
         : h('p.hint', null, t('contracts.none')),
     );
-    this.openModal('contracts', card);
+    this.openModal('contracts', card, { cls: 'desk-side' });
   }
 
   private showContract(): void {
@@ -746,7 +795,7 @@ export class GameUI {
         h('button.big-btn.mint', { onclick: () => this.closeModal(true) }, t('contract.keep')),
       ),
     );
-    this.openModal('contract', card);
+    this.openModal('contract', card, { cls: 'desk-side' });
   }
 
   // ----------------------------------------------------------- Empires Daily
@@ -771,7 +820,7 @@ export class GameUI {
         : h('p.hint', null, t('daily.empty')),
     );
     this.game.dispatch({ type: 'mark_news_read' });
-    this.openModal('daily', card);
+    this.openModal('daily', card, { cls: 'desk-side' });
   }
 
   // ------------------------------------------------------------------- menu
@@ -789,6 +838,7 @@ export class GameUI {
         h('button.big-btn.coral', { onclick: () => { if (confirm(t('menu.new_game_confirm'))) this.services.newGame(); } }, t('menu.new_game')),
       ),
       h('p.hint.version', { id: 'menu-version' }, t('menu.version', { version: this.build.version, commit: this.build.commit, date: this.build.date })),
+      h('p.hint.shortcuts', null, t('menu.shortcuts')),
       this.debug ? h('p.hint.version', null, t('menu.debug_sandbox')) : null,
     );
     this.openModal('menu', card);

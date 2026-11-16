@@ -88,7 +88,11 @@ export class DecorUI {
     const s = this.host.state();
     if (this.placement) {
       // While placing, a tap always means "the floor cell under my finger" (even over a rug or a chair).
-      if ((target.kind === 'floor' || target.kind === 'item') && target.cell) this.moveGhostTo(target.cell);
+      if ((target.kind === 'floor' || target.kind === 'item') && target.cell) {
+        this.moveGhostTo(target.cell);
+        // Mouse: the ghost already follows the cursor, so a click places it (if it fits).
+        if (this.scene.lastPointerType === 'mouse' && this.placementError() === null) this.confirmPlacement();
+      }
       return;
     }
     if (this.pickDeskFor && target.kind === 'item') {
@@ -131,10 +135,33 @@ export class DecorUI {
     if (!p) return;
     const office = this.host.state().office;
     const rs = rotatedSize(getItemDef(p.defId), p.rot);
-    p.x = Math.max(0, Math.min(office.w - rs.w, cell[0] - Math.floor((rs.w - 1) / 2)));
-    p.z = Math.max(0, Math.min(office.d - rs.d, cell[1] - Math.floor((rs.d - 1) / 2)));
+    const x = Math.max(0, Math.min(office.w - rs.w, cell[0] - Math.floor((rs.w - 1) / 2)));
+    const z = Math.max(0, Math.min(office.d - rs.d, cell[1] - Math.floor((rs.d - 1) / 2)));
+    if (x === p.x && z === p.z) return;
+    p.x = x;
+    p.z = z;
     this.updateGhost();
     this.render();
+  }
+
+  /** Mouse hover (desktop): the ghost follows the cursor. */
+  onHover(cell: [number, number] | null): void {
+    if (this.el && this.placement && cell) this.moveGhostTo(cell);
+  }
+
+  /** Keyboard (desktop). Returns true if the key was used. */
+  handleKey(key: string): boolean {
+    if (!this.el) return false;
+    if (key === 'Escape') {
+      if (this.placement) this.cancelPlacement();
+      else if (this.pickDeskFor) { this.pickDeskFor = null; this.render(); }
+      else if (this.selected) { this.selected = null; this.render(); }
+      else this.close();
+      return true;
+    }
+    if ((key === 'r' || key === 'R') && this.placement) { this.rotatePlacement(); return true; }
+    if (key === 'Enter' && this.placement && this.placementError() === null) { this.confirmPlacement(); return true; }
+    return false;
   }
 
   private placementError(): string | null {

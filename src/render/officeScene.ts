@@ -142,6 +142,10 @@ export class OfficeScene {
   readonly camera: OrthographicCamera;
   readonly bubbles: BubbleSystem;
   onTap: (t: TapTarget) => void = () => {};
+  /** Mouse hover over the floor (decoration mode only): the cell under the cursor. */
+  onHover: (cell: [number, number] | null) => void = () => {};
+  /** Type of the pointer that produced the last tap ('mouse', 'touch', 'pen'). */
+  lastPointerType = 'mouse';
   private actors = new Map<string, EmpirianActor>();
   private pickables: Object3D[] = [];
   private screenCanvas: HTMLCanvasElement;
@@ -828,7 +832,13 @@ export class OfficeScene {
         down = null;
       }
     });
+    let hoverQueued: PointerEvent | null = null;
     el.addEventListener('pointermove', (ev) => {
+      // Desktop: in decoration mode the ghost follows the mouse (one pick per frame at most).
+      if (ev.pointerType === 'mouse' && this.decorMode && ev.buttons === 0) {
+        if (!hoverQueued) requestAnimationFrame(() => { const e = hoverQueued; hoverQueued = null; if (e) this.onHover(this.floorCellAt(e.clientX, e.clientY)); });
+        hoverQueued = ev;
+      }
       if (!pointers.has(ev.pointerId)) return;
       pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
       if (pointers.size === 2 && pinchStart > 0) {
@@ -841,7 +851,10 @@ export class OfficeScene {
       if (pointers.size < 2) pinchStart = 0;
       if (!down) return;
       const moved = Math.hypot(ev.clientX - down.x, ev.clientY - down.y);
-      if (moved < 12 && performance.now() - down.t < 600) this.pick(ev.clientX, ev.clientY);
+      if (moved < 12 && performance.now() - down.t < 600) {
+        this.lastPointerType = ev.pointerType || 'mouse';
+        this.pick(ev.clientX, ev.clientY);
+      }
       down = null;
     };
     el.addEventListener('pointerup', end);

@@ -187,14 +187,18 @@ const VARIANTS = [
   });
   await page.click('[data-cat="comfort"]');
   await page.click('[data-buy="sofa"]');
+  // Desktop: the ghost follows the mouse; a click places it.
   for (const [cx, cz] of [[4, 4], [3, 4], [2, 4], [4, 5], [3, 5]]) {
     const cell = await ev(([x, z]) => window.__empires.scene.cellScreenPos(x, z), [cx, cz]);
-    await page.mouse.click(cell.x, cell.y);
-    await page.waitForTimeout(250);
-    if (await page.isEnabled('#decor-confirm')) break;
+    await page.mouse.move(cell.x, cell.y);
+    await page.waitForTimeout(300);
+    if (await page.isEnabled('#decor-confirm')) {
+      await shot('g23-decor-placing', 500);
+      await page.mouse.click(cell.x, cell.y);
+      await page.waitForTimeout(400);
+      break;
+    }
   }
-  await shot('g23-decor-placing', 700);
-  await page.click('#decor-confirm');
   await page.click('#decor-done');
   await shot('g24-office-furnished', 2000);
   await page.click('#hud-news');
