@@ -320,6 +320,13 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Sueldos y despidos:** sueldo cada semana; despedir cuesta 2 semanas de sueldo, −12 de ánimo al resto y −2 de reputación.
 - **Medición (1 año, 20 semillas):** juegos pequeños + 1 contratación ≈ 313 000 € frente a 239 000 € sin contratar (+31 %, sueldos ≈ 21 500 €), nota media 7,1 frente a 6,4 (el tiempo extra se va a pulir); estrategia realista +6 %. Contratar es la inversión principal que pedía Q-011; el excedente de dinero sigue ahí y se reequilibra en GT.7, cuando haya oficinas más grandes y más gastos.
 
+### D-047 — La pausa congela el mundo: reloj de animación separado
+- **Fecha:** 2026-11-16 · **Estado:** Aplicada (corrección pedida por el propietario)
+- **Causa raíz:** la escena recibía el tiempo real desde el arranque; todas las animaciones (caminar, teclear, parpadeo, burbujas, confeti, pantallas) seguían con él aunque la simulación estuviera parada.
+- **Solución:** tres relojes. Simulación: ticks fijos, solo con velocidad > 0 (ya era así). **Mundo** (`render/worldClock.ts`): avanza con el tiempo real solo si la simulación corre; la escena usa únicamente este reloj para todo lo que vive en la oficina. **Tiempo real**: interfaz, cámara, entrada y vista previa de decoración. Al reanudar, el mundo sigue desde el mismo instante (sin saltos). Antes de crear el estudio (pantalla del fundador) el mundo no está en pausa.
+- **Carga en pausa:** `scene.settle()` coloca a cada Empirian en su sitio y postura sin avanzar el reloj del mundo.
+- **Mientras decides:** las decisiones también pausan; el Empirian queda congelado con la mano levantada.
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

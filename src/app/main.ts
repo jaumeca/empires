@@ -7,6 +7,7 @@ import { OfficeScene, type CameraMode } from '../render/officeScene';
 import { GameUI } from '../ui/gameUI';
 import { DEBUG_SAVE_PREFIX, downloadText, LocalSaveStorage, onAppHidden, pickTextFile, SAVE_PREFIX } from '../platform/storage';
 import { BUILD_INFO } from './buildInfo';
+import { WorldClock } from '../render/worldClock';
 import { CATALOGS, setLocale, t, type Locale } from '../i18n/i18n';
 
 const GAME_VERSION = BUILD_INFO.version;
@@ -90,6 +91,8 @@ game.onUpdate((events) => pending.push(...events));
 
 
 scene.sync(game.state);
+// A loaded game appears with everyone already at their place and pose (even if it starts paused).
+scene.settle();
 ui.start();
 try {
   const notice = startupNotice ?? sessionStorage.getItem('empires.notice');
@@ -113,22 +116,24 @@ onAppHidden(() => {
 });
 
 let last = performance.now();
-const t0 = last;
 let fps = 60;
+/** World animation time: stops while the game is paused (see render/worldClock.ts). */
+const world = new WorldClock();
 function loop(now: number): void {
   const dtMs = Math.min(250, now - last);
   last = now;
   fps = fps * 0.95 + (1000 / Math.max(1, dtMs)) * 0.05;
   game.frame(dtMs);
-  const t = (now - t0) / 1000;
+  // Before the studio exists (founder creation) the world is not "paused": keep it alive.
+  world.advance(dtMs / 1000, game.state.setupComplete ? game.clock.speed : 1);
   if (pending.length) {
     const evs = pending;
     pending = [];
     scene.sync(game.state);
-    scene.handleEvents(evs, t);
+    scene.handleEvents(evs, world.time);
     ui.handleEvents(evs);
   }
-  scene.update(dtMs / 1000, t, game.clock.speed);
+  scene.update(world.dt, world.time, game.clock.speed);
   ui.frame(fps);
   requestAnimationFrame(loop);
 }
@@ -139,6 +144,7 @@ if (debug) {
   (window as unknown as Record<string, unknown>).__empires = {
     get game() { return game; },
     scene,
+    world,
     ui,
     /** Advance n ticks instantly (test helper). */
     advance(n: number) { for (let i = 0; i < n && !game.state.pendingDecision; i++) game.tick(); },

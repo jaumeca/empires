@@ -82,6 +82,11 @@ export class BubbleSystem {
     this.bubbles = this.bubbles.filter((x) => x !== b);
   }
 
+  /** Debug/test: bubble count and positions/opacities (to check that pause freezes them). */
+  snapshot(): string {
+    return this.bubbles.map((b) => `${Math.round(b.sprite.position.y * 1e4)}:${Math.round(b.sprite.material.opacity * 100)}`).join(',');
+  }
+
   update(now: number): void {
     for (const b of [...this.bubbles]) {
       const age = now - b.born;

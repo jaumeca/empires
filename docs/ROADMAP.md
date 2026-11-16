@@ -13,6 +13,7 @@
 | F2 | El primer proyecto | 🟦 Jugable | **v0.1 — primera versión jugable** (falta prueba de juego del propietario) |
 | LS | A Living Studio (adelanta partes de F4, F5, F8) | ✅ Hecho (LS.6 parcial) | Oficina personalizable, fundador que aprende, Empires Daily, eventos, contratos |
 | WEB | Versión web estable (D-043, D-044) | ✅ 0.4.0 en `production-web` | Web para ordenador con soporte táctil, guardado seguro entre versiones, guía de despliegue |
+| ML | More Life, More Fun (6.ª sesión) | 🟦 En curso | Pausa que congela el mundo, personalización de oficina y Empirians, recuerdos, logros y desbloqueos, eventos con más vida |
 | GT | Growing Together (adelanta F4, F5, F7) | 🟦 En curso | Del desarrollador solitario a un estudio: contratar, equipo, oficinas, apps y herramientas, productos con mantenimiento |
 | F3 | Consecuencias y personalización | 🟦 En curso (F3.1) | Proyectos más ricos, decisiones dinámicas, registro causal visible |
 | F4 | Empleados y oficinas | ⬜ | Contratación, personalidades, decoración, garaje |
@@ -135,6 +136,24 @@ Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, of
 | WEB.6 | Rama `production-web` con versiones estables | ✅ 0.4.0 |
 | WEB.7 | Validación en móviles y tabletas reales | ⏸ pendiente del propietario (F1.11) |
 | WEB.8 | `[FUTURO]` Aplicaciones nativas iOS/Android con Capacitor (adaptador de guardado en archivos, zonas seguras, pausa del sistema) | ⬜ |
+
+---
+
+## ML — "More Life, More Fun" (6.ª sesión)
+
+Objetivo: que apetezca **observar** a los Empirians, **decorar** la oficina, **descubrir** acontecimientos y ver cómo el estudio **construye su historia**. Diversión, personalidad y claridad antes que complejidad. Conserva la estética voxel. No sustituye a GT ni a F3: se intercala.
+
+| ID | Tarea | Representación en el mundo | Criterios de aceptación | Depende de | Estado |
+|---|---|---|---|---|---|
+| ML.1 | **La pausa congela el mundo**: reloj de animación del mundo separado del tiempo real; carga en pausa con todos en su sitio | Empirians, burbujas, confeti y pantallas quietos | Poses idénticas durante la pausa a 1x/4x/8x; la interfaz, la cámara y la decoración funcionan; sin saltos al reanudar; al cambiar de pestaña y al cargar en pausa (prueba + e2e) | — | ✅ `render/worldClock.ts`, `tools/e2e/pause.cjs` 16/16 (D-047) |
+| ML.2 | **Recuerdos del estudio**: primera contratación, primer éxito, primer fracaso, grandes decisiones, premios, cambios de oficina, logros de Empirians, productos memorables; ligados a personas y productos | Álbum de recuerdos desde el corcho; cada caja de la estantería abre la historia de su producto | Cada recuerdo nace de un hecho real del estado; ligero (sin IA generativa); partidas antiguas generan sus recuerdos a partir del historial | LS.6 | ⬜ |
+| ML.3 | **Logros y desbloqueos opcionales**: reconocimientos que desbloquean decoraciones especiales (trofeo, placa, cartel…) | El objeto aparece en el catálogo con su historia | Nada básico se bloquea; se puede jugar pequeño o grande; los logros se ven en la oficina | ML.2 | ⬜ |
+| ML.4 | **Más personalización de oficina**: colores de paredes y suelo; nuevos objetos estéticos y funcionales (variantes de escritorio/silla, alfombras, lámparas, plantas, estanterías, ocio); zona de descanso con sinergia sencilla | Todo visible en la habitación | Estético vs funcional distinguido en el catálogo; efectos con contrapartida; sinergias sin acumulación descontrolada; decorar nunca es obligatorio (prueba de no-dominancia) | LS.2–LS.4 | ⬜ |
+| ML.5 | **Empirians más personales**: cambiar aspecto, nombre y apodo del fundador y de los empleados; más peinados, ropa y accesorios | Editor con el personaje en primer plano | Una sola definición de aspecto; guardado compatible | GT.1 | ⬜ |
+| ML.6 | **Personalidad visible**: cada rasgo se expresa en la oficina (el sociable charla, el perfeccionista revisa, el noctámbulo toma café, el curioso consulta la estantería) y reacciones según energía y ánimo | Animaciones y burbujas propias | Dos Empirians con rasgos distintos se distinguen sin abrir su ficha | GT.1, ML.5 | ⬜ |
+| ML.7 | **Momentos con más vida**: eventos contextuales nuevos (idea experimental, negociar un encargo, conflicto en el equipo, responder a una crítica, aprovechar una tendencia, feria, oportunidad inesperada) con consecuencias diferidas | El Empirian implicado levanta la mano | Cada evento depende del estado real; ninguna opción domina; ritmo limitado (no interrumpir); efectos diferidos registrados | LS.7, GT.1 | ⬜ |
+
+**Dependencias:** la ampliación de oficina (GT.4) multiplica el valor de ML.4 (más espacio para zonas); el trabajo en equipo (GT.3) y la personalidad visible (ML.6) se refuerzan; los recuerdos (ML.2) dan sentido a la estantería (LS.6, 2.ª parte) y alimentan los logros (ML.3). **Orden previsto:** ML.1 → ML.2 → ML.3 → ML.4 → ML.5 → ML.6 → ML.7, intercalando GT.4 cuando la decoración lo pida.
 
 ---
 

@@ -759,7 +759,21 @@ export class OfficeScene {
   }
 
   // ------------------------------------------------------------------ update
-  update(dt: number, t: number, speedFactor: number): void {
+  /**
+   * Places everyone at their current target in its final pose, without animating
+   * (used when a game is loaded, possibly paused). World time is not advanced.
+   */
+  settle(): void {
+    for (let i = 0; i < 40; i++) this.update(0.25, 0, 1, false);
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  /**
+   * `dt`/`t` are WORLD time (render/worldClock.ts): both stop while the game is
+   * paused, which freezes every world animation in place. Rendering, camera and
+   * decoration preview keep working.
+   */
+  update(dt: number, t: number, speedFactor: number, render = true): void {
     const state = this.lastState;
     for (const [id, actor] of this.actors) {
       const e = state?.empirians.find((x) => x.id === id);
@@ -835,7 +849,7 @@ export class OfficeScene {
     this.confetti.instanceMatrix.needsUpdate = true;
 
     this.bubbles.update(t);
-    this.renderer.render(this.scene, this.camera);
+    if (render) this.renderer.render(this.scene, this.camera);
   }
 
   // ------------------------------------------------------------------- input
@@ -890,6 +904,16 @@ export class OfficeScene {
       ev.preventDefault();
       this.setZoom(this.zoomLevel * (ev.deltaY < 0 ? 1.1 : 0.9));
     }, { passive: false });
+  }
+
+  /** Debug/test helper: everything that moves with world time, to check that pause freezes it. */
+  worldSnapshot(): string {
+    const r = (n: number) => Math.round(n * 1e4) / 1e4;
+    const actors = [...this.actors.entries()].map(([id, a]) => {
+      const v = a.view;
+      return [id, r(a.pos[0]), r(a.pos[1]), r(v.heading), r(v.body.position.y), r(v.legL.rotation.x), r(v.armR.rotation.x), r(v.armR.rotation.z)];
+    });
+    return JSON.stringify({ actors, screen: this.screenLine, bubbles: this.bubbles.snapshot(), confetti: this.confetti.count });
   }
 
   /** Debug/gallery helper (not used by the game UI). Pass null to restore. */
