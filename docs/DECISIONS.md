@@ -273,6 +273,14 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Equilibrio medido (30 semillas):** ante el rival, en un juego pequeño diferenciarse rinde +16 % frente a ignorar y en uno mediano adelantarse y diferenciarse empatan (+22 %); ante la vista previa, dar la versión actual gana con juegos limpios (+15 %) y es la peor opción con juegos llenos de bugs, donde gana la demo pulida. Ninguna opción domina en todos los contextos.
 - **Corregido durante la medición:** (1) el rival llegaba según la nueva fecha del jugador, así que adelantarse nunca servía; (2) la idea inesperada mezclaba condición y azar en el disparador; (3) el jugador automático no respondía a eventos surgidos entre proyectos.
 
+### D-041 — Contratos externos: primera actividad alternativa
+- **Fecha:** 2026-11-16 · **Estado:** Aplicada (provisional hasta LS.9 y pruebas de juego)
+- **Regla:** un solo trabajo a la vez: un juego **o** un encargo. Los encargos llegan cada semana (al menos uno si hay hueco, hasta 3), caducan en 7–14 días y vienen de clientes ficticios (panadería, gimnasio, museo, startup, escuela, floristería) con cuatro tipos (web, app, corrección de errores, prototipo) que piden más programación o más diseño.
+- **Pago y plazo:** pago = trabajo × 62 € × (0,85 + reputación/200) × ±10 %. El jugador ve su **estimación honesta** (habilidad real, oficina y una eficiencia media del 85 %) y el plazo del cliente (estimación + 20–60 %); si la estimación se acerca al plazo, la oferta se marca como arriesgada.
+- **Consecuencias:** −4 % del pago por día de retraso (máximo −60 %) y −1 a −3 de reputación; +10 % y +2 de reputación si entregas con un cuarto del plazo de margen; cancelar cuesta 4 de reputación y no cobra nada. Dan experiencia de programación/diseño y +8 de gestión.
+- **Equilibrio medido (autoplay, varias semillas):** encargos ≈ 377 €/día frente a ≈ 839 €/día haciendo juegos (≈ 45 %), ≈ 9 % de entregas tardías. Son ingresos **seguros** para tapar huecos o reponerse tras un fracaso, no la estrategia dominante (prueba `contracts are a safe alternative, not a dominant strategy`).
+- **Representación:** botón "Encargos" con contador en la oficina, tarjeta de ofertas, píldora de progreso abajo y el Empirian trabajando en su escritorio; aviso al entregar.
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

@@ -152,6 +152,15 @@ input[type=range] { width: 100%; accent-color: var(--mint-dark); height: 28px; }
 .option .t { font-weight: 900; font-size: 16px; }
 .option .hs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 
+/* Contracts (LS.8) */
+.offers { display: grid; gap: 8px; }
+.offer { background: #fff; border: 3px solid var(--edge); border-radius: 14px; padding: 10px 12px; display: grid; gap: 6px; }
+.offer .t { font-weight: 900; font-size: 15px; }
+.work-tiles { grid-template-columns: 1fr 1fr; }
+.work-tiles .tile .t { font-size: 16px; }
+.bar.contract > i { background: linear-gradient(90deg, var(--sky), #6ea5df); }
+.hud-bottom .big-btn.ghost { position: relative; }
+
 /* Empires Daily (LS.5) */
 .badge-host { position: relative; }
 .badge { position: absolute; top: -4px; right: -4px; background: var(--coral); color: #fff; border-radius: 999px; min-width: 20px; height: 20px; font-size: 12px; font-weight: 900; display: grid; place-items: center; border: 2px solid var(--paper); }

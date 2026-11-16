@@ -115,6 +115,21 @@ export const SIM_CONFIG = {
     newsworthyScore: 7.3,
   },
 
+  /** External contracts (LS.8). */
+  contracts: {
+    maxOffers: 3,
+    ratePerPoint: 62,
+    /** Extra days on top of the estimate (min, max share). */
+    slack: [0.2, 0.6] as [number, number],
+    /** Average efficiency assumed by estimates (fatigue builds up over a job). */
+    estimateEfficiency: 0.85,
+    latePenaltyPerDay: 0.04,
+    maxPenalty: 0.6,
+    earlyBonus: 0.1,
+    cancelReputation: 4,
+    managementXp: 8,
+  },
+
   /** Dynamic events (LS.7). */
   events: {
     /** Minimum days between two dynamic events. */

@@ -4,6 +4,7 @@ import { newId, record } from './core/ledger';
 import type { Appearance, GameState, Project, ProjectSize, Rot } from './model/state';
 import { canPlace, getItemDef, SELL_REFUND } from './systems/office';
 import { useSavedIdeas } from './systems/events';
+import { acceptContract, cancelContract } from './systems/contracts';
 import { getActiveProject, getFounder } from './state';
 import { getTopic } from '../content/topics';
 import { resolveDecision } from './systems/decisions';
@@ -30,7 +31,9 @@ export type Command =
   | { type: 'mount_item'; defId: string; deskUid: string }
   | { type: 'move_item'; uid: string; x: number; z: number; rot: Rot }
   | { type: 'sell_item'; uid: string }
-  | { type: 'mark_news_read' };
+  | { type: 'mark_news_read' }
+  | { type: 'accept_contract'; offerId: string }
+  | { type: 'cancel_contract' };
 
 /** `error` is a stable code; the UI translates it as `error.<code>`. */
 export type CommandResult = { ok: true } | { ok: false; error: string };
@@ -58,6 +61,7 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
 
     case 'start_project': {
       if (getActiveProject(state)) return fail('project_in_progress');
+      if (state.contracts.active) return fail('contract_in_progress');
       try {
         getTopic(cmd.topicId);
       } catch {
@@ -215,6 +219,16 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       record(state, { kind: 'office', text: { key: 'ledger.office.sold', params: { item: def.id, refund } }, causes: [], tone: 0 });
       emit({ type: 'office_changed', severity: 'info' });
       return { ok: true };
+    }
+
+    case 'accept_contract': {
+      const err = acceptContract(state, cmd.offerId);
+      return err ? fail(err) : { ok: true };
+    }
+
+    case 'cancel_contract': {
+      const err = cancelContract(state);
+      return err ? fail(err) : { ok: true };
     }
 
     case 'mark_news_read': {

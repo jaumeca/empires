@@ -198,6 +198,35 @@ export interface World {
   revivals: Record<string, number>;
 }
 
+export interface ContractOffer {
+  id: string;
+  clientId: string;
+  kind: string;
+  /** Share of technical work (0..1). */
+  focus: number;
+  /** Work points to deliver. */
+  work: number;
+  /** Days allowed from acceptance. */
+  days: number;
+  payment: number;
+  expiresDay: number;
+}
+
+export interface ActiveContract extends ContractOffer {
+  startDay: number;
+  dueDay: number;
+  done: number;
+  causeId: string;
+}
+
+/** External contracts (LS.8). */
+export interface Contracts {
+  offers: ContractOffer[];
+  active: ActiveContract | null;
+  nextRefreshDay: number;
+  completed: number;
+}
+
 export type Rot = 0 | 1 | 2 | 3;
 
 /** A catalog item placed in the office (LS.2). Coordinates are grid cells. */
@@ -243,6 +272,7 @@ export interface GameState {
   setupComplete: boolean;
   office: Office;
   world: World;
+  contracts: Contracts;
   /** Deferred consequences (LS.7). */
   scheduled: ScheduledEffect[];
   /** Pacing of dynamic events. */

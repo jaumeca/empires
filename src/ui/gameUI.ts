@@ -19,6 +19,7 @@ import {
 import { clear, h } from './dom';
 import { DecorUI } from './decorUI';
 import { topicMood } from '../sim/systems/world';
+import { estimateDays } from '../sim/systems/contracts';
 import { fmtMoney, fmtNum1, fmtPrice, getLocale, LOCALE_NAMES, setLocale, t, tr, type Locale } from '../i18n/i18n';
 
 export interface UIServices {
@@ -107,7 +108,7 @@ export class GameUI {
     const p = getActiveProject(s);
     // Structure is rebuilt only when it changes; values are patched in place so
     // buttons are never replaced under the player's finger.
-    const key = JSON.stringify([this.game.clock.speed, p?.id, p?.phase, s.setupComplete, !!this.modal, s.projects.length, this.unreadNews()]);
+    const key = JSON.stringify([this.game.clock.speed, p?.id, p?.phase, s.setupComplete, !!this.modal, s.projects.length, this.unreadNews(), s.contracts.active?.id, s.contracts.offers.length]);
     if (force || key !== this.lastHudKey) {
       this.lastHudKey = key;
       this.buildHud();
@@ -117,6 +118,11 @@ export class GameUI {
     if (r.money) {
       r.money.textContent = fmtMoney(s.company.money);
       r.money.classList.toggle('neg', s.company.money < 0);
+    }
+    const ct = s.contracts.active;
+    if (ct && !p) {
+      if (r.bar) r.bar.style.width = `${Math.round(Math.min(1, ct.done / ct.work) * 100)}%`;
+      if (r.days) r.days.textContent = t('common.days_short', { n: ct.dueDay - s.day });
     }
     if (p) {
       const prog = productionProgress(p);
@@ -167,8 +173,22 @@ export class GameUI {
         ),
       );
       if (p.phase === 'polish') bottom.append(h('button.big-btn.coral.pulse', { id: 'hud-release', onclick: () => this.confirmRelease() }, t('hud.release')));
+    } else if (s.contracts.active) {
+      const ct = s.contracts.active;
+      r.bar = h('i');
+      r.days = h('span');
+      bottom.append(
+        h('div.pill.project-pill.contract', { id: 'hud-contract', onclick: () => this.showContract() },
+          h('div', null, h('div.name', null, t('contract.pill', { client: ct.clientId })), h('div.phase', null, t(`ckind.${ct.kind}`))),
+          h('div.bar.contract', null, r.bar),
+          h('span.stat', null, icon('clock', 18), r.days),
+        ),
+      );
     } else if (!this.modal) {
-      bottom.append(h('button.big-btn.mint', { id: 'hud-new-project', onclick: () => this.showNewProject() }, s.projects.length ? t('hud.new_project') : t('hud.first_project')));
+      bottom.append(
+        h('button.big-btn.mint', { id: 'hud-new-project', onclick: () => this.showNewProject() }, s.projects.length ? t('hud.new_project') : t('hud.first_project')),
+        h('button.big-btn.ghost.badge-host', { id: 'hud-contracts', onclick: () => this.showContracts() }, t('work.contracts'), s.contracts.offers.length ? h('span.badge', null, String(s.contracts.offers.length)) : null),
+      );
     }
     this.hud.append(bottom);
   }
@@ -177,10 +197,10 @@ export class GameUI {
   frame(fps: number): void {
     const s = this.state;
     const founder = s.setupComplete ? getFounder(s) : null;
-    const want = founder && !this.modal && !this.decor.active && !getActiveProject(s) && founder.activity !== 'celebrating' ? (s.projects.length ? t('speech.again') : t('speech.first')) : null;
+    const want = founder && !this.modal && !this.decor.active && !getActiveProject(s) && !s.contracts.active && founder.activity !== 'celebrating' ? (!s.projects.length ? t('speech.first') : s.contracts.offers.length ? t('speech.idle_options') : t('speech.again')) : null;
     if (want && founder) {
       if (!this.speechEl) {
-        this.speechEl = h('div.speech', { onclick: () => this.showNewProject() });
+        this.speechEl = h('div.speech', { onclick: () => (this.state.projects.length ? this.showWorkChooser() : this.showNewProject()) });
         this.root.append(this.speechEl);
       }
       this.speechEl.textContent = want;
@@ -228,6 +248,10 @@ export class GameUI {
         case 'money_low':
           this.toast(t('toast.money_low'), 'alert');
           break;
+        case 'contract_done':
+          this.toast(e.lateDays > 0 ? t('toast.contract_late', { days: e.lateDays, pay: e.pay }) : t('toast.contract_done', { pay: e.pay }), 'coin');
+          this.services.save();
+          break;
         case 'news':
           if (e.importance === 'major') {
             const n = this.state.world.news.find((x) => x.id === e.newsId);
@@ -267,7 +291,8 @@ export class GameUI {
     switch (target.kind) {
       case 'computer':
         if (getActiveProject(s)) this.showProjectPanel();
-        else this.showNewProject();
+        else if (s.contracts.active) this.showContract();
+        else this.showWorkChooser();
         break;
       case 'empirian':
         this.showEmpirian(target.id);
@@ -648,6 +673,76 @@ export class GameUI {
         specs.length ? h('div.row', null, ...specs.map((sp) => h('span.chip.good', null, icon('star', 16), t('emp.specialty', { topic: sp.topicId, bonus: sp.bonus })))) : h('div.hint', null, t('emp.no_specialty'))),
     );
     this.openModal('empirian', card, { pause: false });
+  }
+
+  // ---------------------------------------------------------------- work
+  showWorkChooser(): void {
+    const s = this.state;
+    const card = h('div.card.narrow', null, this.closeBtn(),
+      h('h2', null, t('work.title')),
+      h('p.sub', null, t('work.sub')),
+      h('div.tiles.work-tiles', null,
+        h('button.tile', { id: 'choose-game', onclick: () => this.showNewProject() }, h('div.t', null, icon('rocket', 20), t('work.game')), h('div.d', null, t('work.game_desc'))),
+        h('button.tile', { id: 'choose-contracts', onclick: () => this.showContracts() }, h('div.t', null, icon('coin', 20), t('work.contracts'), s.contracts.offers.length ? ` (${s.contracts.offers.length})` : ''), h('div.d', null, t('work.contracts_desc'))),
+      ),
+    );
+    this.openModal('work', card);
+  }
+
+  showContracts(): void {
+    const s = this.state;
+    const offers = s.contracts.offers;
+    const card = h('div.card', null, this.closeBtn(),
+      h('h2', null, t('contracts.title')),
+      h('p.sub', null, t('contracts.sub')),
+      offers.length
+        ? h('div.offers', null, ...offers.map((o) => {
+            const est = estimateDays(s, o.work, o.focus);
+            const risky = est > o.days * 0.9;
+            return h('div.offer', { dataset: { offer: o.id } },
+              h('div.t', null, t('contracts.offer', { client: o.clientId, kind: o.kind })),
+              h('div.row', null,
+                h('span.chip.good', null, icon('coin', 16), t('contracts.pay', { pay: o.payment })),
+                h('span.chip', null, icon('calendar', 16), t('contracts.days', { days: o.days })),
+                h(`span.chip${risky ? '.bad' : ''}`, null, icon('clock', 16), t('contracts.estimate', { days: est })),
+                risky ? h('span.chip.warn', null, t('contracts.risky')) : null,
+              ),
+              h('div.row.between', null,
+                h('span.hint', null, t('contracts.expires', { day: o.expiresDay })),
+                h('button.big-btn.mint.small', { dataset: { accept: o.id }, onclick: () => {
+                  const r = this.game.dispatch({ type: 'accept_contract', offerId: o.id });
+                  if (!r.ok) return this.toast(t(`error.${r.error}`), 'alert');
+                  this.closeModal();
+                  this.setSpeed(this.resumeSpeed || 1);
+                  this.toast(t('toast.contract_accepted'), 'rocket');
+                } }, t('contracts.accept')),
+              ),
+            );
+          }))
+        : h('p.hint', null, t('contracts.none')),
+    );
+    this.openModal('contracts', card);
+  }
+
+  private showContract(): void {
+    const s = this.state;
+    const c = s.contracts.active;
+    if (!c) return;
+    const card = h('div.card.narrow', null, this.closeBtn(),
+      h('h2', null, t('contract.title', { client: c.clientId })),
+      h('p.sub', null, t('contracts.offer', { client: c.clientId, kind: c.kind })),
+      h('div.row', null,
+        h('span.chip', null, t('contract.progress', { pct: Math.min(1, c.done / c.work) })),
+        h('span.chip', null, icon('calendar', 16), t('contract.due', { day: c.dueDay })),
+        h('span.chip.good', null, icon('coin', 16), t('contracts.pay', { pay: c.payment })),
+      ),
+      s.day > c.dueDay ? h('p.hint', null, t('contract.late')) : null,
+      h('div.actions', null,
+        h('button.big-btn.coral', { onclick: () => { this.game.dispatch({ type: 'cancel_contract' }); this.closeModal(true); } }, t('contract.cancel')),
+        h('button.big-btn.mint', { onclick: () => this.closeModal(true) }, t('contract.keep')),
+      ),
+    );
+    this.openModal('contract', card);
   }
 
   // ----------------------------------------------------------- Empires Daily

@@ -6,6 +6,7 @@ import { isResting, projectDay, workTick } from './systems/project';
 import { maybeDeadlineDecision } from './systems/decisions';
 import { marketWeek } from './systems/market';
 import { applyScheduled, maybeTriggerEvent } from './systems/events';
+import { contractsDay, contractTick } from './systems/contracts';
 import { gainXp } from './systems/progression';
 import { ambianceLevel, officeEffects } from './systems/office';
 
@@ -16,8 +17,12 @@ export function step(state: GameState, emit: EventSink): void {
   const founder = getFounder(state);
   const project = getActiveProject(state);
 
+  const contract = state.contracts.active;
   if (project) {
     workTick(state, project, founder, emit);
+  } else if (contract && !state.pendingDecision) {
+    contractTick(state, founder, emit);
+    founder.energy = Math.max(0, founder.energy - (C.energy.drainPerTick.normal ?? 0.85) * officeEffects(state.office).fatigue);
   } else if (founder.activity !== 'celebrating' || state.tick % (C.ticksPerDay * 2) === 0) {
     if (!state.pendingDecision) founder.activity = 'idle';
   }
@@ -44,9 +49,10 @@ function dayBoundary(state: GameState, emit: EventSink): void {
   state.company.money -= C.economy.dailyLivingCost;
   const fx = officeEffects(state.office);
   const resting = !!project && isResting(state, project);
-  const relaxedBonus = resting ? 8 : project?.pace === 'relaxed' ? 2 : project ? 0 : 6;
+  const working = !!project || !!state.contracts.active;
+  const relaxedBonus = resting ? 8 : project?.pace === 'relaxed' ? 2 : working ? 0 : 6;
   // A good place to rest helps every night, and much more on days off (LS.4).
-  const restBonus = fx.rest * (resting || !project ? 1.5 : 0.5);
+  const restBonus = fx.rest * (resting || !working ? 1.5 : 0.5);
   founder.energy = Math.min(C.energy.max, founder.energy + C.energy.overnightRecovery + relaxedBonus + restBonus);
   if (!project) founder.morale = Math.min(100, founder.morale + 0.5);
   // Coffee on working mornings (paid every day through upkeep).
@@ -65,6 +71,8 @@ function dayBoundary(state: GameState, emit: EventSink): void {
     projectDay(state, project);
     maybeDeadlineDecision(state, project, founder, emit);
   }
+  contractsDay(state);
+  if (state.contracts.active) gainXp(state, founder, 'management', C.progression.managementPerProjectDay, emit);
   applyScheduled(state, emit);
   maybeTriggerEvent(state, emit);
   if ((state.day - 1) % 7 === 0) marketWeek(state, emit);

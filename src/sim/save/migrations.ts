@@ -73,4 +73,6 @@ export const MIGRATIONS: Record<number, (s: AnyState) => AnyState> = {
   },
   /** 5 → 6 (LS.7): dynamic events start with nothing scheduled. */
   5: (s) => ({ ...s, schemaVersion: 6, scheduled: [], eventLog: { lastDay: null, lastByKind: {} } }),
+  /** 6 → 7 (LS.8): no contracts yet; the first offers arrive in a few days. */
+  6: (s) => ({ ...s, schemaVersion: 7, contracts: { offers: [], active: null, nextRefreshDay: (s.day as number) + 3, completed: 0 } }),
 };

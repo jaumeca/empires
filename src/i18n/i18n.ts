@@ -71,6 +71,8 @@ export function t(key: string, params: Record<string, string | number> = {}): st
       case 'skill': return t(`skill.${v}`);
       case 'item': return t(`item.${v}.name`);
       case 'company': return t(`company.${v}`);
+      case 'client': return t(`client.${v}`);
+      case 'ckind': return t(`ckind.${v}`);
       default: return String(v);
     }
   });

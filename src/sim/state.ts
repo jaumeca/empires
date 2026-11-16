@@ -4,8 +4,9 @@ import type { Appearance, Empirian, GameState, Project } from './model/state';
 import { TOPICS } from '../content/topics';
 import { createStartingOffice } from './systems/office';
 import { createWorld } from './systems/world';
+import { createContracts } from './systems/contracts';
 
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 export const DEFAULT_APPEARANCE: Appearance = {
   skin: 2,
@@ -52,6 +53,7 @@ export function createNewGame(seed: number): GameState {
     setupComplete: false,
     office,
     world: createWorld(),
+    contracts: createContracts(),
     scheduled: [],
     eventLog: { lastDay: null, lastByKind: {} },
   };

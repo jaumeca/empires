@@ -21,6 +21,7 @@ export type SimEvent =
   | { type: 'sales_week'; projectId: string; units: number; revenue: number; severity: 'info' }
   | { type: 'money_low'; severity: 'important' }
   | { type: 'office_changed'; severity: 'info' }
+  | { type: 'contract_done'; contractId: string; pay: number; lateDays: number; severity: 'important' }
   | { type: 'news'; newsId: string; kind: string; importance: 'major' | 'minor'; severity: 'important' | 'info' }
   | { type: 'coffee'; empirianId: string; severity: 'info' }
   | { type: 'skill_up'; empirianId: string; skill: string; level: number; severity: 'important' };
