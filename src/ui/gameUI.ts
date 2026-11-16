@@ -2,13 +2,13 @@ import type { Speed } from '../sim/config';
 import type { SimEvent } from '../sim/core/events';
 import { PROJECT_LIMITS } from '../sim/commands';
 import { SIM_CONFIG } from '../sim/config';
-import { estimatePlan, estimateProgress } from '../sim/estimates';
+import { estimatePlan, estimateProgress, teamSpeedFactor } from '../sim/estimates';
+import { employees, freeWorkstations, hiringUnlocked } from '../sim/systems/team';
 import type { Game } from '../sim/game';
 import type { Appearance, GameState, PendingDecision, Project, ProjectSize, SkillId } from '../sim/model/state';
 import { progressToNext, SKILLS, specializations } from '../sim/systems/progression';
 import { getActiveProject, getFounder, getProject } from '../sim/state';
-import { officeWorkMultiplier, productionProgress } from '../sim/systems/project';
-import { officeEffects } from '../sim/systems/office';
+import { productionProgress } from '../sim/systems/project';
 import type { BuildInfo } from '../app/buildInfo';
 import { TOPICS } from '../content/topics';
 import { drawFace } from '../render/face';
@@ -146,6 +146,7 @@ export class GameUI {
       used();
     }
     else if (k === 'f' || k === 'F') { const f = getFounder(s); this.showEmpirian(f.id); used(); }
+    else if ((k === 't' || k === 'T') && (hiringUnlocked(s) || s.empirians.length > 1)) { this.showTeam(); used(); }
   }
 
   // ------------------------------------------------------------------- HUD
@@ -156,7 +157,7 @@ export class GameUI {
     const p = getActiveProject(s);
     // Structure is rebuilt only when it changes; values are patched in place so
     // buttons are never replaced under the player's finger.
-    const key = JSON.stringify([this.game.clock.speed, p?.id, p?.phase, s.setupComplete, !!this.modal, s.projects.length, this.unreadNews(), s.contracts.active?.id, s.contracts.offers.length]);
+    const key = JSON.stringify([this.game.clock.speed, p?.id, p?.phase, s.setupComplete, !!this.modal, s.projects.length, this.unreadNews(), s.contracts.active?.id, s.contracts.offers.length, s.hiring.candidates.length, s.empirians.length, hiringUnlocked(s)]);
     if (force || key !== this.lastHudKey) {
       this.lastHudKey = key;
       this.buildHud();
@@ -204,6 +205,7 @@ export class GameUI {
         h('div.pill.speeds', null, speedBtn(0, icon('pause', 18)), speedBtn(1, '1x'), speedBtn(2, '2x'), speedBtn(4, '4x'), speedBtn(8, '8x')),
         h('button.icon-btn.badge-host', { 'aria-label': t('daily.button'), title: t('kbd.tip', { label: t('daily.button'), key: 'N' }), id: 'hud-news', onclick: () => this.showDaily() }, icon('news'), this.unreadNews() ? h('span.badge', null, String(Math.min(9, this.unreadNews()))) : null),
         h('button.icon-btn', { 'aria-label': t('decor.button'), title: t('kbd.tip', { label: t('decor.button'), key: 'D' }), id: 'hud-decor', onclick: () => this.decor.open() }, icon('decor')),
+        hiringUnlocked(s) || s.empirians.length > 1 ? h('button.icon-btn.badge-host', { 'aria-label': t('team.button'), title: t('kbd.tip', { label: t('team.button'), key: 'T' }), id: 'hud-team', onclick: () => this.showTeam() }, icon('team'), s.hiring.candidates.length && s.empirians.length - 1 < SIM_CONFIG.team.maxEmployees ? h('span.badge', null, String(s.hiring.candidates.length)) : null) : null,
         h('button.icon-btn', { 'aria-label': t('hud.menu'), title: t('kbd.tip', { label: t('hud.menu'), key: 'M' }), id: 'hud-menu', onclick: () => this.showMenu() }, icon('menu')),
       ),
     );
@@ -308,6 +310,19 @@ export class GameUI {
             const n = this.state.world.news.find((x) => x.id === e.newsId);
             if (n) this.toast(t('daily.toast', { title: t(`news.${n.kind}.title`, n.params) }), 'news');
           }
+          break;
+        case 'candidates_arrived':
+          this.toast(t('toast.candidates', { count: e.count }), 'team');
+          break;
+        case 'hired': {
+          const who = this.state.empirians.find((x) => x.id === e.empirianId);
+          if (who) this.toast(t('toast.hired', { name: who.name }), 'team');
+          this.services.save();
+          break;
+        }
+        case 'fired':
+          this.toast(t('toast.fired'), 'alert');
+          this.services.save();
           break;
         case 'skill_up': {
           const who = this.state.empirians.find((x) => x.id === e.empirianId);
@@ -486,7 +501,7 @@ export class GameUI {
     const daysLbl = h('span');
     const focusLbl = h('span');
     const refresh = () => {
-      const e = estimatePlan(founder, plan.size, plan.focus, plan.budget, plan.days, officeWorkMultiplier(officeEffects(s.office), 'mixed', plan.focus));
+      const e = estimatePlan(founder, plan.size, plan.focus, plan.budget, plan.days, teamSpeedFactor(s, plan.focus));
       clear(est);
       const verdict = { too_short: 'bad', tight: 'warn', ok: 'good', generous: 'warn' }[e.verdict];
       est.append(
@@ -635,11 +650,15 @@ export class GameUI {
   // --------------------------------------------------------------- decision
   private portrait(id: string): HTMLCanvasElement {
     const e = this.state.empirians.find((x) => x.id === id) ?? getFounder(this.state);
+    return this.portraitOf(e.appearance, 'surprised');
+  }
+
+  private portraitOf(a: Appearance, mood: Parameters<typeof drawFace>[1] = 'happy'): HTMLCanvasElement {
     const c = h('canvas.portrait', { width: 40, height: 40 });
     const ctx = c.getContext('2d');
     if (ctx) {
-      drawFace(ctx, 'surprised', partColors(e.appearance).skin, 4);
-      ctx.fillStyle = hexToCss(PALETTE_HEX[partColors(e.appearance).hair] ?? 0);
+      drawFace(ctx, mood, partColors(a).skin, 4);
+      ctx.fillStyle = hexToCss(PALETTE_HEX[partColors(a).hair] ?? 0);
       ctx.fillRect(0, 0, 40, 6);
     }
     return c;
@@ -724,8 +743,64 @@ export class GameUI {
       h('div.section', null, h('div.label', null, t('emp.skills')), ...SKILLS.map(skillRow), h('div.hint', null, t('emp.learning_hint'))),
       h('div.section', null, h('div.label', null, t('emp.specialties')),
         specs.length ? h('div.row', null, ...specs.map((sp) => h('span.chip.good', null, icon('star', 16), t('emp.specialty', { topic: sp.topicId, bonus: sp.bonus })))) : h('div.hint', null, t('emp.no_specialty'))),
+      e.trait ? h('div.section', null, h('div.label', null, t('team.personality')),
+        h('div.row', null, h('span.chip.trait', null, t(`trait.${e.trait}`)), h('span.hint', null, t(`trait.${e.trait}.desc`)))) : null,
+      e.salary !== undefined ? h('div.row.between', null,
+        h('span.chip', null, icon('coin', 16), t('team.salary_week', { salary: e.salary })),
+        h('button.big-btn.coral.small', { id: 'fire-btn', onclick: () => {
+          if (!confirm(t('team.fire_confirm', { name: e.name, severance: e.salary! * SIM_CONFIG.team.severanceWeeks }))) return;
+          const r = this.game.dispatch({ type: 'fire', empirianId: e.id });
+          if (!r.ok) return this.toast(t(`error.${r.error}`), 'alert');
+          this.closeModal(true);
+        } }, t('team.fire'))) : null,
     );
     this.openModal('empirian', card, { pause: false });
+  }
+
+  // ---------------------------------------------------------------- team (GT.1)
+  showTeam(): void {
+    const s = this.state;
+    const free = freeWorkstations(s).length;
+    const staff = employees(s);
+    const full = staff.length >= SIM_CONFIG.team.maxEmployees;
+    const skillMini = (sk: Record<SkillId, number>) => h('div.mini-skills', null,
+      ...(['tech', 'design', 'creativity', 'management'] as SkillId[]).map((k) => h('span.mini', { title: t(`skill.${k}`) }, icon(({ tech: 'code', design: 'design', creativity: 'idea', management: 'calendar' } as Record<SkillId, IconName>)[k], 14), String(Math.floor(sk[k])))));
+    const payroll = staff.reduce((a, e) => a + (e.salary ?? 0), 0);
+    const card = h('div.card.wide.team', null, this.closeBtn(),
+      h('h2', null, t('team.title')),
+      h('p.sub', null, staff.length ? t('team.sub_payroll', { count: staff.length + 1, payroll }) : t('team.sub_solo')),
+      h('div.team-row', null, ...s.empirians.map((e) => h('button.member', { dataset: { member: e.id }, onclick: () => this.showEmpirian(e.id) },
+        this.portraitOf(e.appearance, e.morale >= 60 ? 'happy' : 'neutral'),
+        h('div.t', null, e.name),
+        h('div.d', null, e.id === s.founderId ? t('team.founder') : t(`trait.${e.trait}`)),
+      ))),
+      h('div.section', null, h('div.label', null, t('team.candidates')),
+        full ? h('p.hint', null, t('team.full')) :
+        !s.hiring.candidates.length ? h('p.hint', null, t('team.no_candidates', { day: s.hiring.nextRefreshDay })) :
+        h('div.offers', null, ...s.hiring.candidates.map((c) => {
+          const reason = free === 0 ? 'no_free_desk' : s.company.money < c.salary ? 'not_enough_money' : null;
+          return h('div.offer.candidate', { dataset: { candidate: c.id } },
+            h('div.row', { style: { flexWrap: 'nowrap', alignItems: 'center' } }, this.portraitOf(c.appearance, 'happy'),
+              h('div', { style: { flex: '1' } }, h('div.t', null, c.name), skillMini(c.baseSkills))),
+            h('div.row', null,
+              h('span.chip.trait', { title: t(`trait.${c.trait}.desc`) }, t(`trait.${c.trait}`)),
+              h('span.chip', null, icon('coin', 16), t('team.salary_week', { salary: c.salary })),
+            ),
+            h('div.hint', null, t(`trait.${c.trait}.desc`)),
+            h('div.row.between', null,
+              h('span.hint', null, t('team.expires', { day: c.expiresDay })),
+              h('button.big-btn.mint.small', { dataset: { hire: c.id }, disabled: !!reason, title: reason ? t(`error.${reason}`) : '', onclick: () => {
+                const r = this.game.dispatch({ type: 'hire', candidateId: c.id });
+                if (!r.ok) return this.toast(t(`error.${r.error}`), 'alert');
+                this.closeModal(true);
+              } }, t('team.hire')),
+            ),
+          );
+        }))),
+      !full && free === 0 ? h('div.row.between.desk-hint', null, h('span.hint', null, t('team.need_desk')),
+        h('button.big-btn.ghost.small', { id: 'team-buy-desk', onclick: () => { this.closeModal(); this.decor.open(); } }, icon('decor', 16), ` ${t('team.go_decor')}`)) : null,
+    );
+    this.openModal('team', card, { cls: 'desk-side' });
   }
 
   // ---------------------------------------------------------------- work

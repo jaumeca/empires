@@ -177,12 +177,12 @@ export interface OfficeEffects {
   upkeep: number;
 }
 
-/** The founder works at the desk with the best computer (ties: first placed). */
+/** The founder works at the desk with the best computer (ties: first placed), among desks no employee uses. */
 export function founderDesk(office: Office): PlacedItem | null {
   let best: PlacedItem | null = null;
   let bestScore = -1;
   for (const it of office.items) {
-    if (getItemDef(it.defId).category !== 'desk') continue;
+    if (getItemDef(it.defId).category !== 'desk' || it.assignedTo) continue;
     const pc = it.mounts?.computer ? getItemDef(it.mounts.computer).effects ?? {} : {};
     const score = (pc.techSpeed ?? 1) + (pc.designSpeed ?? 1) + (it.mounts?.computer ? 1 : 0);
     if (score > bestScore) { best = it; bestScore = score; }

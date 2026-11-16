@@ -424,3 +424,7 @@ Todos los sistemas nuevos viven en `src/sim/systems/`, son deterministas (flujos
 - **Entrada de escritorio:** `OfficeScene.onHover` (ratón sin botones en modo decoración, un pick por frame) y `lastPointerType`; `DecorUI.onHover/handleKey`; `GameUI.onKey` traduce teclas a las mismas acciones de la interfaz (nunca comandos nuevos). Estilos de escritorio bajo `@media (pointer: fine)` y `(min-width: 1180px) and (min-height: 640px)`.
 - **E2E web:** `tools/e2e/persistence.cjs`, `tools/e2e/desktop.cjs`.
 
+## 17. Equipo (GT.1, 2026-11-16)
+
+`src/sim/systems/team.ts`: candidatos (`state.hiring`, flujo `rng.hiring`), `hire`/`fire`, `payroll` semanal, rasgos (`traitSpeed/traitBugs/traitDrain/traitXp`), `coordinationFactor`, `workstationEffects` (efectos del puesto de cada persona). `project.ts` reparte `workTick` en `contribute()` por persona; `contracts.ts` igual; `estimates.ts/teamSpeedFactor` alimenta las estimaciones. Guardado v8 (migración 7→8: estudio en solitario, sin candidatos). La vista asigna a cada empleado un punto `seat:<id>` en su escritorio y retira a quien se marcha. Pruebas: `tests/sim/team.test.ts`; e2e `tools/e2e/team.cjs`.
+

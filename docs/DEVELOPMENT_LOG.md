@@ -4,6 +4,33 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-16 — Quinta sesión (2.ª parte): Growing Together GT.1 — contratar al primer Empirian (0.5.0)
+
+### Resumen
+El estudio puede crecer: llegan candidatos con habilidades, personalidad y sueldo; hace falta comprar un puesto; el contratado se sienta en su escritorio, trabaja en proyectos y encargos, aprende, se cansa y cobra cada semana. Base de GT.2 (rasgos, energía y ánimo propios) y GT.3 (coordinación).
+
+### Cambios
+- Simulación: `systems/team.ts`; trabajo por persona en `project.ts` (`contribute`) y `contracts.ts`; energía, ánimo y café por persona en `step.ts`; sueldos semanales; estimaciones con todo el equipo (`teamSpeedFactor`); el escritorio en uso no se vende; guardado **v8** con migración.
+- Interfaz: botón de equipo con contador (tecla T), tarjeta de candidatos (desactivado y con atajo a decorar si no hay puesto), ficha del empleado con rasgo, sueldo y despedir, avisos; icono nuevo.
+- Escena: cada empleado va a su propio escritorio; quien se marcha desaparece.
+- Versión **0.5.0**.
+
+### Pruebas ejecutadas
+- `npx vitest run`: 18 archivos, **128 pruebas**, todas pasan (nuevas: `tests/sim/team.test.ts`, 6). Las pruebas anteriores no cambian: con el fundador solo, la simulación da exactamente los mismos resultados.
+- E2E: play 21/21, decor 10/10, contracts 10/10, persistence 10/10, desktop 15/15, **team 13/13**.
+- `economy.report.ts` con estrategias de contratación (ver D-046). Galería: 32 capturas.
+
+### Problemas encontrados
+- El bucle de contratación del simulador de carreras se quedaba sin avanzar cuando no cabía un escritorio (ahora reintenta una vez por semana).
+- La prueba de rasgos mezclaba los bugs del fundador con los del empleado: ahora se mide por persona con los eventos de la simulación.
+- En la habitación actual solo cabe un escritorio más: la segunda contratación espera a GT.4 (oficina más grande).
+
+### Pendiente
+- GT.2: reacciones visibles por rasgo y por cansancio/sueldo; GT.3: asignar tareas; GT.4: ampliar la oficina; GT.7: reequilibrio (el dinero sigue acumulándose, aunque contratar ya es una inversión clara).
+- Entrada del candidato por la puerta (`[FUTURO]`). Móviles reales.
+
+---
+
 ## 2026-11-16 — Quinta sesión (1.ª parte): versión web estable 0.4.0
 
 ### Resumen

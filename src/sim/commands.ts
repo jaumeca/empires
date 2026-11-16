@@ -4,6 +4,7 @@ import { newId, record } from './core/ledger';
 import type { Appearance, GameState, Project, ProjectSize, Rot } from './model/state';
 import { canPlace, getItemDef, SELL_REFUND } from './systems/office';
 import { useSavedIdeas } from './systems/events';
+import { fire, hire } from './systems/team';
 import { acceptContract, cancelContract } from './systems/contracts';
 import { getActiveProject, getFounder } from './state';
 import { getTopic } from '../content/topics';
@@ -33,7 +34,9 @@ export type Command =
   | { type: 'sell_item'; uid: string }
   | { type: 'mark_news_read' }
   | { type: 'accept_contract'; offerId: string }
-  | { type: 'cancel_contract' };
+  | { type: 'cancel_contract' }
+  | { type: 'hire'; candidateId: string }
+  | { type: 'fire'; empirianId: string };
 
 /** `error` is a stable code; the UI translates it as `error.<code>`. */
 export type CommandResult = { ok: true } | { ok: false; error: string };
@@ -208,6 +211,7 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       const idx = state.office.items.findIndex((i) => i.uid === cmd.uid);
       const it = state.office.items[idx];
       if (!it) return fail('unknown_item');
+      if (it.assignedTo) return fail('desk_in_use');
       const def = getItemDef(it.defId);
       const same = (pred: (d: ReturnType<typeof getItemDef>) => boolean) => state.office.items.filter((i) => pred(getItemDef(i.defId))).length;
       if (def.category === 'desk' && same((d) => d.category === 'desk') <= 1) return fail('last_desk');
@@ -226,6 +230,15 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       return err ? fail(err) : { ok: true };
     }
 
+    case 'hire': {
+      if (!state.setupComplete) return fail('setup_required');
+      const err = hire(state, cmd.candidateId, emit);
+      return err ? fail(err) : { ok: true };
+    }
+    case 'fire': {
+      const err = fire(state, cmd.empirianId, emit);
+      return err ? fail(err) : { ok: true };
+    }
     case 'cancel_contract': {
       const err = cancelContract(state);
       return err ? fail(err) : { ok: true };

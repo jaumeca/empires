@@ -36,6 +36,8 @@ Capturas generadas automáticamente con `npm run gallery` (Chromium sin pantalla
 | 28 | [g27-contract-offers.jpg](g27-contract-offers.jpg) | **Encargos de clientes** (LS.8): pago, plazo del cliente y estimación honesta. |
 | 29 | [g28-contract-working.jpg](g28-contract-working.jpg) | Trabajando en un encargo: píldora de progreso y días restantes. |
 | 30 | [g29-phone-decor.jpg](g29-phone-decor.jpg) | Modo decoración en móvil horizontal 844×390 (el catálogo ocupa la mitad inferior; los avisos se limitan a uno). |
+| 31 | [g30-team-candidates.jpg](g30-team-candidates.jpg) | **Equipo** (GT.1): candidatos con habilidades, rasgo y sueldo semanal; tarjeta lateral en ordenador. |
+| 32 | [g31-team-working.jpg](g31-team-working.jpg) | Segundo Empirian trabajando en su propio escritorio junto al fundador. |
 
 ## Qué decidir en la revisión (F1.12)
 

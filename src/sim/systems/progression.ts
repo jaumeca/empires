@@ -44,6 +44,7 @@ export function progressToNext(e: Empirian, skill: SkillId): number {
 /** Adds experience; recomputes the level and announces whole-level gains. */
 export function gainXp(state: GameState, e: Empirian, skill: SkillId, amount: number, emit: EventSink): void {
   if (amount <= 0) return;
+  if (e.trait === 'curious') amount *= SIM_CONFIG.team.traits.curious.xp;
   const before = e.skills[skill];
   e.xp[skill] += amount;
   e.skills[skill] = levelFor(e.baseSkills[skill], e.xp[skill]);

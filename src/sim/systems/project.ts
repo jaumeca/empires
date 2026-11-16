@@ -9,6 +9,7 @@ import { maybeOfferMoment } from './moments';
 import { gainTopicXp, gainXp, topicBonus } from './progression';
 import { officeEffects, type OfficeEffects } from './office';
 import { toolMultiplier } from './world';
+import { coordinationFactor, traitBugs, traitSpeed, workstationEffects } from './team';
 
 const C = SIM_CONFIG;
 
@@ -92,7 +93,8 @@ export function pointsPerTick(p: Project, e: Empirian): number {
     skillSpeed(skillFor(e, p.focus)) *
     (C.pace.workMultiplier[p.pace] ?? 1) *
     budgetMultiplier(p) *
-    efficiency(e)
+    efficiency(e) *
+    traitSpeed(e, p.pace)
   );
 }
 
@@ -101,7 +103,7 @@ function bugRate(p: Project, e: Empirian): number {
   const fatigue = e.energy >= t ? 0 : (t - e.energy) / t;
   const mods = p.bugRateMods.reduce((a, m) => a * m.factor, 1);
   const skillMod = 1.25 - e.skills.tech * 0.05; // tech skill 5 => 1.0
-  return C.bugs.ratePerTechPoint * (C.pace.bugMultiplier[p.pace] ?? 1) * (1 + fatigue) * mods * skillMod;
+  return C.bugs.ratePerTechPoint * (C.pace.bugMultiplier[p.pace] ?? 1) * (1 + fatigue) * mods * skillMod * traitBugs(e);
 }
 
 // ---------------------------------------------------------------------------
@@ -115,13 +117,22 @@ export function isResting(state: GameState, p: Project): boolean {
 export function workTick(state: GameState, p: Project, founder: Empirian, emit: EventSink): void {
   if (p.phase === 'released' || state.pendingDecision) return;
   if (isResting(state, p)) {
-    founder.activity = 'resting';
+    for (const e of state.empirians) e.activity = 'resting';
     return;
   }
   maybeOfferMoment(state, p, founder, emit);
   if (state.pendingDecision) return;
-  const fx = officeEffects(state.office);
-  const basePts = pointsPerTick(p, founder);
+  // Everyone in the studio works on the project (GT.1); coordination costs grow with the team.
+  const coord = coordinationFactor(state.empirians.length);
+  const building = p.phase === 'concept' || p.phase === 'production';
+  for (const e of state.empirians) contribute(state, p, e, founder, emit, coord);
+  if (building) maybeOfferBigIdea(state, p, founder, emit);
+}
+
+/** One working hour of one Empirian on the project. */
+function contribute(state: GameState, p: Project, e: Empirian, founder: Empirian, emit: EventSink, coord: number): void {
+  const fx = workstationEffects(state, e);
+  const basePts = pointsPerTick(p, e) * coord;
   const rngW = state.rng.work;
 
   if (p.phase === 'concept' || p.phase === 'production') {
@@ -129,28 +140,28 @@ export function workTick(state: GameState, p: Project, founder: Empirian, emit: 
     const pts = basePts * officeWorkMultiplier(fx, p.phase === 'concept' && !isTech ? 'concept' : isTech ? 'tech' : 'design') * toolMultiplier(state, isTech ? 'tech' : 'design');
     if (isTech) p.workDone.tech += pts;
     else p.workDone.design += pts;
-    founder.activity = p.phase === 'concept' && nextFloat(rngW) < 0.4 ? 'thinking' : isTech ? 'coding' : 'designing';
-    emit({ type: 'work', empirianId: founder.id, kind: isTech ? 'tech' : 'design', amount: pts, severity: 'info' });
+    e.activity = p.phase === 'concept' && nextFloat(rngW) < 0.4 ? 'thinking' : isTech ? 'coding' : 'designing';
+    emit({ type: 'work', empirianId: e.id, kind: isTech ? 'tech' : 'design', amount: pts, severity: 'info' });
     // Learning by doing (LS.1).
     // Experience comes from hours of practice (1 tick = 1 hour), not from boosted output.
     const hours = 1;
-    gainXp(state, founder, isTech ? 'tech' : 'design', hours, emit);
-    if (p.phase === 'concept') gainXp(state, founder, 'creativity', hours * C.progression.conceptCreativity, emit);
-    gainTopicXp(founder, p.topicId, hours);
+    gainXp(state, e, isTech ? 'tech' : 'design', hours, emit);
+    if (p.phase === 'concept') gainXp(state, e, 'creativity', hours * C.progression.conceptCreativity, emit);
+    gainTopicXp(e, p.topicId, hours);
 
     // Bugs come from building things (less while prototyping).
     const techPts = isTech ? pts : pts * 0.3;
     const conceptMod = p.phase === 'concept' ? 0.3 : 1;
-    const newBugs = sampleCount(state.rng.bugs, techPts * bugRate(p, founder) * conceptMod);
+    const newBugs = sampleCount(state.rng.bugs, techPts * bugRate(p, e) * conceptMod);
     if (newBugs > 0) {
       let hidden = 0;
       for (let i = 0; i < newBugs; i++) if (nextFloat(state.rng.bugs) < C.bugs.hiddenShare) hidden++;
       p.bugs.hidden += hidden;
       p.bugs.known += newBugs - hidden;
-      emit({ type: 'bug_created', empirianId: founder.id, count: newBugs, severity: 'info' });
+      emit({ type: 'bug_created', empirianId: e.id, count: newBugs, severity: 'info' });
     }
     if (p.phase === 'concept' && nextFloat(rngW) < 0.08) {
-      emit({ type: 'idea', empirianId: founder.id, severity: 'info' });
+      emit({ type: 'idea', empirianId: e.id, severity: 'info' });
     }
 
     const prog = productionProgress(p);
@@ -168,7 +179,6 @@ export function workTick(state: GameState, p: Project, founder: Empirian, emit: 
       });
       emit({ type: 'phase_changed', projectId: p.id, phase: p.phase, severity: 'important' });
     }
-    maybeOfferBigIdea(state, p, founder, emit);
     return;
   }
 
@@ -181,7 +191,7 @@ export function workTick(state: GameState, p: Project, founder: Empirian, emit: 
     if (fixed > 0) {
       p.bugs.known -= fixed;
       p.bugs.fixed += fixed;
-      emit({ type: 'bug_fixed', empirianId: founder.id, count: fixed, severity: 'info' });
+      emit({ type: 'bug_fixed', empirianId: e.id, count: fixed, severity: 'info' });
     }
     testPts *= 0.5; // half of the effort went into fixing
   }
@@ -192,22 +202,22 @@ export function workTick(state: GameState, p: Project, founder: Empirian, emit: 
     if (found > 0) {
       p.bugs.hidden -= found;
       p.bugs.known += found;
-      emit({ type: 'bug_found', empirianId: founder.id, count: found, severity: 'info' });
+      emit({ type: 'bug_found', empirianId: e.id, count: found, severity: 'info' });
     }
   }
   const qBefore = trueQuality(p, founder);
   p.polishDone += polishPts;
   const hours = 1;
   const testShare = pts > 0 ? testPts / pts : 0;
-  gainXp(state, founder, 'tech', hours * testShare * C.progression.testingTech, emit);
-  gainXp(state, founder, 'creativity', hours * (1 - testShare) * C.progression.polishCreativity, emit);
-  gainXp(state, founder, p.focus >= 0.5 ? 'tech' : 'design', hours * (1 - testShare) * 0.5, emit);
-  gainTopicXp(founder, p.topicId, hours * 0.5);
+  gainXp(state, e, 'tech', hours * testShare * C.progression.testingTech, emit);
+  gainXp(state, e, 'creativity', hours * (1 - testShare) * C.progression.polishCreativity, emit);
+  gainXp(state, e, p.focus >= 0.5 ? 'tech' : 'design', hours * (1 - testShare) * 0.5, emit);
+  gainTopicXp(e, p.topicId, hours * 0.5);
   if (Math.floor(trueQuality(p, founder) * 2) > Math.floor(qBefore * 2)) {
-    emit({ type: 'quality_up', empirianId: founder.id, severity: 'info' });
+    emit({ type: 'quality_up', empirianId: e.id, severity: 'info' });
   }
-  founder.activity = testPts >= polishPts ? 'testing' : nextFloat(rngW) < p.focus ? 'coding' : 'designing';
-  emit({ type: 'work', empirianId: founder.id, kind: testPts >= polishPts ? 'test' : 'polish', amount: pts, severity: 'info' });
+  e.activity = testPts >= polishPts ? 'testing' : nextFloat(rngW) < p.focus ? 'coding' : 'designing';
+  emit({ type: 'work', empirianId: e.id, kind: testPts >= polishPts ? 'test' : 'polish', amount: pts, severity: 'info' });
 }
 
 // ---------------------------------------------------------------------------

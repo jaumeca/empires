@@ -311,6 +311,15 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Solución:** con `?debug` el juego usa ranuras separadas (`empires.debug.save.*`); `?fresh`, `?seed` y `?stress` solo funcionan con `?debug`. Una dirección normal ignora todo salvo `lang` y `cam`.
 - La versión (`package.json`), el commit y la fecha de compilación se inyectan al compilar y se ven en el menú. Versión actual: **0.4.0**.
 
+### D-046 — Contratar al primer Empirian (GT.1)
+- **Fecha:** 2026-11-16 · **Estado:** Aplicada (provisional hasta GT.7 y pruebas de juego)
+- **Candidatos:** se desbloquean al publicar un juego o entregar un encargo; llegan 3 cada 14 días (flujo aleatorio propio `hiring`), duran 14–24 días. Perfiles programador/diseñador/generalista, rasgo y sueldo semanal según habilidad (en la práctica 450–760 €/semana).
+- **Puesto:** hace falta un escritorio libre con ordenador y silla (los escritorios nuevos los traen). El empleado se queda ese escritorio (`assignedTo`), que no se puede vender; el fundador usa el mejor de los libres. Máximo 3 empleados (en la habitación actual solo cabe uno más: GT.4).
+- **Trabajo en equipo:** todos trabajan en el proyecto o encargo activo con su habilidad, su ordenador, su silla y su energía; coordinación 1/(1 + 0,15·(n−1)) por persona (2 personas ≈ 1,74×). La "gran idea", los momentos y el techo de calidad siguen siendo del fundador.
+- **Rasgos (sin almuerzo gratis):** perfeccionista (−35 % bugs, −10 % velocidad), noctámbulo (+20 % en crunch, +25 % de cansancio), sociable (+7 de ánimo objetivo para todo el equipo, −5 % velocidad), curioso (+60 % experiencia, −7 % velocidad).
+- **Sueldos y despidos:** sueldo cada semana; despedir cuesta 2 semanas de sueldo, −12 de ánimo al resto y −2 de reputación.
+- **Medición (1 año, 20 semillas):** juegos pequeños + 1 contratación ≈ 313 000 € frente a 239 000 € sin contratar (+31 %, sueldos ≈ 21 500 €), nota media 7,1 frente a 6,4 (el tiempo extra se va a pulir); estrategia realista +6 %. Contratar es la inversión principal que pedía Q-011; el excedente de dinero sigue ahí y se reequilibra en GT.7, cuando haya oficinas más grandes y más gastos.
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

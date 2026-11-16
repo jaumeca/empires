@@ -1,6 +1,23 @@
 import { SIM_CONFIG } from './config';
-import type { Empirian, Project, ProjectSize } from './model/state';
-import { pointsPerTick, trueQuality } from './systems/project';
+import type { Empirian, GameState, Project, ProjectSize } from './model/state';
+import { officeWorkMultiplier, pointsPerTick, skillFor, skillSpeed, trueQuality } from './systems/project';
+import { coordinationFactor, traitSpeed, workstationEffects } from './systems/team';
+import { getFounder } from './state';
+
+/**
+ * Speed of the whole studio relative to the founder working alone at a neutral desk
+ * (GT.1): each person's skill, trait and workstation, times the coordination cost.
+ * Solo founder: equals the founder's office multiplier.
+ */
+export function teamSpeedFactor(state: GameState, focus: number, pace = 'normal'): number {
+  const f = getFounder(state);
+  const coord = coordinationFactor(state.empirians.length);
+  let sum = 0;
+  for (const e of state.empirians) {
+    sum += skillSpeed(skillFor(e, focus)) * traitSpeed(e, pace) * officeWorkMultiplier(workstationEffects(state, e), 'mixed', focus) * coord;
+  }
+  return sum / skillSpeed(skillFor(f, focus));
+}
 
 /**
  * Player-facing estimates (GDD §8.2): derived from the true values but with

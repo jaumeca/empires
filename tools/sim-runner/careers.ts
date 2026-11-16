@@ -8,6 +8,7 @@ import { createNewGame, DEFAULT_APPEARANCE, getProject } from '../../src/sim/sta
 import { getTopic } from '../../src/content/topics';
 import { estimateDays } from '../../src/sim/systems/contracts';
 import { canPlace } from '../../src/sim/systems/office';
+import { employees, freeWorkstations } from '../../src/sim/systems/team';
 import type { GameState, Rot } from '../../src/sim/model/state';
 import type { Command } from '../../src/sim/commands';
 
@@ -20,6 +21,8 @@ export interface Strategy {
   next: (s: GameState, ctx: Ctx) => Next;
   /** Purchases once money allows (office investment strategies). */
   shopping?: { defId: string; mount?: boolean }[];
+  /** GT.1: hire up to this many employees (best skill per euro), buying desks as needed. */
+  hire?: number;
 }
 interface Ctx { games: number; lastScore: number; justContracted?: boolean }
 
@@ -36,6 +39,9 @@ export const STRATEGIES: Strategy[] = [
   { name: 'F games + big spend office', next: () => kart(), shopping: [{ defId: 'pc_workstation', mount: true }, { defId: 'chair_ergo', mount: true }, { defId: 'coffee_machine' }, { defId: 'sofa' }, { defId: 'whiteboard' }, { defId: 'arcade' }, { defId: 'plant_tall' }, { defId: 'lamp_floor' }] },
   { name: 'H realistic: mixed + office + growth', next: (s, c) => (c.games > 0 && (c.lastScore < 6.5 || s.company.money < 7000) && s.contracts.offers.length && !c.justContracted ? { kind: 'contract' } : c.games >= 2 && s.company.money > 14000 ? game('kart', 'medium', 3000, 98) : kart()), shopping: [{ defId: 'pc_dev', mount: true }, { defId: 'chair_ergo', mount: true }, { defId: 'coffee_machine' }, { defId: 'whiteboard' }, { defId: 'sofa' }, { defId: 'plant_tall' }] },
   { name: 'I growth + office (no contracts)', next: (s, c) => (c.games >= 2 && s.company.money > 14000 ? game('kart', 'medium', 3000, 98) : kart()), shopping: [{ defId: 'pc_dev', mount: true }, { defId: 'chair_ergo', mount: true }, { defId: 'coffee_machine' }, { defId: 'whiteboard' }, { defId: 'sofa' }, { defId: 'plant_tall' }] },
+  { name: 'J realistic + hire 1', hire: 1, next: (s, c) => (c.games > 0 && (c.lastScore < 6.5 || s.company.money < 7000) && s.contracts.offers.length && !c.justContracted ? { kind: 'contract' } : c.games >= 2 && s.company.money > 14000 ? game('kart', 'medium', 3000, 98) : kart()), shopping: [{ defId: 'pc_dev', mount: true }, { defId: 'chair_ergo', mount: true }, { defId: 'coffee_machine' }, { defId: 'whiteboard' }, { defId: 'sofa' }, { defId: 'plant_tall' }] },
+  { name: 'K realistic + hire 2', hire: 2, next: (s, c) => (c.games > 0 && (c.lastScore < 6.5 || s.company.money < 7000) && s.contracts.offers.length && !c.justContracted ? { kind: 'contract' } : c.games >= 2 && s.company.money > 14000 ? game('kart', 'medium', 3000, 98) : kart()), shopping: [{ defId: 'pc_dev', mount: true }, { defId: 'chair_ergo', mount: true }, { defId: 'coffee_machine' }, { defId: 'whiteboard' }, { defId: 'sofa' }, { defId: 'plant_tall' }] },
+  { name: 'L small games + hire 1', hire: 1, next: () => kart() },
   { name: 'G early trends + growth', next: (s, c) => (c.games >= 2 && s.company.money > 14000 ? game(trendTopic(s), 'medium', 3000, 98) : game(trendTopic(s))) },
 ];
 
@@ -51,7 +57,7 @@ export function career(seed: number, st: Strategy, horizon = 365) {
   g.dispatch({ type: 'setup_founder', name: 'T', companyName: 'T', appearance: DEFAULT_APPEARANCE });
   const ctx: Ctx = { games: 0, lastScore: 10 };
   let minMoney = g.state.company.money;
-  let spentOffice = 0, contracts = 0, late = 0;
+  let spentOffice = 0, contracts = 0, late = 0, hires = 0, hireRetryDay = 0;
   const decisions = new Set<string>();
   const scores: number[] = [];
   const shop = [...(st.shopping ?? [])];
@@ -73,6 +79,18 @@ export function career(seed: number, st: Strategy, horizon = 365) {
       if (r) { scores.push(r.averageScore); ctx.lastScore = r.averageScore; ctx.games++; }
       pid = null;
       idleUntil = s.day + 5;
+    }
+    // Hiring between jobs (GT.1): buy a desk if needed, then the best skill per euro.
+    if (st.hire && s.day >= hireRetryDay && !s.activeProjectId && !s.contracts.active && employees(s).length < st.hire && s.hiring.candidates.length && s.company.money > 15000) {
+      hireRetryDay = s.day + 7; // one attempt per week at most (never loops without time passing)
+      if (!freeWorkstations(s).length) {
+        const before = s.company.money;
+        const cmd = placeAnywhere(s, 'desk_basic');
+        if (cmd && g.dispatch(cmd).ok) spentOffice += before - g.state.company.money;
+      }
+      const best = [...s.hiring.candidates].sort((a, b) => (b.baseSkills.tech + b.baseSkills.design) / b.salary - (a.baseSkills.tech + a.baseSkills.design) / a.salary)[0]!;
+      if (g.dispatch({ type: 'hire', candidateId: best.id }).ok) hires++;
+      continue;
     }
     // Shopping between jobs, keeping a cushion for the next game.
     if (!s.activeProjectId && !s.contracts.active && shop.length && s.company.money > 12000) {
@@ -108,6 +126,6 @@ export function career(seed: number, st: Strategy, horizon = 365) {
   const f = g.state.empirians[0]!;
   return {
     money: g.state.company.money, minMoney, games: scores.length, score: mean(scores), contracts, late,
-    spentOffice, rep: g.state.company.reputation, skill: `${f.skills.tech.toFixed(1)}/${f.skills.design.toFixed(1)}/${f.skills.creativity.toFixed(1)}/${f.skills.management.toFixed(1)}`, decisions,
+    spentOffice, hires, salaries: g.state.hiring.salariesPaid, team: g.state.empirians.length, rep: g.state.company.reputation, skill: `${f.skills.tech.toFixed(1)}/${f.skills.design.toFixed(1)}/${f.skills.creativity.toFixed(1)}/${f.skills.management.toFixed(1)}`, decisions,
   };
 }

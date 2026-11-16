@@ -2,7 +2,7 @@
 
 Videojuego premium de simulación y gestión en el que pequeños personajes voxel, los **Empirians**, construyen software en oficinas en miniatura y levantan un imperio tecnológico.
 
-**Estado:** v0.4.0 — v0.1 jugable + "A Living Studio" (experiencia del fundador, oficina personalizable, Empires Daily, eventos, encargos). Versión web para ordenador con soporte táctil. Pendiente: validación en móviles reales.
+**Estado:** v0.5.0 — v0.1 jugable + "A Living Studio" (experiencia del fundador, oficina personalizable, Empires Daily, eventos, encargos) + primera contratación (Growing Together). Versión web para ordenador con soporte táctil. Pendiente: validación en móviles reales.
 
 **Despliegue web:** rama `production-web`, instrucciones en [`docs/DEPLOY_WEB.md`](docs/DEPLOY_WEB.md), versiones en [`docs/WEB_RELEASES.md`](docs/WEB_RELEASES.md).
 
@@ -25,7 +25,7 @@ npm run dev
 Abre http://localhost:5173 (en horizontal si es un móvil en la misma red: `npm run dev -- --host`).
 
 - Solo para desarrollo: `?debug` (diagnóstico y **partida de pruebas separada**, nunca toca la normal) · `?debug&fresh` partida de pruebas nueva · `?cam=iso` cámara isométrica.
-- En ordenador: Espacio pausa, 1–4 velocidad, P proyecto, C encargos, N periódico, D decorar, M menú (lista completa en el menú).
+- En ordenador: Espacio pausa, 1–4 velocidad, P proyecto, C encargos, N periódico, D decorar, T equipo, M menú (lista completa en el menú).
 
 ## Comprobaciones
 

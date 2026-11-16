@@ -6,6 +6,8 @@ import type { ActiveContract, ContractOffer, Contracts, Empirian, GameState } fr
 import { getFounder } from '../state';
 import { efficiency, officeWorkMultiplier, skillFor, skillSpeed } from './project';
 import { officeEffects } from './office';
+import { traitSpeed, workstationEffects } from './team';
+import { teamSpeedFactor } from '../estimates';
 import { gainXp } from './progression';
 import { toolMultiplier } from './world';
 
@@ -31,7 +33,7 @@ export function createContracts(): Contracts {
 /** Working days a founder needs for `work` points at a given focus (estimate shown to the player). */
 export function estimateDays(state: GameState, work: number, focus: number): number {
   const f = getFounder(state);
-  const perDay = SIM_CONFIG.work.basePointsPerTick * skillSpeed(skillFor(f, focus)) * officeWorkMultiplier(officeEffects(state.office), 'mixed', focus) * SIM_CONFIG.ticksPerDay * K().estimateEfficiency;
+  const perDay = SIM_CONFIG.work.basePointsPerTick * skillSpeed(skillFor(f, focus)) * teamSpeedFactor(state, focus) * SIM_CONFIG.ticksPerDay * K().estimateEfficiency;
   return Math.ceil(work / Math.max(0.1, perDay));
 }
 
@@ -96,18 +98,18 @@ export function settlement(a: ActiveContract, day: number): { pay: number; lateD
   return { pay, lateDays, early };
 }
 
-/** One working hour on the active contract (called instead of project work). */
-export function contractTick(state: GameState, founder: Empirian, emit: EventSink): void {
+/** One working hour of one Empirian on the active contract (called instead of project work). */
+export function contractTick(state: GameState, e: Empirian, emit: EventSink, coord = 1): void {
   const a = state.contracts.active;
   if (!a) return;
   const isTech = nextFloat(state.rng.work) < a.focus;
-  const fx = officeEffects(state.office);
-  const pts = SIM_CONFIG.work.basePointsPerTick * skillSpeed(skillFor(founder, a.focus)) * efficiency(founder) * officeWorkMultiplier(fx, isTech ? 'tech' : 'design') * toolMultiplier(state, isTech ? 'tech' : 'design');
+  const fx = workstationEffects(state, e);
+  const pts = SIM_CONFIG.work.basePointsPerTick * skillSpeed(skillFor(e, a.focus)) * efficiency(e) * traitSpeed(e, 'normal') * coord * officeWorkMultiplier(fx, isTech ? 'tech' : 'design') * toolMultiplier(state, isTech ? 'tech' : 'design');
   a.done += pts;
-  founder.activity = isTech ? 'coding' : 'designing';
-  emit({ type: 'work', empirianId: founder.id, kind: isTech ? 'tech' : 'design', amount: pts, severity: 'info' });
-  gainXp(state, founder, isTech ? 'tech' : 'design', 1, emit);
-  if (a.done >= a.work) deliver(state, founder, emit);
+  e.activity = isTech ? 'coding' : 'designing';
+  emit({ type: 'work', empirianId: e.id, kind: isTech ? 'tech' : 'design', amount: pts, severity: 'info' });
+  gainXp(state, e, isTech ? 'tech' : 'design', 1, emit);
+  if (a.done >= a.work) deliver(state, getFounder(state), emit);
 }
 
 function deliver(state: GameState, founder: Empirian, emit: EventSink): void {

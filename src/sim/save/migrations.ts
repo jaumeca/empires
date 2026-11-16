@@ -75,4 +75,9 @@ export const MIGRATIONS: Record<number, (s: AnyState) => AnyState> = {
   5: (s) => ({ ...s, schemaVersion: 6, scheduled: [], eventLog: { lastDay: null, lastByKind: {} } }),
   /** 6 → 7 (LS.8): no contracts yet; the first offers arrive in a few days. */
   6: (s) => ({ ...s, schemaVersion: 7, contracts: { offers: [], active: null, nextRefreshDay: (s.day as number) + 3, completed: 0 } }),
+  /** 7 → 8 (GT.1): still a solo founder; applicants start arriving soon (own random stream). */
+  7: (s) => {
+    const rng = { ...(s.rng as AnyState), hiring: createRngState(s.seed as number, 'hiring') };
+    return { ...s, schemaVersion: 8, rng, hiring: { candidates: [], nextRefreshDay: (s.day as number) + 1, hired: 0, salariesPaid: 0 } };
+  },
 };

@@ -537,6 +537,16 @@ export class OfficeScene {
     return view;
   }
 
+  removeEmpirian(id: string): void {
+    const actor = this.actors.get(id);
+    if (!actor) return;
+    actor.view.root.traverse((o) => {
+      this.pickables = this.pickables.filter((p) => p !== o);
+    });
+    this.scene.remove(actor.view.root);
+    this.actors.delete(id);
+  }
+
   setAppearance(id: string, a: Appearance): void {
     const actor = this.actors.get(id);
     if (!actor) return;
@@ -558,6 +568,18 @@ export class OfficeScene {
     this.lastState = state;
     this.syncOffice(state.office);
     for (const e of state.empirians) this.ensureEmpirian(e.id, e.appearance);
+    // Employees who left the studio (GT.1).
+    for (const id of [...this.actors.keys()]) {
+      if (id.startsWith('stress-') || state.empirians.some((e) => e.id === id)) continue;
+      this.removeEmpirian(id);
+    }
+    // Each employee works at their own desk.
+    for (const k of Object.keys(this.pois)) if (k.startsWith('seat:')) delete this.pois[k];
+    for (const it of state.office.items) {
+      if (!it.assignedTo) continue;
+      const sp = useSpot(it);
+      if (sp) this.pois[`seat:${it.assignedTo}`] = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'sit' };
+    }
     this.syncProducts(state.projects);
   }
 
@@ -756,11 +778,13 @@ export class OfficeScene {
         go('coffee');
       } else {
         let wanted = this.behaviourFor(activity);
+        // Employees sit at their own desk (GT.1); only the founder uses the founder's seat.
+        if (wanted === 'seat' && id !== state?.founderId) wanted = this.pois[`seat:${id}`] ? `seat:${id}` : 'center';
         // Concept work at the whiteboard when there is one (visible effect of the item).
         if (activity === 'thinking' && this.pois.whiteboard) wanted = 'whiteboard';
         if (wanted) go(wanted);
         else if (t > actor.nextWander) {
-          const options = Object.keys(this.pois).filter((k) => !['side', 'center'].includes(k) || k === 'center');
+          const options = Object.keys(this.pois).filter((k) => (!['side', 'center'].includes(k) || k === 'center') && !k.startsWith('seat:'));
           go(options[Math.floor(Math.random() * options.length)]!);
           actor.nextWander = t + 5 + Math.random() * 5;
         }

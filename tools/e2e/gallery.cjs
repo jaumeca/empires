@@ -219,5 +219,29 @@ const VARIANTS = [
   await page.click('#hud-decor');
   await shot('g29-phone-decor', 1000);
 
+  // 31-32 Growing Together (GT.1): applicants and a second Empirian at work.
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.click('#decor-done');
+  await ev(() => { const s = window.__empires.game.state; s.contracts.completed = Math.max(1, s.contracts.completed); s.company.money = Math.max(30000, s.company.money); });
+  await ev(() => window.__empires.advance(8 * 15));
+  await page.waitForTimeout(500);
+  await page.keyboard.press('t');
+  await shot('g30-team-candidates', 900);
+  await page.keyboard.press('Escape');
+  await ev(() => {
+    const g = window.__empires.game;
+    const sofa = g.state.office.items.find((i) => i.defId === 'sofa');
+    if (sofa) g.dispatch({ type: 'sell_item', uid: sofa.uid }); // make room for a second desk
+    search: for (let z = 2; z < 8; z++) for (let x = 0; x < 10; x++) for (const rot of [0, 1, 2, 3]) if (g.dispatch({ type: 'buy_item', defId: 'desk_basic', x, z, rot }).ok) break search;
+    const c = g.state.hiring.candidates[0];
+    if (c) g.dispatch({ type: 'hire', candidateId: c.id });
+  });
+  await page.keyboard.press('p');
+  await page.click('#start-project');
+  await ev(() => window.__empires.advance(8 * 4));
+  for (let i = 0; i < 10 && (await ev(() => !!window.__empires.game.state.pendingDecision)); i++) { await page.keyboard.press('1'); await page.waitForTimeout(300); }
+  await page.click('[data-speed="1"]');
+  await shot('g31-team-working', 4000);
+
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });

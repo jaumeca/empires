@@ -130,6 +130,29 @@ export const SIM_CONFIG = {
     managementXp: 8,
   },
 
+  /** Team (GT.1–GT.3). Salaries are weekly. */
+  team: {
+    maxEmployees: 3,
+    candidatesPerRefresh: 3,
+    refreshDays: 14,
+    candidateDays: [14, 24] as [number, number],
+    /** Weekly salary = base + perLevel · (average of tech and design − 3), ±10 %. */
+    salaryBase: 320,
+    salaryPerLevel: 140,
+    /** Coordination: each person works at 1 / (1 + coordination · (team − 1)). */
+    coordination: 0.15,
+    severanceWeeks: 2,
+    fireMorale: 12,
+    fireReputation: 2,
+    hireMorale: 70,
+    traits: {
+      perfectionist: { speed: 0.9, bugs: 0.65 },
+      night_owl: { crunchSpeed: 1.2, drain: 1.25 },
+      sociable: { speed: 0.95, teamMorale: 7 },
+      curious: { speed: 0.93, xp: 1.6 },
+    },
+  },
+
   /** Dynamic events (LS.7). */
   events: {
     /** Minimum days between two dynamic events. */

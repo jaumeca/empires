@@ -24,6 +24,10 @@ export type SimEvent =
   | { type: 'contract_done'; contractId: string; pay: number; lateDays: number; severity: 'important' }
   | { type: 'news'; newsId: string; kind: string; importance: 'major' | 'minor'; severity: 'important' | 'info' }
   | { type: 'coffee'; empirianId: string; severity: 'info' }
-  | { type: 'skill_up'; empirianId: string; skill: string; level: number; severity: 'important' };
+  | { type: 'skill_up'; empirianId: string; skill: string; level: number; severity: 'important' }
+  | { type: 'candidates_arrived'; count: number; severity: 'important' }
+  | { type: 'hired'; empirianId: string; severity: 'important' }
+  | { type: 'fired'; empirianId: string; severity: 'important' }
+  | { type: 'payroll'; total: number; severity: 'info' };
 
 export type EventSink = (e: SimEvent) => void;

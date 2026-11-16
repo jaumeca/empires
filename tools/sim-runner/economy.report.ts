@@ -26,6 +26,7 @@ it('economy review', () => {
       mean(rs.map((r) => r.spentOffice)).toFixed(0).padStart(9),
       mean(rs.map((r) => r.rep)).toFixed(0).padStart(5),
       rs[0]!.skill.padStart(16),
+      ` team ${mean(rs.map((r) => r.team)).toFixed(1)} salaries ${mean(rs.map((r) => r.salaries)).toFixed(0)}`,
       ` kinds:${all.size}`,
     );
   }

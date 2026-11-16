@@ -525,12 +525,13 @@ Primero usos para el dinero (equipamiento, costes recurrentes, formación, inves
 
 El fundador deja de estar solo. Es la siguiente gran etapa y también la forma de dar **usos con sentido al dinero** (Q-011): sueldos, puestos de trabajo, ampliaciones, equipamiento. No se recortan ingresos de forma arbitraria.
 
-### 24.1 Contratar al primer Empirian `[CONFIRMADO]`
+### 24.1 Contratar al primer Empirian `[IMPLEMENTADO]` (D-046)
 - Candidatos generados por la semilla, cada uno con nombre, aspecto, habilidades (programación, diseño, creatividad, gestión), un **rasgo de personalidad** y un **sueldo** pedido. Más habilidad, más sueldo.
 - Hace falta un **puesto libre** (escritorio con ordenador y silla): la oficina limita el tamaño del estudio y el catálogo cobra sentido.
 - La entrevista se ve en la oficina: el candidato entra, saluda y espera. Contratar o no es una decisión con consecuencias; despedir cuesta ánimo y reputación.
+- Implementado: tarjeta de candidatos con cara, habilidades, rasgo explicado con palabras y sueldo; si no hay puesto, acceso directo al modo decoración; el contratado aparece en la oficina, celebra y se sienta en su escritorio. `[FUTURO]` El candidato entrando por la puerta para la entrevista.
 
-### 24.2 Empleados vivos `[CONFIRMADO]`
+### 24.2 Empleados vivos `[CONFIRMADO]` (base `[IMPLEMENTADO]`: rasgos, sueldo, energía y ánimo propios)
 - Aprenden haciendo con el mismo modelo que el fundador (§23.1), tienen **energía y ánimo propios**, cobran **cada semana** y pueden cansarse, alegrarse o desanimarse.
 - Los rasgos tienen efecto y expresión visual (p. ej. *perfeccionista*: menos bugs y más lento; *noctámbulo*: rinde más con crunch y se agota antes; *sociable*: mejora el ánimo de los demás; *curioso*: aprende más rápido). Ningún rasgo es siempre mejor.
 
