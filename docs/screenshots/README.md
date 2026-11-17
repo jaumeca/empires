@@ -48,6 +48,8 @@ Capturas generadas automáticamente con `npm run gallery` (Chromium sin pantalla
 | 40 | [g39-walls-floor.jpg](g39-walls-floor.jpg) | **Paredes y suelo**: se prueban en la oficina antes de pagar. |
 | 41 | [g40-bigger-studio.jpg](g40-bigger-studio.jpg) | **Estudio más grande** (AW.E.1): 14×10 casillas, segunda ventana, todo en su sitio. |
 | 42 | [g41-features.jpg](g41-features.jpg) | **Funcionalidades y prototipo** (AW.D): explicadas con palabras, con bloqueos y huecos por tamaño. |
+| 43 | [g42-roles.jpg](g42-roles.jpg) | **Reparto de tareas** (AW.E.2): Auto, Diseño, Código o Pruebas por persona, con reparto automático. |
+| 44 | [g43-team-idea.jpg](g43-team-idea.jpg) | **Evento de historia** (D-055): una empleada propone una idea; tres opciones con consecuencias distintas. |
 
 ## Qué decidir en la revisión (F1.12)
 

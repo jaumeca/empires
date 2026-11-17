@@ -76,8 +76,12 @@ export function resolveDecision(
   if (founder && EVENT_KINDS.includes(d.kind)) {
     // Dynamic events (LS.7) may not involve an active project.
     state.pendingDecision = null;
-    founder.activity = 'idle';
-    gainXp(state, founder, 'management', SIM_CONFIG.progression.managementPerDecision, emit);
+    founder.activity = 'idle'; // the speaker (founder or an employee) lowers their hand
+    // Deciding is the founder's job, whoever raised the question.
+    const boss = state.empirians.find((e) => e.id === state.founderId) ?? founder;
+    gainXp(state, boss, 'management', SIM_CONFIG.progression.managementPerDecision, emit);
+    // It counts as a decision taken during the current project (tutorial, history).
+    state.projects.find((x) => x.id === state.activeProjectId)?.decisionsTaken.push(`${d.kind}:${optionId}`);
     resolveEvent(state, d, optionId, founder, emit);
     emit({ type: 'decision_resolved', decisionId, optionId, severity: 'info' });
     return { ok: true };

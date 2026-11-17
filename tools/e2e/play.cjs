@@ -114,7 +114,11 @@ const check = (name, ok, detail = '') => { checks.push({ name, ok, detail }); co
   const boxes = await page.evaluate(() => window.__empires.scene.productBoxes.size);
   check('collectible box on the shelf', boxes === 1);
 
-  // Save & reload
+  // Save & reload (a story event, e.g. a critic, may be asking first: answer it).
+  const pendingKind = await page.evaluate(() => window.__empires.game.state.pendingDecision?.kind || '');
+  if (pendingKind) console.log('pending before save:', pendingKind);
+  for (let i = 0; i < 4 && (await page.evaluate(() => !!window.__empires.game.state.pendingDecision)); i++) { await page.keyboard.press('1'); await page.waitForTimeout(300); }
+  for (let i = 0; i < 4 && (await page.isVisible('.card .close')); i++) { await page.click('.card .close'); await page.waitForTimeout(150); }
   await page.click('[data-speed="0"]');
   await page.click('button[aria-label="Menú"]');
   await page.click('text=Guardar ahora');

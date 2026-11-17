@@ -148,6 +148,14 @@ if (debug) {
     ui,
     /** Advance n ticks instantly (test helper). */
     advance(n: number) { for (let i = 0; i < n && !game.state.pendingDecision; i++) game.tick(); },
+    /** Advance n ticks, answering any question with its first option (test helper). */
+    play(n: number) {
+      for (let i = 0; i < n; i++) {
+        const d = game.state.pendingDecision;
+        if (d) game.dispatch({ type: 'choose_option', decisionId: d.id, optionId: d.kind === 'deadline' ? 'release' : d.options[0]!.id });
+        else game.tick();
+      }
+    },
     /** Raise a dynamic/story event now (test helper). */
     forceEvent(kind: string) { return game.forceEvent(kind); },
   };

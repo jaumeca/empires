@@ -177,6 +177,37 @@ describe('story events', () => {
     for (const v of ['send_copy_good', 'send_copy_mixed', 'send_copy_bad', 'interview', 'decline']) expect(en[`ledger.event.influential_review.${v}`]).toBeTruthy();
   });
 
+  it('answering an event counts as a decision (tutorial) and trains the founder, not the speaker', () => {
+    const g = studio(11);
+    const p0 = startGame(g);
+    const boss = g.state.empirians[0]!;
+    const emp = g.state.empirians[1]!;
+    const m0 = boss.xp.management;
+    const e0 = emp.xp.management;
+    choose(g, 'team_idea', 'save');
+    expect(getProject(g.state, p0.id)!.decisionsTaken).toContain('team_idea:save');
+    expect(boss.xp.management).toBeGreaterThan(m0);
+    expect(emp.xp.management).toBe(e0);
+  });
+
+  it('the "why this score" only blames events that really changed bugs', () => {
+    const g = studio(12);
+    const p0 = startGame(g);
+    g.dispatch({ type: 'adjust_project', pace: 'crunch', testFocus: 0.05 });
+    until(g, () => getProject(g.state, p0.id)!.phase === 'production' && productionProgress(getProject(g.state, p0.id)!) > 0.2);
+    choose(g, 'game_fair', 'table');
+    g.state.eventLog.lastByKind = {}; // allow the next forced event
+    choose(g, 'team_debate', 'fast');
+    until(g, () => !g.state.activeProjectId, 60000);
+    const p = getProject(g.state, p0.id)!;
+    const keyOf = (id: string) => g.state.ledger.find((l) => l.id === id)?.text.key ?? '';
+    const bugs = g.state.ledger.find((l) => l.kind === 'score_factor' && l.projectId === p.id && l.text.key.startsWith('factor.bugs'));
+    expect(bugs, 'the game shipped with bugs (a top factor)').toBeTruthy();
+    const keys = bugs!.causes.map(keyOf);
+    expect(keys).toContain('ledger.event.team_debate.fast');
+    expect(keys).not.toContain('ledger.event.game_fair.table');
+  });
+
   it('are rare, deterministic and saved: at most two per project and a gap between them', () => {
     const run = () => {
       const g = studio(9);

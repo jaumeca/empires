@@ -62,7 +62,7 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.waitForTimeout(600);
   check('…and the coach hides while deciding (never interrupts a decision)', !(await page.isVisible('#tutorial-coach')));
   for (let i = 0; i < 5 && (await page.evaluate(() => !!window.__empires.game.state.pendingDecision)); i++) { await page.keyboard.press('1'); await page.waitForTimeout(400); }
-  check('7 release: explained after the first decision', await waitStep('release'));
+  check('7 release: explained after the first decision', await waitStep('release'), await page.evaluate(() => JSON.stringify({ step: document.getElementById('tutorial-coach')?.dataset.step, tut: window.__empires.game.state.tutorial, pend: window.__empires.game.state.pendingDecision?.kind, kinds: window.__empires.game.state.ledger.slice(-6).map((l) => l.text.key) })));
   for (let i = 0; i < 400 && (await page.evaluate(() => !!window.__empires.game.state.activeProjectId)); i++) {
     await page.evaluate(() => window.__empires.advance(40));
     for (let j = 0; j < 5 && (await page.evaluate(() => !!window.__empires.game.state.pendingDecision)); j++) {

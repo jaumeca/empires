@@ -46,7 +46,7 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   s = await st();
   check('founder works on the contract', s.contracts.active && s.contracts.active.done > 0, s.contracts.active ? String(Math.round(s.contracts.active.done)) : '-');
 
-  await page.evaluate(() => window.__empires.advance(8 * 60));
+  await page.evaluate(() => window.__empires.play(8 * 60));
   await page.waitForTimeout(600);
   s = await st();
   check('contract delivered and paid', !s.contracts.active && s.contracts.completed === 1 && s.company.money > money0, `money ${money0} → ${s.company.money}`);

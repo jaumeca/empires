@@ -130,8 +130,10 @@ const VARIANTS = [
   await frame(null);
   // 13 reviews
   await page.waitForTimeout(2600);
-  await ev(() => { for (let i = 0; i < 8 * 7 * 4; i++) window.__empires.game.tick(); });
-  await shot('g13-reviews', 1500);
+  // (story events such as a critic may ask meanwhile: answer with the neutral last option)
+  await ev(() => { const g = window.__empires.game; for (let i = 0; i < 8 * 7 * 4; i++) { const d = g.state.pendingDecision; if (d) g.dispatch({ type: 'choose_option', decisionId: d.id, optionId: d.options[d.options.length - 1].id }); else g.tick(); } });
+  if (!(await page.isVisible('.card .close'))) await ev(() => window.__empires.ui.showResults?.(window.__empires.game.state.projects[0].id));
+  await shot('g13-reviews', 3200);
   await page.click('.card .close');
   // 14/15 collectible box
   await shot('g14-room-after-launch', 2000);
@@ -320,6 +322,24 @@ const VARIANTS = [
   await page.waitForTimeout(400);
   for (let i = 0; i < 4 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(200); }
   await shot('g40-bigger-studio', 2500);
+
+  // 43 Who does what (AW.E.2).
+  await ev(() => window.__empires.ui.showTeam());
+  await page.waitForTimeout(300);
+  const second = await ev(() => window.__empires.game.state.empirians[1]?.id);
+  if (second) await page.click(`[data-role-of="${second}"] [data-role="test"]`);
+  await shot('g42-roles', 500);
+  await page.keyboard.press('Escape');
+
+  // 44 A story event raised by an employee.
+  await ev(() => {
+    const g = window.__empires.game;
+    if (!g.state.activeProjectId) g.dispatch({ type: 'start_project', name: 'Isla', topicId: 'pirates', size: 'small', focus: 0.45, budget: 1500, days: 42, price: 9.99 });
+  });
+  for (let i = 0; i < 4 && (await page.isVisible('.card .close')); i++) { await page.click('.card .close'); await page.waitForTimeout(150); }
+  await ev(() => window.__empires.forceEvent('team_idea'));
+  await shot('g43-team-idea', 1800);
+  await page.keyboard.press('1');
 
 
   await browser.close();

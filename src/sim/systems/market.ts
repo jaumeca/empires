@@ -50,8 +50,13 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
 
   // --- Explanation: build factors with links to their causes ----------------
   const started = entriesFor(state, p.id, ['project_started']).map((e) => e.id);
-  const timeCauses = entriesFor(state, p.id, ['delay', 'deadline_changed', 'budget_changed', 'decision']).map((e) => e.id);
-  const bugCauses = entriesFor(state, p.id, ['pace_changed', 'testing_changed', 'decision']).map((e) => e.id);
+  // Story events are causes only where they really changed something (e.g. a debate's bug rate).
+  const story = (e: { text: { key: string } }) => /^ledger\.event\.(team_idea|contract_change|game_fair|influential_review|team_debate|training_request)\./.test(e.text.key);
+  const timeCauses = entriesFor(state, p.id, ['delay', 'deadline_changed', 'budget_changed', 'decision']).filter((e) => !story(e)).map((e) => e.id);
+  const bugCauses = [...new Set([
+    ...entriesFor(state, p.id, ['pace_changed', 'testing_changed', 'decision']).filter((e) => !story(e)).map((e) => e.id),
+    ...p.bugRateMods.map((m) => m.causeId).filter((id) => state.ledger.some((l) => l.id === id && story(l))),
+  ])];
   const factors: Factor[] = [];
   const fit = fitModifier(p);
   factors.push({

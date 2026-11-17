@@ -4,6 +4,33 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-17 — Octava sesión (2.ª parte): reparto de tareas y primeros eventos de historia (0.10.0)
+
+### Estado verificado al empezar
+`production-web` = 0.9.0 (`3a3c40c`); desarrollo en `2a6fb75` con el reparto de tareas a medias (sin confirmar); guardado v10.
+
+### Resumen
+- **E.2 — Reparto de tareas** (D-054): en Equipo → Reparto de tareas, cada persona en Auto, Diseño, Código o Pruebas, con botón de reparto automático y la mezcla actual explicada. Especialistas +12 % pero el juego exige su mezcla; el de Pruebas encuentra bugs mientras se construye y reduce los de los demás. La ficha muestra el papel.
+- **Primeros eventos de historia** (D-055): idea de un empleado, el cliente pide cambios, feria, crítica influyente, discusión en el equipo y petición de formación. Pregunta la persona implicada; queda en la Historia y en su ficha.
+- El "¿Por qué esta nota?" ya no culpa de los bugs a eventos que no los causaron (una mesa en una feria aparecía como causa); sí cita la discusión que aceleró a costa de bugs.
+
+### Pruebas ejecutadas
+- `npx vitest run`: **187 pruebas**, todas pasan (nuevas: `tests/sim/roles.test.ts` 7, `tests/sim/storyEvents.test.ts` 11; `economy.test.ts` pasa a 12 semillas).
+- E2E en el build publicado (`index-cCI8BzHV.js`), en serie: **roles 10/10**, **events 9/9**, tutorial 20/20, features 7/7, expansion 8/8, style 7/7, identity 13/13, decor 10/10, routines 8/8, pause 16/16, play 21/21, persistence 10/10, desktop 15/15, team 13/13, story 10/10, contracts 10/10.
+- Galería: 44 capturas (nuevas g42 reparto, g43 evento de historia).
+- Actualización real 0.9.0 → 0.10.0 con la partida en el almacenamiento: misma partida, esquema 10, sin errores, sin tutorial forzado.
+
+### Problemas encontrados
+- **Tester inútil** en la primera versión (la mitad de velocidad a cambio de casi ningún bug menos): ahora construye el 35 % del tiempo y los demás cometen un 40 % menos de bugs; compensa en juegos medianos o ajustados (medido).
+- **Todos de Pruebas = juego bloqueado**: si nadie construye, construyen igualmente.
+- **El tutorial no avanzaba** si la primera decisión era un evento dinámico (solo contaban los momentos del proyecto): ya cuentan los eventos. Fallo latente desde 0.7.0 que salió al cambiar el orden de las tiradas.
+- **La experiencia de gestión de una decisión iba a quien preguntaba** (un empleado) en vez de al fundador: corregido.
+- Las pruebas e2e `play`, `story` y `contracts` y la galería avanzaban el tiempo sin contestar preguntas; con los eventos nuevos se quedaban esperando una decisión (comportamiento correcto del juego). Nueva ayuda de depuración `__empires.play(n)` que contesta con la primera opción.
+- Con 6 semillas, la prueba de economía "encargos tras un fracaso ≥ 0,95× juegos" fallaba por suerte (0,90×); con 52 semillas es 0,94–1,0×. Se documenta en D-055 y la prueba usa 12 semillas y ≥ 0,92×.
+- La captura g13 (críticas) aparece semitransparente sobre la oficina; ya ocurría en 0.9.0 (no es una regresión), pendiente de revisar.
+
+---
+
 ## 2026-11-17 — Octava sesión: The Next Chapter — Bloque C (identidad), E.1 (estudio más grande) y D.1/D.2 (funcionalidades y prototipos) (0.9.0)
 
 ### Estado verificado al empezar

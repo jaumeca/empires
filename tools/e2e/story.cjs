@@ -59,7 +59,7 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
 
   // An achievement unlocks a trophy; it can be placed.
   await page.evaluate(() => { const s = window.__empires.game.state; s.company.money = 150000; });
-  await page.evaluate(() => window.__empires.advance(8));
+  await page.evaluate(() => window.__empires.play(8));
   await page.waitForTimeout(300);
   s = await st();
   check('reaching 100.000 € unlocks the neon sign', s.story.achievements.rich !== undefined);
