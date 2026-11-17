@@ -6,9 +6,10 @@ import { createStartingOffice } from './systems/office';
 import { createWorld } from './systems/world';
 import { createHiring } from './systems/team';
 import { createStory } from './systems/story';
+import { createTutorial } from './systems/tutorial';
 import { createContracts } from './systems/contracts';
 
-export const SCHEMA_VERSION = 9;
+export const SCHEMA_VERSION = 10;
 
 export const DEFAULT_APPEARANCE: Appearance = {
   skin: 2,
@@ -58,6 +59,7 @@ export function createNewGame(seed: number): GameState {
     contracts: createContracts(),
     hiring: createHiring(),
     story: createStory(),
+    tutorial: createTutorial(),
     scheduled: [],
     eventLog: { lastDay: null, lastByKind: {} },
   };

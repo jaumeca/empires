@@ -13,6 +13,7 @@
 | F2 | El primer proyecto | 🟦 Jugable | **v0.1 — primera versión jugable** (falta prueba de juego del propietario) |
 | LS | A Living Studio (adelanta partes de F4, F5, F8) | ✅ Hecho (LS.6 parcial) | Oficina personalizable, fundador que aprende, Empires Daily, eventos, contratos |
 | WEB | Versión web estable (D-043, D-044) | ✅ 0.4.0 en `production-web` | Web para ordenador con soporte táctil, guardado seguro entre versiones, guía de despliegue |
+| AW | A World Alive (7.ª sesión) | 🟦 En curso | Tutorial integrado, oficina viva (rutinas), identidad, decisiones de proyecto y eventos con historias |
 | ML | More Life, More Fun (6.ª sesión) | 🟦 En curso | Pausa que congela el mundo, personalización de oficina y Empirians, recuerdos, logros y desbloqueos, eventos con más vida |
 | GT | Growing Together (adelanta F4, F5, F7) | 🟦 En curso | Del desarrollador solitario a un estudio: contratar, equipo, oficinas, apps y herramientas, productos con mantenimiento |
 | F3 | Consecuencias y personalización | 🟦 En curso (F3.1) | Proyectos más ricos, decisiones dinámicas, registro causal visible |
@@ -136,6 +137,21 @@ Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, of
 | WEB.6 | Rama `production-web` con versiones estables | ✅ 0.4.0 |
 | WEB.7 | Validación en móviles y tabletas reales | ⏸ pendiente del propietario (F1.11) |
 | WEB.8 | `[FUTURO]` Aplicaciones nativas iOS/Android con Capacitor (adaptador de guardado en archivos, zonas seguras, pausa del sistema) | ⬜ |
+
+---
+
+## AW — "A World Alive": vida, variedad, tutorial y diversión (7.ª sesión)
+
+Objetivo: divertido desde los primeros minutos, oficina viva y partidas distintas. Nada de más menús o números por sí mismos. Se apoya en ML, GT, F3 y LS (integra, no duplica).
+
+| ID | Bloque | Contenido | Criterios de aceptación | Depende de | Estado |
+|---|---|---|---|---|---|
+| AW.A | **Primera experiencia** | Tutorial contextual de 11 pasos (fundador, oficina, velocidad, primer juego y su plan, progreso y energía, primera decisión, publicación, críticas y ventas, decorar, historia, cómo se desbloquea contratar); omitir, reiniciar desde Ayuda, guardado en la partida; textos para ratón o dedo | Pasos por hechos reales (se reconoce lo hecho por cuenta propia); nunca durante una decisión; no bloquea la pantalla; no se repite; partidas antiguas sin tutorial forzado (pruebas + e2e) | — | ✅ `systems/tutorial.ts`, `ui/tutorialUI.ts`, guardado v10, `tests/sim/tutorial.test.ts`, `tools/e2e/tutorial.cjs` 20/20 (D-049) |
+| AW.B | **Oficina viva** | Rutinas con propósito (café/agua, descanso, charlar, estirarse, mirar por la ventana, celebrar, reaccionar a malas noticias, volver al puesto) según energía, ánimo, personalidad y muebles; zona de descanso | Deterministas; efectos moderados; sin abandonar tareas en exceso; rutas válidas o alternativa segura; nada atraviesa obstáculos; la pausa lo congela todo | GT.1, ML.1 | ⬜ Siguiente |
+| AW.C | **Identidad** | Editar después aspecto, nombre y apodo de fundador y empleados; ficha con biografía y logros visible junto al personaje; colores de paredes/suelo y nuevos objetos (rincón de bebidas) | Cambiar ropa no cambia habilidades, personalidad ni historia; estético vs funcional claro; sin estrategia de repetir el mismo objeto | ML.4, ML.5, ML.6 | ⬜ |
+| AW.D | **Diversión** | Más decisiones de proyecto (funcionalidades, prototipo, alcance vs plazo, deuda técnica, pruebas extra, comentarios de usuarios, tendencia, lanzar o retrasar) y eventos que generan historias (idea brillante de un empleado, discrepancia técnica, cliente pide cambios, feria, crítica influyente, formación, tendencia, resurgimiento) con límites de frecuencia | Cada opción con consecuencias distintas y comprensibles; ninguna estrategia universal; juego pequeño viable; eventos en la Historia | F3.2–F3.5, ML.7 | ⬜ |
+| AW.E | **Profundidad** | Continuar GT (ampliar oficina, reparto de tareas) y F3 (nuevos tipos de software) | Ver GT y F3 | GT, F3 | ⬜ |
+| AW.F | **Pequeñas satisfacciones** | Animaciones discretas para primeros hitos, récords, premios, nueva oficina; audio opcional y silenciable | Sin abusar de confeti ni avisos | AW.B | ⬜ |
 
 ---
 

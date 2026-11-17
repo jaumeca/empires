@@ -334,6 +334,14 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Logros (opcionales, nada básico se bloquea):** Juego de oro → trofeo; Cinco juegos → placa; Ya no estás solo → foto del equipo; Clientes felices (5 encargos) → bonsái; Caja fuerte (100 000 €) → cartel luminoso; Remontada → cactus de la suerte. Son decoraciones bonitas con ambiente pequeño (y el cartel gasta 2 €/día): recuerdan, no obligan a optimizar.
 - **Partidas antiguas:** migración 8→9 con el recuerdo de la fundación; al día siguiente se generan los recuerdos de su historia real (lanzamientos, contrataciones…).
 
+### D-049 — Tutorial integrado (AW.A)
+- **Fecha:** 2026-11-17 · **Estado:** Aplicada (provisional hasta pruebas de juego)
+- **Progreso en la partida** (`state.tutorial`, guardado v10). 11 pasos: fundador → conocer al Empirian → pausa y velocidad → primer juego (el plan se explica dentro del diálogo) → progreso y energía → primera decisión → publicar → críticas y ventas → decorar → historia → cómo se desbloquea contratar (informativo; nunca se fuerza una contratación).
+- **Hechos reales:** cada paso se completa por un hecho del juego (proyecto creado, decisión tomada, lanzamiento, compra…) o por una marca de la interfaz para lo puramente visual (abrir la ficha, cambiar la velocidad, abrir la historia…). Lo que el jugador hace por su cuenta cuenta y no se repite. Al reiniciar el tutorial, se toma la partida actual como punto de partida (no cuentan los juegos ya hechos), sin tocar nada más.
+- **Presentación:** tarjeta pequeña abajo a la izquierda que no bloquea; con una ventana abierta se integra dentro de ella; resaltado del botón y flecha sobre personajes u objetos; oculta durante las decisiones; el bocadillo del fundador calla mientras guía. Textos distintos para ratón (con atajos) y para dedo.
+- **Omitir y repetir:** "Omitir tutorial" desde la primera pantalla; Menú › Ayuda (o tecla ?) tiene una guía por temas y "Repetir el tutorial".
+- **Partidas anteriores:** quien ya tenía proyectos no recibe el tutorial (puede iniciarlo desde Ayuda); una partida que aún no había empezado su primer juego sí.
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

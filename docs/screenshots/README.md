@@ -40,6 +40,8 @@ Capturas generadas automáticamente con `npm run gallery` (Chromium sin pantalla
 | 32 | [g31-team-working.jpg](g31-team-working.jpg) | Segundo Empirian trabajando en su propio escritorio junto al fundador. |
 | 33 | [g32-studio-story.jpg](g32-studio-story.jpg) | **Historia del estudio** (ML.2/ML.3): logros y recuerdos ligados a personas y productos. Se abre desde la estantería o los trofeos. |
 | 34 | [g33-trophies.jpg](g33-trophies.jpg) | Pestaña **Trofeos** en Decorar: decoraciones que se ganan con logros (las no ganadas dicen cómo conseguirlas). |
+| 35 | [g34-tutorial.jpg](g34-tutorial.jpg) | **Tutorial** (AW.A): tarjeta guía que no bloquea y flecha sobre el fundador. |
+| 36 | [g35-help.jpg](g35-help.jpg) | **Ayuda**: lo esencial por temas, atajos y «Repetir el tutorial». |
 
 ## Qué decidir en la revisión (F1.12)
 

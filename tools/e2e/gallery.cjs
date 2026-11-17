@@ -47,6 +47,7 @@ const VARIANTS = [
   await page.click('button[aria-label="topColor 3"]');
   await shot('g02-founder-customized', 800);
   await page.click('#start-game');
+  await page.evaluate(() => window.__empires.game.dispatch({ type: 'tutorial', action: 'skip' })); // general shots without the guide
   await page.waitForTimeout(2000);
 
   // 03 initial room (empty)
@@ -168,6 +169,7 @@ const VARIANTS = [
   await page.goto(`${base}/?fresh&debug&seed=42`);
   await page.waitForTimeout(1500);
   await page.click('#start-game');
+  await page.evaluate(() => window.__empires.game.dispatch({ type: 'tutorial', action: 'skip' })); // general shots without the guide
   await ev(() => { window.__empires.game.state.company.money = 30000; });
   await ev(() => window.__empires.advance(8 * 40));
   await page.waitForTimeout(500);
@@ -250,11 +252,21 @@ const VARIANTS = [
   for (let i = 0; i < 4 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(200); }
   await page.keyboard.press('h');
   await shot('g32-studio-story', 800);
-  await page.click('.card .close');
-  await page.keyboard.press('d');
+  for (let i = 0; i < 4 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(250); }
+  await page.evaluate(() => window.__empires.ui.decor.open());
+  await page.waitForTimeout(300);
   await page.click('[data-cat="awards"]');
   await shot('g33-trophies', 600);
   await page.click('#decor-done');
+
+  // 35-36 Tutorial (AW.A) and Help.
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto(`${base}/?fresh&debug&seed=42`);
+  await page.waitForTimeout(1500);
+  await page.click('#start-game');
+  await shot('g34-tutorial', 1200);
+  await page.keyboard.press('?');
+  await shot('g35-help', 600);
 
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });

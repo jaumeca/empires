@@ -96,6 +96,15 @@ export interface Story {
   seenReleases: string[];
 }
 
+/** In-game tutorial progress (AW.A). Steps complete from real facts; `marks` record UI-only facts. */
+export interface Tutorial {
+  active: boolean;
+  marks: string[];
+  /** Counts when the tutorial (re)started: steps compare against them so a restart is meaningful. */
+  base: { projects: number; released: number; decisions: number; purchases: number };
+  finishedDay?: number;
+}
+
 export interface Hiring {
   candidates: Candidate[];
   nextRefreshDay: number;
@@ -332,6 +341,8 @@ export interface GameState {
   hiring: Hiring;
   /** Memories and achievements (ML.2, ML.3). */
   story: Story;
+  /** Tutorial for new players (AW.A). */
+  tutorial: Tutorial;
   /** Deferred consequences (LS.7). */
   scheduled: ScheduledEffect[];
   /** Pacing of dynamic events. */

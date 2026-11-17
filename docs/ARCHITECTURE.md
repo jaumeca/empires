@@ -434,3 +434,7 @@ Todos los sistemas nuevos viven en `src/sim/systems/`, son deterministas (flujos
 - **Historia:** `src/sim/systems/story.ts` (`state.story`: recuerdos con `fact` único, logros, cursor del registro causal, lanzamientos ya evaluados). `storyDay` en el cambio de día; `rememberHire/Farewell/Founding` en sus comandos. Logros → `isUnlocked` en `buy_item`. Guardado v9.
 - **E2E:** `tools/e2e/pause.cjs`, `tools/e2e/story.cjs`.
 
+## 19. Tutorial (AW.A, 2026-11-17)
+
+`src/sim/systems/tutorial.ts`: pasos, `stepDone` (hechos del estado o marcas), `currentStep`, comando `tutorial` (mark/skip/restart/finish). `src/ui/tutorialUI.ts`: tarjeta guía, resaltado (`.tut-target`) y flecha (`scene.empirianScreenPos/itemScreenPos`); se calcula en `ui.frame()` y solo reconstruye el DOM cuando cambia el paso o el contexto. Las marcas visuales se envían como comandos (la interfaz nunca toca el estado). Guardado v10. Pruebas: `tests/sim/tutorial.test.ts`; e2e `tools/e2e/tutorial.cjs`.
+

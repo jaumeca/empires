@@ -4,6 +4,29 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-17 — Séptima sesión: A World Alive — Bloque A, tutorial integrado (0.7.0)
+
+### Estado verificado al empezar
+`production-web` = 0.6.0 (`ac31f27`); desarrollo limpio en `3be726b`; guardado v9.
+
+### Resumen
+Tutorial de 11 pasos, contextual y visual: tarjeta guía que no bloquea (dentro de la ventana cuando hay una abierta), resaltado del botón y flecha sobre el fundador o la estantería; cada paso se completa con hechos reales; nunca durante una decisión; se puede omitir desde la primera pantalla y repetir desde la nueva Ayuda (Menú o tecla ?). Textos para ratón (con atajos) y para dedo, en español e inglés. Guardado v10.
+
+### Pruebas ejecutadas
+- `npx vitest run`: 21 archivos, **142 pruebas**, todas pasan (nuevas: `tests/sim/tutorial.test.ts`, 6: sesión completa, progreso por cuenta propia, omitir, reiniciar sin tocar la partida, guardar/cargar a mitad, migración de partidas anteriores).
+- E2E: **tutorial 20/20** (dos ejecuciones seguidas) y sin regresiones: play 21/21, decor 10/10, contracts 10/10, persistence 10/10, desktop 15/15, team 13/13, pause 16/16, story 10/10. Galería: 36 capturas.
+
+### Problemas encontrados
+- El bocadillo del fundador ("toca el ordenador") contradecía la guía: calla mientras el tutorial guía.
+- La tarjeta tapaba el selector de tamaño del nuevo proyecto: con una ventana abierta, la guía se integra dentro.
+- El paso de críticas se completaba al abrir los resultados y su explicación no llegaba a verse: ahora cuenta al cerrarlos.
+- La galería se atascaba con el tutorial activo: las capturas generales lo omiten y hay capturas propias del tutorial.
+
+### Siguiente
+Bloque B — oficina viva (rutinas con propósito, zona de descanso, reacciones), congelado en pausa.
+
+---
+
 ## 2026-11-16 — Sexta sesión: More Life, More Fun (ML.1–ML.3) → 0.5.1 y 0.6.0
 
 ### Resumen

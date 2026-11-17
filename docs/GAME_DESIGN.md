@@ -575,6 +575,28 @@ Cambiar aspecto, nombre y apodo del fundador y de los empleados; más peinados, 
 ### 25.6 Momentos con más vida `[CONFIRMADO]`
 Eventos contextuales nuevos (idea experimental, negociar un encargo, conflicto en el equipo, responder a una crítica, aprovechar una tendencia, feria, oportunidad inesperada) que dependen del estado real, con consecuencias diferidas y sin interrumpir en exceso.
 
+## 26. "A World Alive": vida, variedad, tutorial y diversión `[CONFIRMADO]` (7.ª sesión)
+
+Que EMPIRES sea divertido desde el primer minuto, que la oficina parezca viva y que cada partida cuente una historia distinta. Principio: un videojuego con personalidad, no un simulador lleno de números.
+
+### 26.1 Tutorial integrado `[IMPLEMENTADO]` (D-049)
+Una bienvenida, no una obligación: guía contextual que acompaña con acciones reales, se puede omitir, se puede repetir desde Ayuda y recuerda el progreso en la partida.
+
+### 26.2 Oficina viva `[CONFIRMADO]`
+Rutinas con propósito según energía, ánimo, personalidad y muebles: café, descanso, charlas, estiramientos, celebraciones, reacciones a malas noticias. Deterministas, con efectos moderados y congeladas en pausa.
+
+### 26.3 Personalidades que se notan `[CONFIRMADO]`
+Cada rasgo se expresa con gestos, burbujas y comportamientos reconocibles, sin estereotipos rígidos. La ficha muestra nombre, apodo, aspecto, personalidad, estado, habilidades, tarea y una pequeña biografía, con el personaje visible.
+
+### 26.4 Identidad del estudio y de los personajes `[CONFIRMADO]`
+Colores de paredes y suelos, nuevos muebles, rincón de bebidas; editar aspecto, nombre y apodo sin tocar progresión ni historia.
+
+### 26.5 Variedad en los proyectos y eventos que generan historias `[CONFIRMADO]`
+Más decisiones durante el desarrollo (funcionalidades, prototipo, alcance, deuda técnica, pruebas, comentarios, tendencias, lanzar o retrasar) y eventos contextuales con consecuencias, reflejados en la Historia del estudio, con límites de frecuencia.
+
+### 26.6 Pequeñas satisfacciones `[CONFIRMADO]`
+Animaciones discretas para los hitos; audio opcional y silenciable.
+
 ## 22. Contradicciones y tensiones identificadas
 
 | # | Tensión | Propuesta de resolución |

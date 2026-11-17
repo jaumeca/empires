@@ -5,6 +5,7 @@ import type { Appearance, GameState, Project, ProjectSize, Rot } from './model/s
 import { canPlace, getItemDef, SELL_REFUND } from './systems/office';
 import { useSavedIdeas } from './systems/events';
 import { fire, hire } from './systems/team';
+import { tutorialCommand } from './systems/tutorial';
 import { isUnlocked, rememberFounding } from './systems/story';
 import { acceptContract, cancelContract } from './systems/contracts';
 import { getActiveProject, getFounder } from './state';
@@ -37,7 +38,8 @@ export type Command =
   | { type: 'accept_contract'; offerId: string }
   | { type: 'cancel_contract' }
   | { type: 'hire'; candidateId: string }
-  | { type: 'fire'; empirianId: string };
+  | { type: 'fire'; empirianId: string }
+  | { type: 'tutorial'; action: 'mark' | 'skip' | 'restart' | 'finish'; step?: string };
 
 /** `error` is a stable code; the UI translates it as `error.<code>`. */
 export type CommandResult = { ok: true } | { ok: false; error: string };
@@ -233,6 +235,10 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       return err ? fail(err) : { ok: true };
     }
 
+    case 'tutorial': {
+      const err = tutorialCommand(state, cmd.action, cmd.step);
+      return err ? fail(err) : { ok: true };
+    }
     case 'hire': {
       if (!state.setupComplete) return fail('setup_required');
       const err = hire(state, cmd.candidateId, emit);

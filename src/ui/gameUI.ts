@@ -11,6 +11,7 @@ import { progressToNext, SKILLS, specializations } from '../sim/systems/progress
 import { getActiveProject, getFounder, getProject } from '../sim/state';
 import { productionProgress } from '../sim/systems/project';
 import type { BuildInfo } from '../app/buildInfo';
+import { TutorialUI } from './tutorialUI';
 import { TOPICS } from '../content/topics';
 import { drawFace } from '../render/face';
 import { iconUrl, type IconName } from '../render/icons';
@@ -51,6 +52,7 @@ export class GameUI {
   private speechEl: HTMLElement | null = null;
   private resumeSpeed: Speed = 1;
   private lastHudKey = '';
+  private tutorial!: TutorialUI;
   private shownResultFor = new Set<string>();
   private diag: HTMLElement | null = null;
   readonly decor: DecorUI;
@@ -65,6 +67,13 @@ export class GameUI {
     }
     scene.onTap = (target) => (this.decor.active ? this.decor.onTap(target) : this.onTap(target));
     scene.onHover = (cell) => this.decor.onHover(cell);
+    this.tutorial = new TutorialUI(root, scene, {
+      state: () => this.state,
+      dispatch: (c) => this.game.dispatch(c),
+      modalKind: () => this.modalKind,
+      decorActive: () => this.decor.active,
+      toast: (text, ic) => this.toast(text, ic),
+    });
     window.addEventListener('keydown', (ev) => this.onKey(ev));
     this.decor = new DecorUI(root, scene, {
       state: () => this.game.state,
@@ -135,8 +144,8 @@ export class GameUI {
       return;
     }
     const speeds: Record<string, Speed> = { '1': 1, '2': 2, '3': 4, '4': 8 };
-    if (k === ' ') { this.setSpeed(this.game.clock.speed === 0 ? this.lastPlaySpeed : 0); used(); }
-    else if (speeds[k]) { this.setSpeed(speeds[k]); used(); }
+    if (k === ' ') { this.playerSpeed(this.game.clock.speed === 0 ? this.lastPlaySpeed : 0); used(); }
+    else if (speeds[k]) { this.playerSpeed(speeds[k]); used(); }
     else if (k === 'n' || k === 'N') { this.showDaily(); used(); }
     else if (k === 'd' || k === 'D') { this.decor.open(); used(); }
     else if (k === 'm' || k === 'M' || k === 'Escape') { this.showMenu(); used(); }
@@ -148,6 +157,7 @@ export class GameUI {
     }
     else if (k === 'f' || k === 'F') { const f = getFounder(s); this.showEmpirian(f.id); used(); }
     else if (k === 'h' || k === 'H') { this.showStory(); used(); }
+    else if (k === '?' || k === 'F1') { this.showHelp(); used(); }
     else if ((k === 't' || k === 'T') && (hiringUnlocked(s) || s.empirians.length > 1)) { this.showTeam(); used(); }
   }
 
@@ -194,7 +204,7 @@ export class GameUI {
     }
     const speed = this.game.clock.speed;
     const speedBtn = (v: Speed, label: Node | string) =>
-      h('button', { class: `${speed === v ? 'on' : ''} ${v === 0 ? 'paused' : ''}`, 'aria-label': v === 0 ? t('hud.pause') : t('hud.speed', { n: v }), title: v === 0 ? t('kbd.tip', { label: t('hud.pause'), key: t('kbd.space') }) : t('kbd.tip', { label: t('hud.speed', { n: v }), key: String({ 1: 1, 2: 2, 4: 3, 8: 4 }[v]) }), dataset: { speed: String(v) }, onclick: () => this.setSpeed(v) }, label);
+      h('button', { class: `${speed === v ? 'on' : ''} ${v === 0 ? 'paused' : ''}`, 'aria-label': v === 0 ? t('hud.pause') : t('hud.speed', { n: v }), title: v === 0 ? t('kbd.tip', { label: t('hud.pause'), key: t('kbd.space') }) : t('kbd.tip', { label: t('hud.speed', { n: v }), key: String({ 1: 1, 2: 2, 4: 3, 8: 4 }[v]) }), dataset: { speed: String(v) }, onclick: () => this.playerSpeed(v) }, label);
     const r = this.hudRefs;
     r.day = h('span.day');
     r.money = h('span.money');
@@ -247,9 +257,10 @@ export class GameUI {
 
   /** Per-frame: speech bubble position + diagnostics. */
   frame(fps: number): void {
+    this.tutorial.frame();
     const s = this.state;
     const founder = s.setupComplete ? getFounder(s) : null;
-    const want = founder && !this.modal && !this.decor.active && !getActiveProject(s) && !s.contracts.active && founder.activity !== 'celebrating' ? (!s.projects.length ? t('speech.first') : s.contracts.offers.length ? t('speech.idle_options') : t('speech.again')) : null;
+    const want = founder && !this.modal && !this.decor.active && !this.tutorial.visible && !getActiveProject(s) && !s.contracts.active && founder.activity !== 'celebrating' ? (!s.projects.length ? t('speech.first') : s.contracts.offers.length ? t('speech.idle_options') : t('speech.again')) : null;
     if (want && founder) {
       if (!this.speechEl) {
         this.speechEl = h('div.speech', { onclick: () => (this.state.projects.length ? this.showWorkChooser() : this.showNewProject()) });
@@ -278,6 +289,11 @@ export class GameUI {
     this.resumeSpeed = v;
     if (v !== 0) this.lastPlaySpeed = v;
     this.renderHud(true);
+  }
+  /** A speed change made by the player (buttons, keys): also teaches the tutorial step. */
+  private playerSpeed(v: Speed): void {
+    this.setSpeed(v);
+    this.tutorial.mark('speed');
   }
   /** Last non-zero speed chosen by the player (Space toggles between it and pause). */
   private lastPlaySpeed: Speed = 1;
@@ -417,6 +433,8 @@ export class GameUI {
 
   closeModal(resume = false): void {
     if (!this.modal) return;
+    // The reviews step counts once the player has seen (and closed) the results.
+    if (this.modalKind.startsWith('results:')) this.tutorial.mark('reviews');
     this.modal.remove();
     this.modal = null;
     this.modalKind = '';
@@ -585,6 +603,7 @@ export class GameUI {
 
   // ---------------------------------------------------------- project panel
   showProjectPanel(): void {
+    this.tutorial.mark('progress');
     const s = this.state;
     const p = getActiveProject(s);
     if (!p) return this.showNewProject();
@@ -772,6 +791,7 @@ export class GameUI {
   /** ML.2/ML.3: the studio's story — achievements and memories. Opened from the shelf, trophies, H or the menu. */
   showStory(): void {
     const s = this.state;
+    this.tutorial.mark('story');
     const mems = [...s.story.memories].reverse();
     const card = h('div.card.wide.story', null, this.closeBtn(),
       h('h2', null, t('story.title', { company: s.company.name })),
@@ -795,6 +815,7 @@ export class GameUI {
   private showEmpirian(id: string): void {
     const e = this.state.empirians.find((x) => x.id === id);
     if (!e) return;
+    this.tutorial.mark('meet');
     const skillIcon: Record<SkillId, IconName> = { tech: 'code', design: 'design', creativity: 'idea', management: 'calendar' };
     const skillRow = (k: SkillId) =>
       h('div.skill', null,
@@ -830,6 +851,7 @@ export class GameUI {
   // ---------------------------------------------------------------- team (GT.1)
   showTeam(): void {
     const s = this.state;
+    this.tutorial.mark('hiring');
     const free = freeWorkstations(s).length;
     const staff = employees(s);
     const full = staff.length >= SIM_CONFIG.team.maxEmployees;
@@ -976,6 +998,7 @@ export class GameUI {
       h('p.sub', null, t('menu.sub')),
       h('div.actions', { style: { justifyContent: 'stretch', flexDirection: 'column' } },
         h('button.big-btn.mint', { onclick: () => { this.services.save(); this.toast(t('toast.saved'), 'check'); this.closeModal(true); } }, t('menu.save')),
+        h('button.big-btn.ghost', { id: 'menu-help', onclick: () => this.showHelp() }, t('menu.help')),
         h('button.big-btn.ghost', { id: 'menu-story', onclick: () => this.showStory() }, t('menu.story')),
         h('button.big-btn.ghost', { onclick: () => this.services.exportSave() }, t('menu.export')),
         h('button.big-btn.ghost', { onclick: () => void this.services.importSave() }, t('menu.import')),
@@ -988,6 +1011,31 @@ export class GameUI {
       this.debug ? h('p.hint.version', null, t('menu.debug_sandbox')) : null,
     );
     this.openModal('menu', card);
+  }
+
+  /** Help (AW.A): short guide by topic, keyboard shortcuts on desktop, restart the tutorial. */
+  showHelp(): void {
+    const s = this.state;
+    const desk = matchMedia('(pointer: fine)').matches;
+    const topic = (k: string, ic: IconName) => h('div.help-topic', null, h('div.t', null, icon(ic, 18), t(`help.${k}.title`)), h('div.d', null, t(`help.${k}.text`)));
+    const card = h('div.card.wide.help', null, this.closeBtn(),
+      h('h2', null, t('help.title')),
+      h('p.sub', null, t('help.sub')),
+      h('div.help-grid', null,
+        topic('games', 'rocket'), topic('time', 'clock'), topic('energy', 'sweat'), topic('decisions', 'idea'),
+        topic('sales', 'coin'), topic('office', 'decor'), topic('team', 'team'), topic('story', 'star'),
+      ),
+      desk ? h('p.hint', null, t('menu.shortcuts')) : null,
+      h('div.actions', null,
+        h('button.big-btn.ghost', { id: 'help-restart-tutorial', onclick: () => {
+          this.game.dispatch({ type: 'tutorial', action: 'restart' });
+          this.closeModal(true);
+          this.toast(t('tut.restarted'), 'star');
+        } }, s.tutorial.active ? t('help.tutorial_restart_active') : t('help.tutorial_restart')),
+        h('button.big-btn.mint', { onclick: () => this.closeModal(true) }, t('common.close')),
+      ),
+    );
+    this.openModal('help', card);
   }
 
   isModalOpen(): boolean {

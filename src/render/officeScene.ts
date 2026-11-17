@@ -1,4 +1,5 @@
 import {
+  Box3,
   BoxGeometry, BufferGeometry, CanvasTexture, Color, DirectionalLight, DynamicDrawUsage, Float32BufferAttribute, Group, HemisphereLight,
   InstancedMesh, LineBasicMaterial, LineSegments, Matrix4, Mesh, MeshBasicMaterial, MeshLambertMaterial, NearestFilter, Object3D,
   OrthographicCamera, PCFSoftShadowMap, Plane, PlaneGeometry, PointLight, Raycaster, Scene, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
@@ -971,6 +972,17 @@ export class OfficeScene {
     const v = world.clone().project(this.camera);
     const rect = this.renderer.domElement.getBoundingClientRect();
     return { x: rect.left + ((v.x + 1) / 2) * rect.width, y: rect.top + ((1 - v.y) / 2) * rect.height };
+  }
+
+  /** Screen position (CSS px) of the top of a placed item, for UI pointers (tutorial). */
+  itemScreenPos(uid: string): { x: number; y: number } | null {
+    const v = this.itemGroups.get(uid);
+    if (!v) return null;
+    const box = new Box3().setFromObject(v.group);
+    if (box.isEmpty()) return null;
+    const c = box.getCenter(new Vector3());
+    c.y = box.max.y + 0.15;
+    return this.project(c);
   }
 
   empirianScreenPos(id: string): { x: number; y: number } | null {

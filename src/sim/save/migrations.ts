@@ -91,4 +91,13 @@ export const MIGRATIONS: Record<number, (s: AnyState) => AnyState> = {
       seenReleases: [],
     },
   }),
+  /**
+   * 9 → 10 (AW.A): tutorial. Players who already created a game don't get it
+   * (they can start it from Help); games still at the start do.
+   */
+  9: (s) => {
+    const projects = (s.projects as unknown[]).length;
+    const veteran = !!s.setupComplete && projects > 0;
+    return { ...s, schemaVersion: 10, tutorial: { active: !veteran, marks: [], base: { projects: 0, released: 0, decisions: 0, purchases: 0 } } };
+  },
 };
