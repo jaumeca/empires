@@ -376,6 +376,14 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Coste:** 25 000 € una vez + 60 €/día de alquiler (≈ 22 000 € al año: un uso del dinero con sentido, Q-011). Plazas: hasta 6 empleados más el fundador (antes 3, en la práctica 1 por espacio). Medido: caben al menos 4 escritorios más que en la habitación, todo el suelo libre sigue conectado y nadie atraviesa muebles.
 - **Momento:** el equipo lo celebra y queda en la Historia del estudio ("estrena un estudio más grande"). Partidas anteriores: sin cambios (siguen en la habitación; sin migración).
 
+### D-054 — Reparto de tareas (AW.E.2, sobre GT.3)
+- **Fecha:** 2026-11-17 · **Estado:** Aplicada (provisional hasta pruebas de juego)
+- **Papeles:** cada persona puede estar en **Auto** (por defecto: hace lo que pide el proyecto; no se guarda nada, partidas antiguas sin cambios), **Diseño**, **Código** o **Pruebas**. Se elige en la tarjeta del Equipo (solo con 2 o más personas) y hay un botón **Reparto automático** que lo deshace todo. La ficha muestra el papel.
+- **Especialistas (diseño o código):** +12 % de velocidad en lo suyo, pero el juego necesita su mezcla: si el reparto real de trabajo se aleja más de 15 puntos del enfoque del juego, baja el techo de calidad (2,5 por unidad de desvío). La tarjeta lo explica con la mezcla actual ("62 % código, el juego pide 45 %").
+- **Pruebas:** durante la producción dedica el 65 % de su tiempo a buscar y arreglar bugs y el 35 % a construir; mientras alguien prueba, los demás introducen un 40 % menos de bugs (revisión). En el pulido, prueba en vez de pulir; los especialistas apenas prueban. Si todos son de Pruebas, construyen igualmente (el juego no se queda bloqueado).
+- **Medido (6 semillas, 2 personas):** en un juego pequeño con plazo holgado gana el automático (6,8) o un diseñador y un programador si el enfoque es equilibrado (6,9); con enfoque 0,3 todo código cae a 5,2. Con tester: en un juego pequeño y holgado pierde (6,5–6,6, producción más lenta) pero en un mediano ajustado (56 días) gana claramente (6,25 frente a 5,8; con funcionalidades con muchos bugs, 6,2 frente a 4,8). Ningún reparto domina; pruebas de no-dominancia en `tests/sim/roles.test.ts`.
+- **Sin automatizar más:** con 2–3 personas basta un selector por persona; la asignación automática por fases es una idea para equipos grandes (Funcionalidades futuras, ROADMAP AW.E).
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

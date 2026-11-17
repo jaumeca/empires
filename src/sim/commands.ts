@@ -1,7 +1,7 @@
 import { SIM_CONFIG, type Pace } from './config';
 import type { EventSink } from './core/events';
 import { newId, record } from './core/ledger';
-import type { Appearance, GameState, Project, ProjectSize, Rot } from './model/state';
+import type { Appearance, GameState, Project, ProjectSize, Role, Rot } from './model/state';
 import { canPlace, getItemDef, SELL_REFUND } from './systems/office';
 import { useSavedIdeas } from './systems/events';
 import { fire, hire } from './systems/team';
@@ -49,7 +49,8 @@ export type Command =
   | { type: 'tutorial'; action: 'mark' | 'skip' | 'restart' | 'finish'; step?: string }
   | { type: 'edit_empirian'; empirianId: string; name?: string; nickname?: string; appearance?: Appearance }
   | { type: 'set_office_style'; wall?: string; floor?: string }
-  | { type: 'expand_office' };
+  | { type: 'expand_office' }
+  | { type: 'set_role'; empirianId: string; role: Role };
 
 /** `error` is a stable code; the UI translates it as `error.<code>`. */
 export type CommandResult = { ok: true } | { ok: false; error: string };
@@ -251,6 +252,14 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       return err ? fail(err) : { ok: true };
     }
 
+    case 'set_role': {
+      // Who does what (AW.E.2). 'auto' = whatever the project needs.
+      const e = state.empirians.find((x) => x.id === cmd.empirianId);
+      if (!e) return fail('unknown_empirian');
+      if (!['auto', 'design', 'code', 'test'].includes(cmd.role)) return fail('unknown_role');
+      if (cmd.role === 'auto') delete e.role; else e.role = cmd.role;
+      return { ok: true };
+    }
     case 'expand_office': {
       // A bigger studio (AW.E.1): the grid grows towards the front; nothing moves.
       const next = NEXT_SIZE[state.office.size ?? 'room'];

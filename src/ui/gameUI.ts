@@ -10,10 +10,10 @@ import { biography } from '../sim/systems/biography';
 import { FEATURE_CFG, featureLock } from '../sim/systems/features';
 import { FEATURE_SLOTS, FEATURES, getFeature } from '../content/features';
 import type { Game } from '../sim/game';
-import type { Appearance, GameState, Memory, MemoryKind, PendingDecision, Project, ProjectSize, SkillId } from '../sim/model/state';
+import type { Appearance, GameState, Memory, MemoryKind, PendingDecision, Project, ProjectSize, Role, SkillId } from '../sim/model/state';
 import { progressToNext, SKILLS, specializations } from '../sim/systems/progression';
 import { getActiveProject, getFounder, getProject } from '../sim/state';
-import { productionProgress } from '../sim/systems/project';
+import { mixPenalty, productionProgress } from '../sim/systems/project';
 import type { BuildInfo } from '../app/buildInfo';
 import { TutorialUI } from './tutorialUI';
 import { TOPICS } from '../content/topics';
@@ -936,7 +936,7 @@ export class GameUI {
           ),
         ),
       ),
-      h('p.hint.task', null, h('b', null, `${t('emp.task')}: `), task),
+      h('p.hint.task', null, h('b', null, `${t('emp.task')}: `), task, s.empirians.length >= 2 ? h('span.chip.small', { title: t(`role.${e.role ?? 'auto'}.desc`), style: { marginLeft: '6px' } }, `${t('roles.title')}: ${t(`role.${e.role ?? 'auto'}`)}`) : null),
       h('p.hint', null, t('emp.since', { day: since, days: Math.max(0, s.day - since) })),
       h('div.bio', null, ...biography(s, e).map((b) => h('p', null, tr(b)))),
       e.trait ? h('p.hint', null, t(`trait.${e.trait}.desc`)) : null,
@@ -961,6 +961,34 @@ export class GameUI {
     this.openModal('empirian', card, { pause: false, cls: 'desk-side' });
   }
 
+  /** Who does what (AW.E.2): a role per person, or let the project decide. */
+  private rolesSection(): HTMLElement {
+    const s = this.state;
+    const roles: Role[] = ['auto', 'design', 'code', 'test'];
+    const p = s.activeProjectId ? getProject(s, s.activeProjectId) : null;
+    const total = p ? p.workDone.tech + p.workDone.design : 0;
+    const allAuto = s.empirians.every((e) => (e.role ?? 'auto') === 'auto');
+    // Re-render just this section in place (no modal flash, the game stays paused).
+    const refresh = () => el.replaceWith(this.rolesSection());
+    const el: HTMLElement = h('div.section.roles', null,
+      h('div.row.between', null, h('div.label', null, t('roles.title')),
+        h('button.big-btn.ghost.small', { id: 'roles-auto', disabled: allAuto, onclick: () => {
+          for (const e of s.empirians) this.game.dispatch({ type: 'set_role', empirianId: e.id, role: 'auto' });
+          refresh();
+        } }, t('roles.all_auto'))),
+      h('p.hint', null, t('roles.hint')),
+      ...s.empirians.map((e) => h('div.role-row', { dataset: { roleOf: e.id } },
+        h('span.t', null, e.name),
+        h('div.seg', null, ...roles.map((r) => h('button', { class: (e.role ?? 'auto') === r ? 'on' : '', dataset: { role: r }, title: t(`role.${r}.desc`), onclick: () => {
+          const res = this.game.dispatch({ type: 'set_role', empirianId: e.id, role: r });
+          if (!res.ok) return this.toast(t(`error.${res.error}`), 'alert');
+          refresh();
+        } }, t(`role.${r}`)))))),
+      p && total >= SIM_CONFIG.roles.mixMinWork && p.phase !== 'polish' && p.phase !== 'released' ? h('p.hint', { id: 'roles-mix' }, t(mixPenalty(p) > 0 ? 'roles.mix_off' : 'roles.mix_ok', { code: Math.round((p.workDone.tech / total) * 100), want: Math.round(p.focus * 100) })) : null,
+    );
+    return el;
+  }
+
   // ---------------------------------------------------------------- team (GT.1)
   showTeam(): void {
     const s = this.state;
@@ -979,6 +1007,7 @@ export class GameUI {
         h('div.t', null, e.name),
         h('div.d', null, e.id === s.founderId ? t('team.founder') : t(`trait.${e.trait}`)),
       ))),
+      s.empirians.length >= 2 ? this.rolesSection() : null,
       h('div.section', null, h('div.label', null, t('team.candidates')),
         full ? h('p.hint', null, t('team.full')) :
         !s.hiring.candidates.length ? h('p.hint', null, t('team.no_candidates', { day: s.hiring.nextRefreshDay })) :

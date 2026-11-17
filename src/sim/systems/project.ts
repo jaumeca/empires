@@ -41,7 +41,18 @@ export function qualityCeiling(p: Project, founder: Empirian): number {
   const skill = skillFor(founder, p.focus);
   const mods = p.ceilingMods.reduce((a, m) => a + m.amount, 0);
   const creativity = (founder.skills.creativity - 5) * C.progression.creativityCeiling;
-  return Math.max(1, C.quality.baseCeiling + (skill - 5) * 0.35 + creativity + topicBonus(founder, p.topicId) + fitModifier(p) + mods + featureCeiling(p));
+  return Math.max(1, C.quality.baseCeiling + (skill - 5) * 0.35 + creativity + topicBonus(founder, p.topicId) + fitModifier(p) + mods + featureCeiling(p) - mixPenalty(p));
+}
+
+/**
+ * The game needs the mix of design and code its focus asks for (AW.E.2): a team
+ * that only codes a design-heavy game loses quality. Auto roles keep the mix.
+ */
+export function mixPenalty(p: Project): number {
+  const total = p.workDone.tech + p.workDone.design;
+  if (total < C.roles.mixMinWork) return 0;
+  const dev = Math.abs(p.workDone.tech / total - p.focus);
+  return Math.max(0, dev - C.roles.mixTolerance) * C.roles.mixPenalty;
 }
 
 /** Ratio of quality-earning investment to required work (> 1 means extra polish). */
@@ -138,13 +149,20 @@ function contribute(state: GameState, p: Project, e: Empirian, founder: Empirian
   const basePts = pointsPerTick(p, e) * coord;
   const rngW = state.rng.work;
 
+  const role = e.role ?? 'auto';
+  // A tester during production hunts bugs early instead of building (AW.E.2).
+  // (Someone else must be building, or the game would never get made.)
+  const testerNow = role === 'test' && p.phase === 'production' && state.empirians.some((o) => o !== e && (o.role ?? 'auto') !== 'test');
+  if (testerNow) testWhileBuilding(state, p, e, basePts * (1 - C.roles.testerBuild) * officeWorkMultiplier(fx, 'tech'), emit);
   if (p.phase === 'concept' || p.phase === 'production') {
-    const isTech = nextFloat(rngW) < p.focus;
-    const pts = basePts * officeWorkMultiplier(fx, p.phase === 'concept' && !isTech ? 'concept' : isTech ? 'tech' : 'design') * toolMultiplier(state, isTech ? 'tech' : 'design');
+    const roll = nextFloat(rngW);
+    const isTech = role === 'code' ? true : role === 'design' ? false : roll < p.focus;
+    const specialist = role === 'code' || role === 'design' ? C.roles.specialistSpeed : testerNow ? C.roles.testerBuild : 1;
+    const pts = specialist * basePts * officeWorkMultiplier(fx, p.phase === 'concept' && !isTech ? 'concept' : isTech ? 'tech' : 'design') * toolMultiplier(state, isTech ? 'tech' : 'design');
     if (isTech) p.workDone.tech += pts;
     else p.workDone.design += pts;
-    e.activity = p.phase === 'concept' && nextFloat(rngW) < 0.4 ? 'thinking' : isTech ? 'coding' : 'designing';
-    emit({ type: 'work', empirianId: e.id, kind: isTech ? 'tech' : 'design', amount: pts, severity: 'info' });
+    e.activity = testerNow ? 'testing' : p.phase === 'concept' && nextFloat(rngW) < 0.4 ? 'thinking' : isTech ? 'coding' : 'designing';
+    if (!testerNow) emit({ type: 'work', empirianId: e.id, kind: isTech ? 'tech' : 'design', amount: pts, severity: 'info' });
     // Learning by doing (LS.1).
     // Experience comes from hours of practice (1 tick = 1 hour), not from boosted output.
     const hours = 1;
@@ -155,7 +173,9 @@ function contribute(state: GameState, p: Project, e: Empirian, founder: Empirian
     // Bugs come from building things (less while prototyping).
     const techPts = isTech ? pts : pts * 0.3;
     const conceptMod = p.phase === 'concept' ? 0.3 : 1;
-    const newBugs = sampleCount(state.rng.bugs, techPts * bugRate(p, e) * conceptMod);
+    // With a tester reviewing as the game is built, fewer mistakes slip in.
+    const review = p.phase === 'production' && hasActiveTester(state) ? C.roles.reviewBugs : 1;
+    const newBugs = sampleCount(state.rng.bugs, techPts * bugRate(p, e) * conceptMod * review);
     if (newBugs > 0) {
       let hidden = 0;
       for (let i = 0; i < newBugs; i++) if (nextFloat(state.rng.bugs) < C.bugs.hiddenShare) hidden++;
@@ -185,9 +205,10 @@ function contribute(state: GameState, p: Project, e: Empirian, founder: Empirian
     return;
   }
 
-  // Polish phase: split between testing/fixing and polishing.
+  // Polish phase: split between testing/fixing and polishing (a tester tests, builders polish).
   const pts = basePts * officeWorkMultiplier(fx, 'mixed', p.focus) * (toolMultiplier(state, 'tech') * p.focus + toolMultiplier(state, 'design') * (1 - p.focus));
-  let testPts = pts * p.testFocus;
+  const testFocus = role === 'test' ? 1 : role === 'auto' ? p.testFocus : Math.min(p.testFocus, 0.2);
+  let testPts = pts * testFocus;
   const polishPts = pts - testPts;
   if (p.bugs.known > 0 && testPts > 0) {
     const fixed = Math.min(p.bugs.known, sampleCount(state.rng.bugs, testPts / C.bugs.fixCost));
@@ -221,6 +242,25 @@ function contribute(state: GameState, p: Project, e: Empirian, founder: Empirian
   }
   e.activity = testPts >= polishPts ? 'testing' : nextFloat(rngW) < p.focus ? 'coding' : 'designing';
   emit({ type: 'work', empirianId: e.id, kind: testPts >= polishPts ? 'test' : 'polish', amount: pts, severity: 'info' });
+}
+
+/** Someone tests while somebody else builds (AW.E.2). */
+export function hasActiveTester(state: GameState): boolean {
+  return state.empirians.some((e) => e.role === 'test') && state.empirians.some((e) => (e.role ?? 'auto') !== 'test');
+}
+
+/** Early testing during production (AW.E.2): finds and fixes bugs while others build. */
+function testWhileBuilding(state: GameState, p: Project, e: Empirian, pts: number, emit: EventSink): void {
+  const testPts = pts;
+  if (p.bugs.known > 0) {
+    const fixed = Math.min(p.bugs.known, sampleCount(state.rng.bugs, testPts / C.bugs.fixCost));
+    if (fixed > 0) { p.bugs.known -= fixed; p.bugs.fixed += fixed; emit({ type: 'bug_fixed', empirianId: e.id, count: fixed, severity: 'info' }); }
+  }
+  const pFind = 1 - Math.pow(1 - C.bugs.discoverPerTestPoint, testPts);
+  const found = Math.min(p.bugs.hidden, sampleCount(state.rng.bugs, p.bugs.hidden * pFind));
+  if (found > 0) { p.bugs.hidden -= found; p.bugs.known += found; emit({ type: 'bug_found', empirianId: e.id, count: found, severity: 'info' }); }
+  emit({ type: 'work', empirianId: e.id, kind: 'test', amount: testPts, severity: 'info' });
+  gainXp(state, e, 'tech', C.progression.testingTech, emit);
 }
 
 // ---------------------------------------------------------------------------

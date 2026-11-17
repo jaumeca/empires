@@ -65,7 +65,11 @@ export interface Empirian {
   lastBreakDay?: number;
   /** Who they're chatting with during a chat break. */
   chatWith?: string;
+  /** Assigned role (AW.E.2). Missing or 'auto' = they do what the project needs. */
+  role?: Role;
 }
+
+export type Role = 'auto' | 'design' | 'code' | 'test';
 
 export type BreakKind = 'drink' | 'rest' | 'chat';
 

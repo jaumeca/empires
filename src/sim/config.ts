@@ -152,6 +152,20 @@ export const SIM_CONFIG = {
     },
   },
 
+  /** Roles (AW.E.2): specialists are faster at their part; the game still needs the right mix. */
+  roles: {
+    specialistSpeed: 1.12,
+    /** A tester during production still builds this share of their hours; the rest finds and fixes bugs. */
+    testerBuild: 0.35,
+    /** While a tester reviews, the builders' new bugs are multiplied by this. */
+    reviewBugs: 0.6,
+    /** Quality penalty per unit of imbalance between the work mix and the project focus (beyond the tolerance). */
+    mixTolerance: 0.15,
+    mixPenalty: 2.5,
+    /** Below this much built work the mix is not judged yet. */
+    mixMinWork: 60,
+  },
+
   /** Daily routines (AW.B): short, purposeful breaks. Hours are 0..7 of the working day. */
   routines: {
     drinkHour: 3,

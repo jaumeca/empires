@@ -107,6 +107,7 @@ img.px { image-rendering: pixelated; width: 22px; height: 22px; vertical-align: 
 .card .close { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--paper-2); font-size: 20px; font-weight: 900; cursor: pointer; color: var(--ink); }
 .section { margin: 12px 0; }
 .section > label, .section > .label { display: block; font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); margin-bottom: 6px; }
+.roles .row.between > .label { font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); }
 .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .row.between { justify-content: space-between; }
 .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
@@ -381,3 +382,6 @@ button.link { background: none; border: none; padding: 4px 2px; font: inherit; f
 .feature.locked, .feature:disabled { opacity: 0.55; cursor: default; }
 label.check { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 14px; margin-top: 6px; cursor: pointer; }
 label.check input { width: 20px; height: 20px; }
+.role-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+.role-row .t { font-weight: 900; min-width: 84px; }
+.role-row .seg { flex: 1; }

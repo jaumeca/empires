@@ -535,9 +535,11 @@ El fundador deja de estar solo. Es la siguiente gran etapa y también la forma d
 - Aprenden haciendo con el mismo modelo que el fundador (§23.1), tienen **energía y ánimo propios**, cobran **cada semana** y pueden cansarse, alegrarse o desanimarse.
 - Los rasgos tienen efecto y expresión visual (p. ej. *perfeccionista*: menos bugs y más lento; *noctámbulo*: rinde más con crunch y se agota antes; *sociable*: mejora el ánimo de los demás; *curioso*: aprende más rápido). Ningún rasgo es siempre mejor.
 
-### 24.3 Trabajo en equipo `[CONFIRMADO]`
+### 24.3 Trabajo en equipo `[IMPLEMENTADO]` (coordinación GT.3; reparto D-054)
 - Reparto del trabajo (programar, diseñar, probar) entre los Empirians; la coordinación tiene **rendimientos decrecientes**: dos personas no son el doble de rápidas.
 - Cada Empirian va a su puesto y se le ve hacer su parte.
+- **Papeles** (Equipo → Reparto de tareas): Auto, Diseño, Código o Pruebas. Los especialistas son algo más rápidos, pero el juego necesita su mezcla de diseño y código; el de Pruebas encuentra y arregla bugs mientras se construye y hace que los demás cometan menos, a cambio de construir menos. Compensa en juegos grandes o con plazos ajustados, no en los pequeños y holgados.
+- `[FUTURO]` Reparto automático por fases e investigación/mantenimiento como papeles cuando haya equipos grandes y productos persistentes.
 
 ### 24.4 Oficinas más grandes y nuevas ubicaciones `[CONFIRMADO]`
 - Habitación → garaje → estudio: más espacio, más puestos, más ambiente y más coste mensual. Mudanza visible (cajas, oficina nueva vacía que se amuebla).
