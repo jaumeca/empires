@@ -3,6 +3,7 @@ import type { SimEvent } from './core/events';
 import { applyCommand, type Command, type CommandResult } from './commands';
 import type { GameState } from './model/state';
 import { step } from './step';
+import { forceEvent } from './systems/events';
 
 /**
  * Converts real elapsed time into a whole number of simulation ticks
@@ -78,6 +79,14 @@ export class Game {
     if (res.ok) this.logCommand(cmd);
     this.handleEvents(events);
     return res;
+  }
+
+  /** Debug/tests: raises a dynamic event now if its trigger holds (ignores chance and pacing). */
+  forceEvent(kind: string): boolean {
+    const events: SimEvent[] = [];
+    const ok = forceEvent(this.state, kind, (e) => events.push(e));
+    this.handleEvents(events);
+    return ok;
   }
 
   /** Schedules a command to run right before the given tick (used for replays/tests). */

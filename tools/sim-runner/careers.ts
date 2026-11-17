@@ -52,6 +52,11 @@ function placeAnywhere(s: GameState, defId: string): Command | null {
   return null;
 }
 
+/** A sensible player's answers to the story events (no gambling). */
+const STORY_POLICY: Record<string, string> = {
+  team_idea: 'adopt', contract_change: 'paid', game_fair: 'table', influential_review: 'interview', team_debate: 'both', training_request: 'books',
+};
+
 export function career(seed: number, st: Strategy, horizon = 365) {
   const g = new Game(createNewGame(seed));
   g.dispatch({ type: 'setup_founder', name: 'T', companyName: 'T', appearance: DEFAULT_APPEARANCE });
@@ -68,7 +73,8 @@ export function career(seed: number, st: Strategy, horizon = 365) {
     const s = g.state;
     const d = s.pendingDecision;
     if (d) {
-      const opt = d.kind === 'deadline' ? 'release' : d.kind === 'big_idea' ? 'keep' : d.kind === 'exhausted' ? 'rest' : d.kind === 'rival_similar' ? 'differentiate' : d.kind === 'critical_bug' ? 'patch_now' : d.kind === 'unexpected_idea' ? 'save' : d.options[d.options.length - 1]!.id;
+      const opt = d.kind === 'deadline' ? 'release' : d.kind === 'big_idea' ? 'keep' : d.kind === 'exhausted' ? 'rest' : d.kind === 'rival_similar' ? 'differentiate' : d.kind === 'critical_bug' ? 'patch_now' : d.kind === 'unexpected_idea' ? 'save'
+        : STORY_POLICY[d.kind] ?? d.options[d.options.length - 1]!.id;
       const ok = d.options.some((o) => o.id === opt) ? opt : d.options[0]!.id;
       decisions.add(`${d.kind}:${ok}`);
       g.dispatch({ type: 'choose_option', decisionId: d.id, optionId: ok });

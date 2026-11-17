@@ -7,6 +7,7 @@ import { getActiveProject, getFounder } from '../state';
 import { productionProgress } from './project';
 import { getTopic } from '../../content/topics';
 import { addNews } from './world';
+import { speakerOf, STORY_EVENTS } from './storyEvents';
 
 /**
  * Dynamic events (LS.7). Unlike the project moments (systems/moments.ts),
@@ -18,15 +19,16 @@ import { addNews } from './world';
  * recorded in the causal ledger when they happen (basis for chains).
  * A global gap keeps interruptions rare (see SIM_CONFIG.events).
  */
-type Ctx = Record<string, string | number>;
+export type Ctx = Record<string, string | number>;
 
-interface EventDef {
+export interface EventDef {
   kind: PendingDecision['kind'];
   cooldownDays: number;
   /** Daily chance once the trigger holds (may depend on the state). */
   chance: number | ((state: GameState) => number);
   trigger(state: GameState): Ctx | null;
-  build(state: GameState, ctx: Ctx): { text: TextRef; options: DecisionOption[] };
+  /** speakerId: who raises it (default: the founder). */
+  build(state: GameState, ctx: Ctx): { text: TextRef; options: DecisionOption[]; speakerId?: string };
   resolve(state: GameState, ctx: Ctx, optionId: string, emit: EventSink): void;
 }
 
@@ -40,7 +42,7 @@ export function schedule(state: GameState, day: number, effect: ScheduledEffect[
   state.scheduled.push({ id: newId(state, 'S'), day, effect, causeId });
 }
 
-const EVENTS: EventDef[] = [
+const CORE_EVENTS: EventDef[] = [
   {
     // A content creator wants to show an early build.
     kind: 'streamer_preview',
@@ -187,6 +189,8 @@ const EVENTS: EventDef[] = [
   },
 ];
 
+const EVENTS: EventDef[] = [...CORE_EVENTS, ...STORY_EVENTS];
+
 export const EVENT_KINDS = EVENTS.map((e) => e.kind);
 
 /** Tests/debug: raise an event now if its trigger holds (ignores chance and pacing). */
@@ -195,10 +199,10 @@ export function forceEvent(state: GameState, kind: string, emit: EventSink): boo
   if (!def || state.pendingDecision) return false;
   const ctx = def.trigger(state);
   if (!ctx) return false;
-  const founder = getFounder(state);
-  const { text, options } = def.build(state, ctx);
-  state.pendingDecision = { id: newId(state, 'D'), kind: def.kind, speakerId: founder.id, text, options, createdTick: state.tick, context: ctx };
-  founder.activity = 'raising_hand';
+  const { text, options, speakerId } = def.build(state, ctx);
+  const speaker = speakerOf(state, speakerId);
+  state.pendingDecision = { id: newId(state, 'D'), kind: def.kind, speakerId: speaker.id, text, options, createdTick: state.tick, context: ctx };
+  speaker.activity = 'raising_hand';
   emit({ type: 'decision_requested', decisionId: state.pendingDecision.id, severity: 'decisive' });
   return true;
 }
@@ -217,14 +221,14 @@ export function maybeTriggerEvent(state: GameState, emit: EventSink): void {
     if (nextFloat(state.rng.events) >= chance) continue;
     const ctx = def.trigger(state);
     if (!ctx) continue;
-    const founder = getFounder(state);
-    const { text, options } = def.build(state, ctx);
-    const d: PendingDecision = { id: newId(state, 'D'), kind: def.kind, speakerId: founder.id, text, options, createdTick: state.tick, context: ctx };
+    const { text, options, speakerId } = def.build(state, ctx);
+    const speaker = speakerOf(state, speakerId);
+    const d: PendingDecision = { id: newId(state, 'D'), kind: def.kind, speakerId: speaker.id, text, options, createdTick: state.tick, context: ctx };
     state.pendingDecision = d;
     ev.lastDay = state.day;
     ev.lastByKind[def.kind] = state.day;
     if (active) active.eventsSeen = (active.eventsSeen ?? 0) + 1;
-    founder.activity = 'raising_hand';
+    speaker.activity = 'raising_hand';
     emit({ type: 'decision_requested', decisionId: d.id, severity: 'decisive' });
     return;
   }

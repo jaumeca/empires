@@ -384,6 +384,20 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Medido (6 semillas, 2 personas):** en un juego pequeño con plazo holgado gana el automático (6,8) o un diseñador y un programador si el enfoque es equilibrado (6,9); con enfoque 0,3 todo código cae a 5,2. Con tester: en un juego pequeño y holgado pierde (6,5–6,6, producción más lenta) pero en un mediano ajustado (56 días) gana claramente (6,25 frente a 5,8; con funcionalidades con muchos bugs, 6,2 frente a 4,8). Ningún reparto domina; pruebas de no-dominancia en `tests/sim/roles.test.ts`.
 - **Sin automatizar más:** con 2–3 personas basta un selector por persona; la asignación automática por fases es una idea para equipos grandes (Funcionalidades futuras, ROADMAP AW.E).
 
+### D-055 — Primeros eventos de historia (AW.D, "The Next Chapter")
+- **Fecha:** 2026-11-17 · **Estado:** Aplicada (provisional hasta pruebas de juego)
+- **Motor:** los mismos eventos dinámicos de LS.7 (`systems/events.ts`): disparador sobre el estado real, probabilidad diaria, enfriamiento por tipo, **como mucho 2 por proyecto y 14 días entre dos eventos** (sin cambios). Nuevo: el evento puede tener **portavoz** (el empleado implicado pregunta él mismo y levanta la mano), cada uno ocurre **una vez por proyecto o encargo**, y deja un **recuerdo en la Historia con las personas implicadas** (aparece en su ficha). Contenido nuevo en `systems/storyEvents.ts`, números en `SIM_CONFIG.storyEvents`.
+- **Seis eventos:**
+  - **Idea de un empleado** (concepto o primera parte de la producción; más probable si es curioso o creativo): adoptarla (+techo según su creatividad, +6 % de trabajo, ánimo ↑↑), guardarla para el próximo juego (ánimo ↑) o rechazarla (ánimo ↓).
+  - **El cliente pide cambios** en un encargo a medias: aceptarlos cobrando (+30 % de trabajo, +35 % de pago, +20 % de plazo), hacerlo como favor (+15 % de trabajo, reputación +3) o negarse (reputación −1).
+  - **Feria de videojuegos** con el juego en producción o pulido: stand (1 500 €, interés ↑↑, reputación +1, ánimo del equipo ↑, 2 días de trabajo menos), mesa pequeña (300 €, interés ↑) o no ir.
+  - **Crítica influyente** de un lanzamiento reciente: mandarle el juego es apostar por su calidad real (nota ≥ 7: ventas ×1,35 cinco semanas; < 5,5: ×0,75 y reputación −2), una entrevista da un empujón seguro (×1,12) a cambio de tiempo, o rechazarla.
+  - **Discusión en el equipo** (producción, con empleados): hacerlo bien (+5 % de trabajo, bugs ×0,8), seguir adelante (−5 % de trabajo, bugs ×1,2) o término medio; quien gana se anima y quien pierde se desanima. Es la base de las relaciones de E.3.
+  - **Petición de formación** (empleados con ≥ 14 días en el estudio): curso (900 €, +½ nivel aprox. en su habilidad principal, un día fuera), libros (150 €, menos) o "ahora no" (ánimo ↓).
+- **Aplazado:** "un juego antiguo vuelve a estar de moda" espera a los productos persistentes (GT.6); ya existe el resurgimiento de un tema (LS.6).
+- **Medido:** en carreras de un año todos aparecen en juego normal (con un empleado: formación y discusión en 5–6 de cada 10 partidas). Los eventos cambian la suerte de las semillas: con 6 semillas el escenario "encargos tras un fracaso" pasaba de 1,07× a 0,90× los juegos puros; con 52 semillas queda en 0,94–1,0× (antes ≈ 1,0–1,07×): ferias y críticas premian un poco más publicar juegos. La prueba de economía usa ahora 12 semillas y exige ≥ 0,92× (antes 0,95× con 6).
+- **Simulador:** las carreras contestan los eventos como un jugador sensato (adoptar la idea, cobrar los cambios, mesa en la feria, entrevista, término medio, libros); `autoplay` usa opciones neutras.
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

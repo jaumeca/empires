@@ -22,6 +22,7 @@ function teamGame(seed: number, roles: [Role, Role] = ['auto', 'auto']) {
   s.hiring.candidates.push({ id: 'H-r', name: 'Bea', appearance: { ...DEFAULT_APPEARANCE }, baseSkills: { tech: 5, design: 5, creativity: 5, management: 4 }, trait: 'curious', salary: 450, expiresDay: 99 });
   expect(g.dispatch({ type: 'hire', candidateId: 'H-r' }).ok).toBe(true);
   s.empirians[0]!.skills.tech = 5; s.empirians[0]!.skills.design = 5;
+  s.eventLog.lastDay = 1e9; // isolate the roles mechanic from random story events
   s.empirians.forEach((e, i) => expect(g.dispatch({ type: 'set_role', empirianId: e.id, role: roles[i]! }).ok).toBe(true));
   return g;
 }

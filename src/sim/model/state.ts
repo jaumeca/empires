@@ -144,7 +144,8 @@ export interface DecisionOption {
 
 export interface PendingDecision {
   id: string;
-  kind: 'big_idea' | 'deadline' | 'exhausted' | 'running_late' | 'polish_plan' | 'feature_trouble' | 'prototype_result' | 'streamer_preview' | 'rival_similar' | 'critical_bug' | 'unexpected_idea';
+  kind: 'big_idea' | 'deadline' | 'exhausted' | 'running_late' | 'polish_plan' | 'feature_trouble' | 'prototype_result' | 'streamer_preview' | 'rival_similar' | 'critical_bug' | 'unexpected_idea'
+    | 'team_idea' | 'contract_change' | 'game_fair' | 'influential_review' | 'team_debate' | 'training_request';
   speakerId: string;
   text: TextRef;
   options: DecisionOption[];
@@ -176,6 +177,8 @@ export interface ProjectResult {
   salesEnded?: boolean;
   /** Temporary sales multiplier (patches, scandals). */
   salesBoost?: { factor: number; untilDay: number };
+  /** An influential critic already covered it (story event). */
+  criticCovered?: boolean;
 }
 
 export interface Project {
@@ -228,6 +231,8 @@ export interface Project {
   /** Dynamic events already seen in this project (LS.7). */
   previewGiven?: string;
   eventsSeen?: number;
+  /** Story events already raised for this project (each one at most once). */
+  storyEvents?: string[];
   rivalAnnounced?: boolean;
   ideaOffered?: boolean;
   bugReported?: boolean;
@@ -308,6 +313,8 @@ export interface ActiveContract extends ContractOffer {
   dueDay: number;
   done: number;
   causeId: string;
+  /** The client already asked for changes (story event). */
+  renegotiated?: boolean;
 }
 
 /** External contracts (LS.8). */

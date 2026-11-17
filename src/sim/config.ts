@@ -194,6 +194,35 @@ export const SIM_CONFIG = {
     previewBugThreshold: 5,
   },
 
+  /** Story events ("The Next Chapter"): see systems/storyEvents.ts. */
+  storyEvents: {
+    moraleBig: 8,
+    moraleSmall: 2,
+    ideaWork: 0.06,
+    ideaBonus: [0.2, 0.45] as [number, number],
+    changeWork: 0.3,
+    changePay: 0.35,
+    changeDays: 0.2,
+    favourShare: 0.5,
+    favourReputation: 3,
+    fairBooth: 1500,
+    fairTable: 300,
+    fairBoothHype: 1.8,
+    fairTableHype: 0.7,
+    criticGood: 7,
+    criticBad: 5.5,
+    criticGoodSales: 1.35,
+    criticBadSales: 0.75,
+    interviewSales: 1.12,
+    debateWork: 0.05,
+    debateCleanBugs: 0.8,
+    debateFastBugs: 1.2,
+    courseCost: 900,
+    courseXp: 330,
+    booksCost: 150,
+    booksXp: 120,
+  },
+
   /** Office atmosphere (LS.4): morale drifts towards base + fromAmbiance · ambianceLevel. */
   office: {
     moraleBase: 52,

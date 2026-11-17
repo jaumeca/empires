@@ -593,8 +593,10 @@ Cada rasgo se expresa con gestos, burbujas y comportamientos reconocibles, sin e
 ### 26.4 Identidad del estudio y de los personajes `[IMPLEMENTADO]` (D-051)
 Colores de paredes y suelos, nuevos muebles, rincón de bebidas; editar aspecto, nombre y apodo sin tocar progresión ni historia.
 
-### 26.5 Variedad en los proyectos y eventos que generan historias `[CONFIRMADO]` (funcionalidades y prototipos `[IMPLEMENTADO]`, D-053)
+### 26.5 Variedad en los proyectos y eventos que generan historias `[CONFIRMADO]` (funcionalidades y prototipos `[IMPLEMENTADO]`, D-053; primeros eventos de historia `[IMPLEMENTADO]`, D-055)
 Más decisiones durante el desarrollo (funcionalidades, prototipo, alcance, deuda técnica, pruebas, comentarios, tendencias, lanzar o retrasar) y eventos contextuales con consecuencias, reflejados en la Historia del estudio, con límites de frecuencia.
+- **Eventos de historia `[IMPLEMENTADO]`:** idea de un empleado, el cliente pide cambios, feria de videojuegos, crítica influyente, discusión en el equipo y petición de formación. Pregunta quien está implicado (su retrato, su mano levantada), cada opción cambia algo medible, y queda en la Historia y en la ficha de las personas implicadas.
+- `[FUTURO]` Un juego antiguo vuelve a estar de moda (con productos persistentes, GT.6); decisiones de alcance, deuda técnica y comentarios de usuarios (D.3).
 
 ### 26.6 Pequeñas satisfacciones `[CONFIRMADO]`
 Animaciones discretas para los hitos; audio opcional y silenciable.

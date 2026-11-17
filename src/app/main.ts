@@ -148,5 +148,7 @@ if (debug) {
     ui,
     /** Advance n ticks instantly (test helper). */
     advance(n: number) { for (let i = 0; i < n && !game.state.pendingDecision; i++) game.tick(); },
+    /** Raise a dynamic/story event now (test helper). */
+    forceEvent(kind: string) { return game.forceEvent(kind); },
   };
 }

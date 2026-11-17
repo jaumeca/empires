@@ -5,7 +5,8 @@ import { career, mean, STRATEGIES } from '../../tools/sim-runner/careers';
  * Economy invariants after LS.9 (D-042). Whole-year careers, headless.
  * Guards the measured shape of the economy, not exact numbers.
  */
-const seeds = [4200, 4201, 4202, 4203, 4204, 4205];
+// 12 seeds: with 6, adding a random event reshuffles luck enough to flip a 5 % margin (measured, D-055).
+const seeds = Array.from({ length: 12 }, (_, i) => 4200 + i);
 const byPrefix = (p: string) => STRATEGIES.find((s) => s.name.startsWith(p))!;
 const year = (p: string) => seeds.map((s) => career(s, byPrefix(p), 365));
 const money = (rs: ReturnType<typeof year>) => mean(rs.map((r) => r.money));
@@ -27,8 +28,9 @@ describe('economy review (LS.9)', () => {
     expect(money(C)).toBeLessThan(money(A) * 0.75);
     const spread = (rs: typeof A) => Math.max(...rs.map((r) => r.money)) - Math.min(...rs.map((r) => r.money));
     expect(spread(C)).toBeLessThan(spread(A));
-    // Mixing in contracts after flops does not hurt.
-    expect(money(D)).toBeGreaterThan(money(A) * 0.95);
+    // Mixing in contracts after flops does not hurt much. Since the story events (fairs and
+    // critics reward games) it is 0.94–1.0× pure games over 52 seeds (D-055).
+    expect(money(D)).toBeGreaterThan(money(A) * 0.92);
   });
 
   it('office investment pays back, with diminishing returns (the expensive office is not much better)', () => {
