@@ -173,6 +173,7 @@ export interface OfficeEffects {
   inspiration: number;
   rest: number;
   coffee: number;
+  drink: number;
   ambiance: number;
   upkeep: number;
 }
@@ -191,7 +192,7 @@ export function founderDesk(office: Office): PlacedItem | null {
 }
 
 export function officeEffects(office: Office): OfficeEffects {
-  const fx: OfficeEffects = { techSpeed: 1, designSpeed: 1, fatigue: 1, inspiration: 1, rest: 0, coffee: 0, ambiance: 0, upkeep: 0 };
+  const fx: OfficeEffects = { techSpeed: 1, designSpeed: 1, fatigue: 1, inspiration: 1, rest: 0, coffee: 0, drink: 0, ambiance: 0, upkeep: 0 };
   const desk = founderDesk(office);
   const eff = (id?: string): ItemEffects => (id ? getItemDef(id).effects ?? {} : {});
   if (desk) {
@@ -211,6 +212,7 @@ export function officeEffects(office: Office): OfficeEffects {
     fx.inspiration = Math.max(fx.inspiration, e.inspiration ?? 1); // best one counts
     fx.rest = Math.max(fx.rest, e.rest ?? 0);
     fx.coffee = Math.max(fx.coffee, e.coffee ?? 0);
+    fx.drink = Math.max(fx.drink, e.drink ?? 0);
     ambianceRaw += e.ambiance ?? 0;
     fx.upkeep += def.upkeep ?? 0;
     for (const m of [it.mounts?.computer, it.mounts?.chair]) if (m) fx.upkeep += getItemDef(m).upkeep ?? 0;

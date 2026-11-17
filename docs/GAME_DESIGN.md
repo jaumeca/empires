@@ -582,7 +582,7 @@ Que EMPIRES sea divertido desde el primer minuto, que la oficina parezca viva y 
 ### 26.1 Tutorial integrado `[IMPLEMENTADO]` (D-049)
 Una bienvenida, no una obligación: guía contextual que acompaña con acciones reales, se puede omitir, se puede repetir desde Ayuda y recuerda el progreso en la partida.
 
-### 26.2 Oficina viva `[CONFIRMADO]`
+### 26.2 Oficina viva `[IMPLEMENTADO]` (1.ª versión, D-050)
 Rutinas con propósito según energía, ánimo, personalidad y muebles: café, descanso, charlas, estiramientos, celebraciones, reacciones a malas noticias. Deterministas, con efectos moderados y congeladas en pausa.
 
 ### 26.3 Personalidades que se notan `[CONFIRMADO]`

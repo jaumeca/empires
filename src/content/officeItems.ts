@@ -24,6 +24,8 @@ export interface ItemEffects {
   rest?: number;
   /** Morning energy boost (coffee), paid every day through `upkeep`. */
   coffee?: number;
+  /** Energy from a drink break during the day (AW.B): coffee machine, water cooler. */
+  drink?: number;
   /** Contribution to the office atmosphere (morale), with diminishing returns. */
   ambiance?: number;
 }
@@ -67,7 +69,8 @@ export const ITEMS: readonly ItemDef[] = [
   // --- Comfort & creativity
   { id: 'armchair', category: 'comfort', price: 300, size: { w: 2, d: 2 }, layer: 'solid', reserve: { w: 2, d: 1 }, spot: { x: 6.5, z: 9, pose: 'lounge' }, rotatable: true, model: 'armchair', effects: { rest: 0, ambiance: 0.5 } },
   { id: 'sofa', category: 'comfort', price: 900, size: { w: 4, d: 2 }, layer: 'solid', reserve: { w: 4, d: 1 }, spot: { x: 12, z: 9, pose: 'lounge' }, rotatable: true, model: 'sofa', effects: { rest: 4, ambiance: 1 } },
-  { id: 'coffee_machine', category: 'comfort', price: 350, upkeep: 5, size: { w: 2, d: 1 }, layer: 'solid', reserve: { w: 2, d: 1 }, spot: { x: 6, z: 9, pose: 'stand' }, rotatable: true, model: 'coffee_machine', effects: { coffee: 7 } },
+  { id: 'coffee_machine', category: 'comfort', price: 350, upkeep: 5, size: { w: 2, d: 1 }, layer: 'solid', reserve: { w: 2, d: 1 }, spot: { x: 6, z: 9, pose: 'stand' }, rotatable: true, model: 'coffee_machine', effects: { coffee: 7, drink: 4 } },
+  { id: 'water_cooler', category: 'comfort', price: 120, size: { w: 1, d: 1 }, layer: 'solid', reserve: { w: 1, d: 1 }, spot: { x: 3, z: 9, pose: 'stand' }, rotatable: true, model: 'water_cooler', effects: { drink: 2 } },
   { id: 'whiteboard', category: 'creative', price: 400, size: { w: 3, d: 1 }, layer: 'solid', reserve: { w: 3, d: 1 }, spot: { x: 9, z: 9, pose: 'stand' }, rotatable: true, model: 'whiteboard', effects: { inspiration: 1.1 } },
   // --- Decoration
   { id: 'plant_small', category: 'plant', price: 60, size: { w: 2, d: 2 }, layer: 'solid', rotatable: false, model: 'plant_small', effects: { ambiance: 1 } },

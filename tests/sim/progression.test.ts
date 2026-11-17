@@ -41,9 +41,13 @@ describe('founder experience (LS.1)', () => {
   });
 
   it('later games benefit from experience (same plan, same topic)', () => {
-    const { scores } = autoplayCareer(5, 8, () => ({ topicId: 'kart', focus: 0.7 }));
-    const early = (scores[0]! + scores[1]!) / 2;
-    const late = (scores[6]! + scores[7]!) / 2;
+    // Averaged over seeds (a single career is noisy).
+    let early = 0, late = 0;
+    for (const seed of [5, 6, 7]) {
+      const { scores } = autoplayCareer(seed, 8, () => ({ topicId: 'kart', focus: 0.7 }));
+      early += (scores[0]! + scores[1]!) / 6;
+      late += (scores[6]! + scores[7]!) / 6;
+    }
     expect(late).toBeGreaterThan(early);
     expect(late - early).toBeLessThan(1.8); // no runaway progression (reputation also grows)
   });

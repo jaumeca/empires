@@ -42,6 +42,7 @@ Capturas generadas automáticamente con `npm run gallery` (Chromium sin pantalla
 | 34 | [g33-trophies.jpg](g33-trophies.jpg) | Pestaña **Trofeos** en Decorar: decoraciones que se ganan con logros (las no ganadas dicen cómo conseguirlas). |
 | 35 | [g34-tutorial.jpg](g34-tutorial.jpg) | **Tutorial** (AW.A): tarjeta guía que no bloquea y flecha sobre el fundador. |
 | 36 | [g35-help.jpg](g35-help.jpg) | **Ayuda**: lo esencial por temas, atajos y «Repetir el tutorial». |
+| 37 | [g36-living-office.jpg](g36-living-office.jpg) | **Oficina viva** (AW.B): dos Empirians charlan cara a cara en su pausa (en pausa, todo queda congelado). |
 
 ## Qué decidir en la revisión (F1.12)
 

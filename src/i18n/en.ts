@@ -704,4 +704,7 @@ export const en: Record<string, string> = {
   "help.story.text": "The studio remembers its big moments. Achievements unlock special decorations in the Trophies tab.",
   "help.tutorial_restart": "Replay the tutorial",
   "help.tutorial_restart_active": "Restart the tutorial",
+  "item.water_cooler.name": "Water cooler",
+  "item.water_cooler.desc": "A corner to grab a drink and stretch your legs. Cheap, no running costs.",
+  "fx.drink": "Drink break",
 };

@@ -438,3 +438,7 @@ Todos los sistemas nuevos viven en `src/sim/systems/`, son deterministas (flujos
 
 `src/sim/systems/tutorial.ts`: pasos, `stepDone` (hechos del estado o marcas), `currentStep`, comando `tutorial` (mark/skip/restart/finish). `src/ui/tutorialUI.ts`: tarjeta guía, resaltado (`.tut-target`) y flecha (`scene.empirianScreenPos/itemScreenPos`); se calcula en `ui.frame()` y solo reconstruye el DOM cuando cambia el paso o el contexto. Las marcas visuales se envían como comandos (la interfaz nunca toca el estado). Guardado v10. Pruebas: `tests/sim/tutorial.test.ts`; e2e `tools/e2e/tutorial.cjs`.
 
+## 20. Rutinas (AW.B, 2026-11-17)
+
+`src/sim/systems/routines.ts` (`routinesTick` al inicio de cada tick, antes del trabajo; `onBreak` excluye del trabajo y del gasto de energía). Campos opcionales en `Empirian` (`breakUntil`, `breakKind`, `lastBreakDay`, `chatWith`): no necesitan migración. La escena traduce las actividades `drinking/lounging/chatting` a puntos (`drink`, `beanbag`, `chat:<id>`), decide el tiempo libre con `freeTimeSpot` (estado + personalidad, sin azar) y reacciona a eventos (`routine`, `project_released`, `achievement`, `hired`, `fired`, `office_changed`). Todo con el reloj del mundo. `findPath` devuelve `[]` si no hay ruta y el actor se queda en su sitio.
+

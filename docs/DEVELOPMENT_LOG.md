@@ -4,6 +4,28 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-17 — Séptima sesión (2.ª parte): A World Alive — Bloque B, oficina viva (0.8.0)
+
+### Resumen
+Los Empirians hacen pausas con propósito (beber, descansar, charlar), cada una en su sitio y visible unos segundos; tienen hábitos según su personalidad y estado (estirarse, bostezar, el curioso que mira lo nuevo, el sociable que busca compañía, el noctámbulo en crunch, el perfeccionista y los bugs); el equipo reacciona a éxitos, fracasos, logros, contrataciones y despedidas; el tiempo libre ya no es un paseo al azar. Nueva fuente de agua. Todo determinista en la simulación y congelado en pausa en la vista.
+
+### Correcciones de base
+- Si un destino no era alcanzable, el Empirian **atravesaba los muebles** en línea recta: ahora se queda donde está y lo reintenta (prueba en `tests/render/render.test.ts`).
+- Una pausa de 1 hora dura 0,4 s reales a 1x: la vista la mantiene visible 4,5 s del reloj del mundo (sin tocar la simulación), para que dé tiempo a levantarse y volver.
+
+### Equilibrio
+Las pausas evitaban el agotamiento en los encargos (sin control de ritmo) y los hacían casi tan rentables como los juegos (≈ 235 000 € frente a 242 000 €/año). Reajuste documentado en D-050: tarifa 62 → 40, estimación 0,85 → 0,95, margen 20–60 % → 5–50 % → encargos ≈ 142 000 € (58 %). Juegos: +1 %.
+
+### Pruebas ejecutadas
+- `npx vitest run`: 23 archivos, **149 pruebas**, todas pasan (nuevas: `tests/sim/routines.test.ts` 6, ruta inalcanzable; prueba de progresión ahora promedia 3 semillas).
+- E2E: **routines 8/8** (pausa en su sitio, pareja cara a cara, nadie atraviesa muebles, pausa congelada, reacción a un fracaso), tutorial 20/20, play 21/21, decor 10/10, contracts 10/10, persistence 10/10, desktop 15/15, team 13/13, pause 16/16, story 10/10.
+
+### Problemas encontrados
+- Las bebidas consumían la única pausa diaria y nunca había charlas: un día de cada dos, con alguien sociable, la pausa es una charla.
+- Un fallo aislado de la prueba de pausa se debía a una decisión abierta al pulsar pausa: la prueba responde antes y verifica la velocidad.
+
+---
+
 ## 2026-11-17 — Séptima sesión: A World Alive — Bloque A, tutorial integrado (0.7.0)
 
 ### Estado verificado al empezar

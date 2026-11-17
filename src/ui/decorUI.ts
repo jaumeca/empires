@@ -40,6 +40,7 @@ export function effectChips(def: ItemDef): string[] {
   if ((e.inspiration ?? 1) > 1) out.push(t('fx.ideas_up'));
   if ((e.rest ?? 0) > 0) out.push(t('fx.rest_up'));
   if ((e.coffee ?? 0) > 0) out.push(t('fx.coffee'));
+  if ((e.drink ?? 0) > 0) out.push(t('fx.drink'));
   if ((e.ambiance ?? 0) >= 1.5) out.push(t('fx.ambiance_up2'));
   else if ((e.ambiance ?? 0) >= 0.5) out.push(t('fx.ambiance_up'));
   if (def.showcase) out.push(t('fx.showcase'));

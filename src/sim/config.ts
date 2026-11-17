@@ -118,11 +118,11 @@ export const SIM_CONFIG = {
   /** External contracts (LS.8). */
   contracts: {
     maxOffers: 3,
-    ratePerPoint: 62,
+    ratePerPoint: 40,
     /** Extra days on top of the estimate (min, max share). */
-    slack: [0.2, 0.6] as [number, number],
+    slack: [0.05, 0.5] as [number, number],
     /** Average efficiency assumed by estimates (fatigue builds up over a job). */
-    estimateEfficiency: 0.85,
+    estimateEfficiency: 0.95,
     latePenaltyPerDay: 0.04,
     maxPenalty: 0.6,
     earlyBonus: 0.1,
@@ -151,6 +151,21 @@ export const SIM_CONFIG = {
       sociable: { speed: 0.95, teamMorale: 7 },
       curious: { speed: 0.93, xp: 1.6 },
     },
+  },
+
+  /** Daily routines (AW.B): short, purposeful breaks. Hours are 0..7 of the working day. */
+  routines: {
+    drinkHour: 3,
+    chatHour: 5,
+    /** Drink break when energy is below this and there is a drink source. */
+    drinkBelow: 55,
+    /** Rest break on a sofa/armchair when energy is below this. */
+    restBelow: 30,
+    restGain: 4,
+    /** Chat when someone sociable is around, or when both feel low. */
+    chatMoraleBelow: 55,
+    chatMorale: 3,
+    sociableChatMorale: 5,
   },
 
   /** Dynamic events (LS.7). */

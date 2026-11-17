@@ -30,6 +30,7 @@ export type SimEvent =
   | { type: 'fired'; empirianId: string; severity: 'important' }
   | { type: 'payroll'; total: number; severity: 'info' }
   | { type: 'memory'; memoryId: string; severity: 'info' }
+  | { type: 'routine'; empirianId: string; kind: 'drink' | 'rest' | 'chat'; partnerId?: string; severity: 'info' }
   | { type: 'achievement'; achievementId: string; itemId: string; severity: 'important' };
 
 export type EventSink = (e: SimEvent) => void;

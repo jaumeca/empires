@@ -255,6 +255,17 @@ function neonSign(): VoxelGrid {
   return g;
 }
 
+function waterCooler(): VoxelGrid {
+  const g = new VoxelGrid(6, 22, 6);
+  g.box(0, 0, 0, 6, 12, 6, P.cream); // cabinet
+  g.box(0, 11, 0, 6, 12, 6, P.wallShade);
+  g.box(1, 7, 5, 3, 9, 6, P.coral); g.box(3, 7, 5, 5, 9, 6, P.sky); // hot & cold taps
+  g.box(1, 3, 5, 5, 4, 6, P.metalDark); // drip tray
+  g.box(1, 12, 1, 5, 21, 5, (x, y, z) => ((x + z + y) % 5 === 0 ? P.skyLight : P.sky)); // big bottle
+  g.box(2, 21, 2, 4, 22, 4, P.fabricBlueDark);
+  return g;
+}
+
 function luckyCactus(): VoxelGrid {
   const g = new VoxelGrid(6, 13, 6);
   g.box(1, 0, 1, 5, 4, 5, P.coral);
@@ -325,6 +336,8 @@ export function itemModel(model: string): ItemModel {
       return { parts: [{ grid: bonsai(), at: [0, 0, 0] }] };
     case 'neon_sign':
       return { parts: [{ grid: neonSign(), at: [0, 0, 0] }], light: [6, 17, 5] };
+    case 'water_cooler':
+      return { parts: [{ grid: waterCooler(), at: [0, 0, 0] }] };
     case 'lucky_cactus':
       return { parts: [{ grid: luckyCactus(), at: [0, 0, 0] }] };
     default:

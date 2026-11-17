@@ -29,7 +29,11 @@ export type Activity =
   | 'thinking'
   | 'raising_hand'
   | 'celebrating'
-  | 'resting';
+  | 'resting'
+  /** Short breaks (AW.B). */
+  | 'drinking'
+  | 'lounging'
+  | 'chatting';
 
 export type SkillId = 'tech' | 'design' | 'creativity' | 'management';
 
@@ -52,7 +56,16 @@ export interface Empirian {
   salary?: number;
   trait?: TraitId;
   hiredDay?: number;
+  /** Short break in progress until this tick (AW.B routines). */
+  breakUntil?: number;
+  breakKind?: BreakKind;
+  /** Day of the last break (at most one per day). */
+  lastBreakDay?: number;
+  /** Who they're chatting with during a chat break. */
+  chatWith?: string;
 }
+
+export type BreakKind = 'drink' | 'rest' | 'chat';
 
 /** Personality traits (GT.1/GT.2). Each one helps in something and costs in something else. */
 export type TraitId = 'perfectionist' | 'night_owl' | 'sociable' | 'curious';

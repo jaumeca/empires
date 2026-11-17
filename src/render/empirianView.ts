@@ -43,6 +43,8 @@ export class EmpirianView {
   private nextBlink = 2;
   private appearance!: Appearance;
   pose: Pose = 'stand';
+  /** Stretching at the desk (AW.B): arms up for a moment. */
+  stretching = false;
   /** Facing angle (radians, 0 = +z). */
   heading = 0;
   private walkPhase = 0;
@@ -188,7 +190,11 @@ export class EmpirianView {
         target.legL = target.legR = -Math.PI / 2;
         target.bodyY = 2.7 * VOXEL; // hips on the chair seat
         const typing = activity === 'coding' || activity === 'testing';
-        if (typing) {
+        if (this.stretching) {
+          target.armLx = target.armRx = -Math.PI + 0.15;
+          target.armLz = 0.3; target.armRz = -0.3;
+          target.headX = -0.25;
+        } else if (typing) {
           const k = Math.sin(t * 14 * s);
           target.armLx = -1.15 + k * 0.1;
           target.armRx = -1.15 - k * 0.1;
@@ -245,6 +251,22 @@ export class EmpirianView {
         break;
       }
       default: {
+        if (activity === 'chatting') {
+          // Talking: nods and hand gestures.
+          target.headX = Math.sin(t * 5) * 0.12;
+          target.armRx = -0.9 + Math.sin(t * 4) * 0.35;
+          target.armRz = -0.25;
+          target.torsoY = Math.sin(t * 2.2) * 0.25 * VOXEL;
+          break;
+        }
+        if (activity === 'drinking') {
+          // Sip every few seconds.
+          const sip = (t % 3) < 1.1;
+          target.armRx = sip ? -2.3 : -0.9;
+          target.armRz = -0.15;
+          target.headX = sip ? -0.2 : 0;
+          break;
+        }
         // Idle: breathing and small look-arounds.
         target.torsoY = Math.sin(t * 2.2) * 0.25 * VOXEL;
         target.headY = Math.sin(t * 0.5) * 0.25;

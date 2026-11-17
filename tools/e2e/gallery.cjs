@@ -268,5 +268,30 @@ const VARIANTS = [
   await page.keyboard.press('?');
   await shot('g35-help', 600);
 
+  // 37 Living office (AW.B): a chat break between two Empirians.
+  await page.goto(`${base}/?fresh&debug&seed=50`);
+  await page.waitForTimeout(1500);
+  await page.click('#start-game');
+  await ev(() => {
+    const g = window.__empires.game;
+    g.dispatch({ type: 'tutorial', action: 'skip' });
+    const s = g.state;
+    s.company.money = 60000;
+    const place = (defId) => { for (let z = 0; z < 8; z++) for (let x = 0; x < 10; x++) for (const rot of [0, 1, 2, 3]) if (g.dispatch({ type: 'buy_item', defId, x, z, rot }).ok) return; };
+    place('water_cooler'); place('desk_basic');
+    s.contracts.completed = 1;
+    s.hiring.candidates.push({ id: 'H-g', name: 'Iris', appearance: { skin: 3, hairStyle: 4, hairColor: 8, top: 3, topColor: 2, pantsColor: 4, accessory: 0 }, baseSkills: { tech: 5, design: 5, creativity: 5, management: 5 }, trait: 'sociable', salary: 400, expiresDay: 99 });
+    g.dispatch({ type: 'hire', candidateId: 'H-g' });
+    g.dispatch({ type: 'start_project', name: 'P', topicId: 'kart', size: 'medium', focus: 0.7, budget: 3000, days: 98, price: 14.99 });
+  });
+  await page.click('[data-speed="1"]');
+  for (let i = 0; i < 400 && !(await ev(() => window.__empires.game.state.empirians.some((e) => e.activity === 'chatting'))); i++) {
+    for (let j = 0; j < 4 && (await ev(() => !!window.__empires.game.state.pendingDecision)); j++) { await page.keyboard.press('1'); await page.waitForTimeout(200); }
+    await page.waitForTimeout(80);
+  }
+  await page.waitForTimeout(2600); // they walk to each other and talk for a few seconds
+  await page.click('[data-speed="0"]');
+  await shot('g36-living-office', 300);
+
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });

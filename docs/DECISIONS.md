@@ -342,6 +342,18 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Omitir y repetir:** "Omitir tutorial" desde la primera pantalla; Menú › Ayuda (o tecla ?) tiene una guía por temas y "Repetir el tutorial".
 - **Partidas anteriores:** quien ya tenía proyectos no recibe el tutorial (puede iniciarlo desde Ayuda); una partida que aún no había empezado su primer juego sí.
 
+### D-050 — Oficina viva: rutinas con propósito (AW.B) y reajuste de encargos
+- **Fecha:** 2026-11-17 · **Estado:** Aplicada (provisional hasta pruebas de juego)
+- **Pausas en la simulación (deterministas, sin azar):** como mucho **una por persona y día**, de una hora, solo mientras se trabaja:
+  - **Descansar** en un sofá o sillón si la energía baja de 30 (+4 de energía más el descanso del mueble); nunca en crunch.
+  - **Beber** a media mañana si la energía baja de 55 y hay cafetera (+4) o fuente de agua (+2, nueva, 120 €, sin gastos); en crunch solo el noctámbulo.
+  - **Charlar** después de comer, un día de cada dos, si hay alguien sociable (o dos personas con el ánimo bajo): +3 de ánimo a ambos (+5 con alguien sociable); nunca en crunch.
+  - Durante la pausa no se trabaja ni se gasta energía.
+- **En la escena (solo visual, con el reloj del mundo, congelado en pausa):** cada pausa en su sitio (fuente o cafetera, sofá, pareja cara a cara), animaciones de beber y charlar, estiramientos en el puesto cuando hay cansancio, bostezos al estar agotado, el noctámbulo animado en crunch, el sociable buscando compañía, el curioso que va a mirar un objeto nuevo, el perfeccionista que se toma a pecho cada bug; el equipo celebra un éxito (≥ 8) y se desanima con un fracaso (< 5), se alegra al contratar y se entristece al despedir. El tiempo libre deja de ser un paseo al azar: cada uno va donde tiene sentido según su energía, ánimo y personalidad.
+- **Rutas seguras:** si un destino no es alcanzable, el Empirian se queda donde está (antes atravesaba muebles) y lo vuelve a intentar.
+- **Duración visible:** una pausa de una hora son 0,4 s reales a 1x; la vista la muestra 4,5 s del reloj del mundo (congelados en pausa) para que se vea levantarse, ir y volver. La simulación no cambia.
+- **Reajuste de encargos (medido):** las pausas evitan que el fundador se hunda de cansancio en los encargos (que no tienen control de ritmo), y los encargos pasaron de ≈ 137 000 € a ≈ 235 000 € al año, casi igual que hacer juegos y con menos riesgo. Para devolverles su papel (opción segura pero menos rentable, D-041): tarifa 62 → 40 €/punto, estimación 0,85 → 0,95 (ya no hay agotamiento oculto) y margen de plazo 20–60 % → 5–50 %. Resultado: encargos ≈ 142 000 € (≈ 58 % de los juegos). Las estrategias de juegos apenas cambian (+1 %).
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

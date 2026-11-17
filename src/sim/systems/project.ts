@@ -10,6 +10,7 @@ import { gainTopicXp, gainXp, topicBonus } from './progression';
 import { officeEffects, type OfficeEffects } from './office';
 import { toolMultiplier } from './world';
 import { coordinationFactor, traitBugs, traitSpeed, workstationEffects } from './team';
+import { onBreak } from './routines';
 
 const C = SIM_CONFIG;
 
@@ -125,7 +126,7 @@ export function workTick(state: GameState, p: Project, founder: Empirian, emit: 
   // Everyone in the studio works on the project (GT.1); coordination costs grow with the team.
   const coord = coordinationFactor(state.empirians.length);
   const building = p.phase === 'concept' || p.phase === 'production';
-  for (const e of state.empirians) contribute(state, p, e, founder, emit, coord);
+  for (const e of state.empirians) if (!onBreak(state, e)) contribute(state, p, e, founder, emit, coord);
   if (building) maybeOfferBigIdea(state, p, founder, emit);
 }
 

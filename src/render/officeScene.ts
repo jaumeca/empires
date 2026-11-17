@@ -67,13 +67,21 @@ export function findPath(from: [number, number], to: [number, number], blocked: 
       queue.push(k);
     }
   }
-  if (prev[idx(tx, tz)] === -2) return [to];
+  // Unreachable: no path at all (never walk through furniture or walls). Callers fall back safely.
+  if (prev[idx(tx, tz)] === -2) return [];
   const path: [number, number][] = [];
   for (let c = idx(tx, tz); c !== -1; c = prev[c]!) path.unshift([(c % w) * CELL + CELL / 2, Math.floor(c / w) * CELL + CELL / 2]);
   path.shift(); // drop the starting cell center
   path.pop(); // replace the last cell center by the exact target
   path.push(to);
   return path;
+}
+
+/** Small stable number from an id (to spread habits in time without randomness). */
+export function hashId(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return h;
 }
 
 const GHOST_MATERIAL = new MeshLambertMaterial({ color: 0x9ff0c8, transparent: true, opacity: 0.55, depthWrite: false });
@@ -95,8 +103,13 @@ class EmpirianActor {
   target: Poi;
   targetName = 'center';
   nextWander = 0;
-  /** Cosmetic coffee break (real time) triggered by the sim's morning coffee. */
+  /** Cosmetic coffee break triggered by the sim's morning coffee (world time). */
   coffeeUntil = 0;
+  /** A break stays visible for a few world seconds (a 1-hour break is too short to walk at 1x). */
+  breakVisual: { kind: 'drink' | 'rest' | 'chat'; until: number } | null = null;
+  /** Curious: looking at a newly placed item until this world time. */
+  inspectUntil = 0;
+  inspectPoi: Poi | null = null;
 
   constructor(readonly view: EmpirianView, start: Poi) {
     this.pos = [start.x, start.z];
@@ -107,9 +120,18 @@ class EmpirianActor {
   goTo(name: string, pois: Record<string, Poi>, blocked: Uint8Array, w: number, d: number, force = false): void {
     const poi = pois[name];
     if (!poi || (name === this.targetName && !force)) return;
+    const path = findPath(this.pos, [poi.x, poi.z], blocked, w, d);
+    const here = Math.hypot(poi.x - this.pos[0], poi.z - this.pos[1]) < 1;
+    if (!path.length && !here) {
+      // Safe fallback: no route → stay where we are, standing, and try again later.
+      this.targetName = `stay:${name}`;
+      this.target = { x: this.pos[0], z: this.pos[1], heading: this.view.heading, pose: 'stand' };
+      this.path = [];
+      return;
+    }
     this.targetName = name;
     this.target = poi;
-    this.path = findPath(this.pos, [poi.x, poi.z], blocked, w, d);
+    this.path = path;
   }
 
   /** Returns true while walking. */
@@ -142,6 +164,7 @@ export class OfficeScene {
   readonly scene = new Scene();
   readonly camera: OrthographicCamera;
   readonly bubbles: BubbleSystem;
+  private lastProjectPace: string | null = null;
   onTap: (t: TapTarget) => void = () => {};
   /** Mouse hover over the floor (decoration mode only): the cell under the cursor. */
   onHover: (cell: [number, number] | null) => void = () => {};
@@ -402,6 +425,7 @@ export class OfficeScene {
       pois.seat = pois.side = { ...pois.center, pose: 'raise' };
     }
     let bestRest = -1;
+    let bestDrink = 0;
     for (const it of office.items) {
       const def = getItemDef(it.defId);
       const sp = useSpot(it);
@@ -411,6 +435,8 @@ export class OfficeScene {
         pois.beanbag = { x: sp.vx, z: sp.vz, heading: sp.heading + Math.PI, pose: 'lounge' };
       }
       if (sp && e.coffee) pois.coffee = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'stand' };
+      // AW.B: the best drink source (coffee machine over water cooler).
+      if (sp && e.drink && e.drink > bestDrink) { bestDrink = e.drink; pois.drink = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'stand' }; }
       if (sp && e.inspiration && e.inspiration > 1) pois.whiteboard = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'think' };
       if (sp && def.showcase) pois.shelf = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'think' };
       if (sp && def.id === 'arcade') pois.arcade = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'stand' };
@@ -567,6 +593,7 @@ export class OfficeScene {
   /** Reads the latest simulation state. Cheap: call whenever state changes. */
   sync(state: GameState): void {
     this.lastState = state;
+    this.lastProjectPace = state.projects.find((p) => p.id === state.activeProjectId)?.pace ?? null;
     this.syncOffice(state.office);
     for (const e of state.empirians) this.ensureEmpirian(e.id, e.appearance);
     // Employees who left the studio (GT.1).
@@ -574,14 +601,40 @@ export class OfficeScene {
       if (id.startsWith('stress-') || state.empirians.some((e) => e.id === id)) continue;
       this.removeEmpirian(id);
     }
-    // Each employee works at their own desk.
-    for (const k of Object.keys(this.pois)) if (k.startsWith('seat:')) delete this.pois[k];
+    // Each employee works at their own desk; chatting pairs meet face to face (AW.B).
+    for (const k of Object.keys(this.pois)) {
+      if (k.startsWith('seat:')) delete this.pois[k];
+      if (k.startsWith('chat:') && !this.actors.get(k.slice(5))?.breakVisual) delete this.pois[k];
+    }
+    for (const e of state.empirians) {
+      if (e.activity !== 'chatting' || !e.chatWith || e.id > e.chatWith) continue;
+      const c = this.pois.center ?? FIXED_POIS.center!;
+      const a = this.nearestFreeCell(c.x - 4, c.z);
+      const b = this.nearestFreeCell(a[0] + 7, a[1], a);
+      const ha = Math.atan2(b[0] - a[0], b[1] - a[1]);
+      this.pois[`chat:${e.id}`] = { x: a[0], z: a[1], heading: ha, pose: 'stand' };
+      this.pois[`chat:${e.chatWith}`] = { x: b[0], z: b[1], heading: ha + Math.PI, pose: 'stand' };
+    }
     for (const it of state.office.items) {
       if (!it.assignedTo) continue;
       const sp = useSpot(it);
       if (sp) this.pois[`seat:${it.assignedTo}`] = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'sit' };
     }
     this.syncProducts(state.projects);
+  }
+
+  /** Where to go in free time: tired → rest, thirsty → drink, curious → shelf/whiteboard, sociable → near others, low → plant/window. */
+  private freeTimeSpot(e: GameState['empirians'][number] | undefined, id: string, t: number): string {
+    const has = (k: string) => !!this.pois[k];
+    const energy = e?.energy ?? 100, morale = e?.morale ?? 70;
+    const slot = Math.floor(t / 9 + (hashId(id) % 7));
+    const pick = (list: string[]) => list.filter(has)[slot % Math.max(1, list.filter(has).length)] ?? 'center';
+    if (energy < 50 && has('beanbag')) return 'beanbag';
+    if (energy < 70 && has('drink') && slot % 3 === 0) return 'drink';
+    if (e?.trait === 'curious') return pick(['shelf', 'whiteboard', 'arcade', 'window']);
+    if (e?.trait === 'sociable') return pick(['center', 'drink', 'coffee']);
+    if (morale < 55) return pick(['plant', 'window']);
+    return pick(['window', 'plant', 'shelf', 'center', 'arcade']);
   }
 
   private behaviourFor(activity: Activity): string | null {
@@ -616,10 +669,13 @@ export class OfficeScene {
           else if (e.kind === 'test') this.bubbles.spawn(head, off, 'test', now, { cooldown: 2.6 });
           else this.bubbles.spawn(head, off, 'star', now, { cooldown: 3.5 });
           break;
-        case 'bug_created':
+        case 'bug_created': {
           this.bubbles.spawn(head, off, 'bug', now, { cooldown: 0.9 });
-          actor.view.flash('frustrated', 0.9, now);
+          // Perfectionists take every bug personally.
+          const perf = this.lastState?.empirians.find((x) => x.id === e.empirianId)?.trait === 'perfectionist';
+          actor.view.flash('frustrated', perf ? 2.2 : 0.9, now);
           break;
+        }
         case 'bug_found':
           this.bubbles.spawn(head, off, 'bug', now, { cooldown: 0.9 });
           actor.view.flash('surprised', 0.7, now);
@@ -637,9 +693,56 @@ export class OfficeScene {
         case 'energy_low':
           this.bubbles.spawn(head, off, 'sweat', now, { cooldown: 3 });
           break;
-        case 'project_released':
-          this.burstConfetti(actor);
+        case 'project_released': {
+          // The team reacts to how it went (AW.B): a flop is felt, a hit is celebrated.
+          const score = this.lastState?.projects.find((p) => p.id === e.projectId)?.result?.averageScore ?? 7;
+          if (score >= 6.5) this.burstConfetti(actor);
+          for (const a of this.actors.values()) {
+            if (score >= 8) { a.view.flash('joyful', 3, now); this.bubbles.spawn(a.view.head, off, 'star', now, { cooldown: 0.2, life: 2.4 }); }
+            else if (score < 5) { a.view.flash('frustrated', 3, now); this.bubbles.spawn(a.view.head, off, 'sweat', now, { cooldown: 0.2, life: 2.4 }); }
+          }
           break;
+        }
+        case 'routine': {
+          actor.breakVisual = { kind: e.kind, until: now + 4.5 };
+          if (e.kind === 'chat' && e.partnerId && e.empirianId < e.partnerId) {
+            const c = this.pois.center ?? FIXED_POIS.center!;
+            const a = this.nearestFreeCell(c.x - 4, c.z);
+            const b = this.nearestFreeCell(a[0] + 7, a[1], a);
+            const ha = Math.atan2(b[0] - a[0], b[1] - a[1]);
+            this.pois[`chat:${e.empirianId}`] = { x: a[0], z: a[1], heading: ha, pose: 'stand' };
+            this.pois[`chat:${e.partnerId}`] = { x: b[0], z: b[1], heading: ha + Math.PI, pose: 'stand' };
+          }
+          const ic = e.kind === 'drink' ? 'cup' : e.kind === 'rest' ? 'zzz' : 'chat';
+          this.bubbles.spawn(head, off, ic, now, { cooldown: 0.5, life: 2.2 });
+          if (e.kind === 'chat') actor.view.flash('happy', 2, now);
+          break;
+        }
+        case 'achievement':
+          for (const a of this.actors.values()) { a.view.flash('joyful', 2.5, now); this.bubbles.spawn(a.view.head, off, 'star', now, { cooldown: 0.2, life: 2.4 }); }
+          break;
+        case 'hired':
+          for (const [aid, a] of this.actors) if (aid !== e.empirianId) { a.view.flash('happy', 2, now); this.bubbles.spawn(a.view.head, off, 'heart', now, { cooldown: 0.2 }); }
+          break;
+        case 'fired':
+          for (const a of this.actors.values()) { a.view.flash('frustrated', 2.5, now); this.bubbles.spawn(a.view.head, off, 'sweat', now, { cooldown: 0.2 }); }
+          break;
+        case 'office_changed': {
+          // Curious Empirians who are free go and have a look at the newest thing.
+          const st = this.lastState;
+          const newest = st?.office.items[st.office.items.length - 1];
+          if (!st || !newest) break;
+          const sp = useSpot(newest);
+          const rs = rotatedSize(getItemDef(newest.defId), newest.rot);
+          const c = sp ? [sp.vx, sp.vz] : this.nearestFreeCell((newest.x + rs.w / 2) * CELL, (newest.z + rs.d + 0.5) * CELL);
+          for (const emp of st.empirians) {
+            const a = this.actors.get(emp.id);
+            if (!a || emp.trait !== 'curious' || emp.activity !== 'idle') continue;
+            a.inspectUntil = now + 5;
+            a.inspectPoi = { x: c[0]!, z: c[1]!, heading: Math.atan2((newest.x + rs.w / 2) * CELL - c[0]!, (newest.z + rs.d / 2) * CELL - c[1]!), pose: 'think' };
+          }
+          break;
+        }
         case 'sales_week':
           this.bubbles.spawn(head, off, 'coin', now, { cooldown: 0.5 });
           break;
@@ -795,18 +898,36 @@ export class OfficeScene {
         let wanted = this.behaviourFor(activity);
         // Employees sit at their own desk (GT.1); only the founder uses the founder's seat.
         if (wanted === 'seat' && id !== state?.founderId) wanted = this.pois[`seat:${id}`] ? `seat:${id}` : 'center';
+        // Short breaks (AW.B): drink, rest, chat — each at its real place, visible for a few world seconds.
+        if (actor.breakVisual && t >= actor.breakVisual.until) actor.breakVisual = null;
+        const shown = actor.breakVisual ? ({ drink: 'drinking', rest: 'lounging', chat: 'chatting' } as const)[actor.breakVisual.kind] : activity;
+        if (shown === 'drinking') wanted = this.pois.drink ? 'drink' : this.pois.coffee ? 'coffee' : 'window';
+        else if (shown === 'lounging') wanted = this.pois.beanbag ? 'beanbag' : 'window';
+        else if (shown === 'chatting') wanted = this.pois[`chat:${id}`] ? `chat:${id}` : 'center';
+        // Curious Empirians go and look at something new when they're free (render only, world time).
+        else if (!wanted && t < actor.inspectUntil && actor.inspectPoi) { this.pois[`inspect:${id}`] = actor.inspectPoi; wanted = `inspect:${id}`; }
         // Concept work at the whiteboard when there is one (visible effect of the item).
         if (activity === 'thinking' && this.pois.whiteboard) wanted = 'whiteboard';
         if (wanted) go(wanted);
         else if (t > actor.nextWander) {
-          const options = Object.keys(this.pois).filter((k) => (!['side', 'center'].includes(k) || k === 'center') && !k.startsWith('seat:'));
-          go(options[Math.floor(Math.random() * options.length)]!);
-          actor.nextWander = t + 5 + Math.random() * 5;
+          // Free time with a purpose (AW.B): what they do depends on how they feel and who they are.
+          go(this.freeTimeSpot(e, id, t));
+          actor.nextWander = t + 7 + (hashId(id) % 5);
         }
       }
       const moving = actor.step(dt, speedFactor);
       actor.view.pose = actor.target.pose;
-      actor.view.animate(t, dt, activity, energy, moving, speedFactor);
+      // Small, recognisable habits (AW.B) — world time only, so pause freezes them too.
+      const seatedWork = !moving && actor.targetName.startsWith('seat') && ['coding', 'designing', 'testing'].includes(activity);
+      actor.view.stretching = seatedWork && energy < 45 && (t + (hashId(id) % 20)) % 20 < 1.4;
+      if (dt > 0 && e) {
+        if (energy < 22 && activity !== 'lounging') this.bubbles.spawn(actor.view.head, 1.05, 'zzz', t, { cooldown: 9 });
+        const crunch = this.lastProjectPace === 'crunch';
+        if (e.trait === 'night_owl' && crunch && seatedWork) this.bubbles.spawn(actor.view.head, 1.05, 'star', t, { cooldown: 8 });
+        if (e.trait === 'sociable' && activity === 'idle' && state && state.empirians.length > 1) this.bubbles.spawn(actor.view.head, 1.05, 'chat', t, { cooldown: 12 });
+      }
+      const animActivity: Activity = actor.breakVisual ? ({ drink: 'drinking', rest: 'lounging', chat: 'chatting' } as const)[actor.breakVisual.kind] : activity;
+      actor.view.animate(t, dt, animActivity, energy, moving, speedFactor);
       const [px, pz] = actor.pos;
       const onRug = this.rugRects.some(([x0, z0, x1, z1]) => px >= x0 && px <= x1 && pz >= z0 && pz <= z1);
       actor.view.root.position.copy(fw(px, onRug && actor.target.pose !== 'lounge' && actor.target.pose !== 'sit' ? 1 : 0, pz));

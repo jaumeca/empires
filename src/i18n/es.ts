@@ -723,4 +723,7 @@ export const es: Record<string, string> = {
   "help.story.text": "El estudio recuerda sus grandes momentos. Los logros desbloquean decoraciones especiales en la pestaña Trofeos.",
   "help.tutorial_restart": "Repetir el tutorial",
   "help.tutorial_restart_active": "Reiniciar el tutorial",
+  "item.water_cooler.name": "Fuente de agua",
+  "item.water_cooler.desc": "Un rincón para beber algo y estirar las piernas. Barata y sin gastos.",
+  "fx.drink": "Pausa para beber",
 };

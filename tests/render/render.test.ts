@@ -92,4 +92,11 @@ describe('room', () => {
     expect(path[path.length - 1]).toEqual([57, 39]);
     expect(path.length).toBeGreaterThan(5);
   });
+  it('an unreachable target gives no path (never walk through furniture)', () => {
+    const w = 10, d = 8;
+    const blocked = new Uint8Array(w * d);
+    // Wall around cell (7,5).
+    for (const [x, z] of [[6, 4], [7, 4], [8, 4], [6, 5], [8, 5], [6, 6], [7, 6], [8, 6]] as const) blocked[x + z * w] = 1;
+    expect(findPath([3, 3], [7 * 6 + 3, 5 * 6 + 3], blocked, w, d)).toEqual([]);
+  });
 });

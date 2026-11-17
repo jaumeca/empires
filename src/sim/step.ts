@@ -10,6 +10,7 @@ import { contractsDay, contractTick } from './systems/contracts';
 import { gainXp } from './systems/progression';
 import { ambianceLevel, officeEffects } from './systems/office';
 import { storyDay } from './systems/story';
+import { onBreak, routinesTick } from './systems/routines';
 import { coordinationFactor, hiringDay, payroll, teamMoraleBonus, traitDrain, workstationEffects } from './systems/team';
 
 const C = SIM_CONFIG;
@@ -19,6 +20,9 @@ export function step(state: GameState, emit: EventSink): void {
   const founder = getFounder(state);
   const project = getActiveProject(state);
 
+  // Short breaks first (AW.B): who is on a break this hour doesn't work.
+  routinesTick(state, emit);
+
   const contract = state.contracts.active;
   if (project) {
     workTick(state, project, founder, emit);
@@ -26,17 +30,19 @@ export function step(state: GameState, emit: EventSink): void {
     // The whole team works on the contract (GT.1).
     const coord = coordinationFactor(state.empirians.length);
     for (const e of state.empirians) {
+      if (onBreak(state, e)) continue;
       contractTick(state, e, emit, coord);
       e.energy = Math.max(0, e.energy - (C.energy.drainPerTick.normal ?? 0.85) * workstationEffects(state, e).fatigue * traitDrain(e));
     }
   } else if (!state.pendingDecision) {
     // Nothing to do: back to idle (a celebration lasts until the next 2-day mark).
-    for (const e of state.empirians) if (e.activity !== 'celebrating' || state.tick % (C.ticksPerDay * 2) === 0) e.activity = 'idle';
+    for (const e of state.empirians) if (!onBreak(state, e) && (e.activity !== 'celebrating' || state.tick % (C.ticksPerDay * 2) === 0)) e.activity = 'idle';
   }
 
   // Energy drains while working (not while waiting for a decision).
   if (project && !state.pendingDecision && !isResting(state, project)) {
     for (const e of state.empirians) {
+      if (onBreak(state, e)) continue;
       const before = e.energy;
       const mgmt = e.id === founder.id ? 1 - Math.max(0, e.skills.management - 5) * C.progression.managementFatigue : 1;
       const chair = workstationEffects(state, e).fatigue;
