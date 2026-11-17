@@ -132,7 +132,6 @@ export const SIM_CONFIG = {
 
   /** Team (GT.1–GT.3). Salaries are weekly. */
   team: {
-    maxEmployees: 3,
     candidatesPerRefresh: 3,
     refreshDays: 14,
     candidateDays: [14, 24] as [number, number],

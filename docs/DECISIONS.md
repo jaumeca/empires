@@ -354,6 +354,28 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Duración visible:** una pausa de una hora son 0,4 s reales a 1x; la vista la muestra 4,5 s del reloj del mundo (congelados en pausa) para que se vea levantarse, ir y volver. La simulación no cambia.
 - **Reajuste de encargos (medido):** las pausas evitan que el fundador se hunda de cansancio en los encargos (que no tienen control de ritmo), y los encargos pasaron de ≈ 137 000 € a ≈ 235 000 € al año, casi igual que hacer juegos y con menos riesgo. Para devolverles su papel (opción segura pero menos rentable, D-041): tarifa 62 → 40 €/punto, estimación 0,85 → 0,95 (ya no hay agotamiento oculto) y margen de plazo 20–60 % → 5–50 %. Resultado: encargos ≈ 142 000 € (≈ 58 % de los juegos). Las estrategias de juegos apenas cambian (+1 %).
 
+### D-051 — Identidad: editor, ficha y acabados de la oficina (AW.C)
+- **Fecha:** 2026-11-17 · **Estado:** Aplicada
+- **Editor de Empirians:** un único editor (el de creación, generalizado) para el fundador y los empleados. El comando `edit_empirian` solo cambia nombre (1–24 caracteres), apodo opcional (≤ 16) y aspecto (valores validados contra los catálogos); habilidades, experiencia, personalidad, sueldo, relaciones y recuerdos no se tocan (prueba). Vista previa voxel: el personaje se coloca solo, de frente, en la casilla libre más cercana a la cámara; los demás se ocultan mientras se edita; al cancelar se restaura.
+- **Ficha:** al lado de la oficina (ordenador), con retrato, nombre y apodo, personalidad, energía, ánimo, tarea actual, antigüedad, habilidades, especialidades, sus recuerdos y una **biografía hecha solo de hechos** de la partida (`systems/biography.ts`: fundación o llegada, lanzamientos en los que participó y el mejor, punto fuerte, especialidad, habilidades dominadas, estado actual).
+- **Acabados:** 5 colores de pared y 4 suelos, puramente estéticos (150 € pared, 300 € suelo, solo se paga lo que cambia); se prueban en la oficina antes de pagar y salir de Decorar sin aplicar lo deshace.
+- **Zona de descanso:** puf (descanso 2, 160 €), alfombra redonda, mesita; **rincón acogedor**: un sillón, sofá o puf con una lámpara o planta a ≤ 2 casillas da +1 de descanso, una sola vez (no se acumula; la oficina inicial no lo tiene).
+
+### D-053 — Funcionalidades y prototipos (AW.D.1/D.2, sobre F3.2)
+- **Fecha:** 2026-11-17 · **Estado:** Aplicada (provisional hasta pruebas de juego)
+- **Funcionalidades:** historia, personalización, multijugador, IA avanzada, editor de niveles, mundo abierto (solo medianos) y multiplataforma. Huecos: 2 en juegos pequeños, 3 en medianos. Desbloqueos por experiencia real: multijugador tras 1 lanzamiento, editor tras 2, mundo abierto tras 3, IA con programación 6 en el equipo, multiplataforma con reputación 45.
+- **Efectos:** cada una suma trabajo y complejidad (bugs) y tiene un riesgo técnico oculto; da atractivo (techo de calidad) según lo bien que encaje con el tema, con rendimientos decrecientes, o **alcance** (más ventas) independiente del tema. Se explican con palabras ("Poco trabajo", "Riesgo alto", "Encaja con el tema", "Más jugadores"). El "¿Por qué?" de la nota las menciona.
+- **Riesgo oculto:** decidido al empezar de forma determinista a partir de la semilla (no consume tiradas). Sin prototipo aparece a un 35 % de la producción: sacarla adelante (+80 % de su trabajo), recortarla (se recupera la mitad, pero baja el interés) o dejarla tal cual (−0,6 de techo y más bugs).
+- **Prototipo:** +4 % de trabajo y 200 €. Al terminar el concepto revela los problemas cuando arreglarlos cuesta poco (+25 %) o quitarlos no cuesta nada; si no hay problemas, valida la idea (+0,15).
+- **Medido (16 semillas, juego pequeño):** sin funcionalidades 166–188 €/día; una que encaja con tiempo para hacerla 234 €/día y +0,8 de nota; dos que encajan con más plazo dan la mejor nota pero menos €/día; una que no encaja o dos de golpe en poco tiempo, peor que nada (119–153 €/día); las de alcance venden más con peor nota. El prototipo compensa con funcionalidades arriesgadas (multijugador 208 frente a 187 €/día) y no con las seguras. Ninguna combinación domina.
+
+### D-052 — Primera ampliación de la oficina (AW.E.1 / GT.4)
+- **Fecha:** 2026-11-17 · **Estado:** Aplicada (provisional hasta GT.7)
+- **Por qué ahora:** en la habitación inicial solo cabía un empleado; sin más espacio no se podían probar equipos mayores (orden ajustado: E.1 antes que D, como pedía el propietario si era necesario).
+- **Estudio:** de 10×8 a 14×10 casillas; la cuadrícula crece hacia el frente del diorama, así que paredes, muebles, decoraciones y equipo se quedan exactamente donde estaban (prueba). Segunda ventana. La cámara encuadra la sala entera y la luz cubre el nuevo espacio.
+- **Coste:** 25 000 € una vez + 60 €/día de alquiler (≈ 22 000 € al año: un uso del dinero con sentido, Q-011). Plazas: hasta 6 empleados más el fundador (antes 3, en la práctica 1 por espacio). Medido: caben al menos 4 escritorios más que en la habitación, todo el suelo libre sigue conectado y nadie atraviesa muebles.
+- **Momento:** el equipo lo celebra y queda en la Historia del estudio ("estrena un estudio más grande"). Partidas anteriores: sin cambios (siguen en la habitación; sin migración).
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

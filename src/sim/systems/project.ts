@@ -11,6 +11,7 @@ import { officeEffects, type OfficeEffects } from './office';
 import { toolMultiplier } from './world';
 import { coordinationFactor, traitBugs, traitSpeed, workstationEffects } from './team';
 import { onBreak } from './routines';
+import { featureCeiling, featuresTick } from './features';
 
 const C = SIM_CONFIG;
 
@@ -40,7 +41,7 @@ export function qualityCeiling(p: Project, founder: Empirian): number {
   const skill = skillFor(founder, p.focus);
   const mods = p.ceilingMods.reduce((a, m) => a + m.amount, 0);
   const creativity = (founder.skills.creativity - 5) * C.progression.creativityCeiling;
-  return Math.max(1, C.quality.baseCeiling + (skill - 5) * 0.35 + creativity + topicBonus(founder, p.topicId) + fitModifier(p) + mods);
+  return Math.max(1, C.quality.baseCeiling + (skill - 5) * 0.35 + creativity + topicBonus(founder, p.topicId) + fitModifier(p) + mods + featureCeiling(p));
 }
 
 /** Ratio of quality-earning investment to required work (> 1 means extra polish). */
@@ -121,6 +122,7 @@ export function workTick(state: GameState, p: Project, founder: Empirian, emit: 
     for (const e of state.empirians) e.activity = 'resting';
     return;
   }
+  featuresTick(state, p, emit);
   maybeOfferMoment(state, p, founder, emit);
   if (state.pendingDecision) return;
   // Everyone in the studio works on the project (GT.1); coordination costs grow with the team.

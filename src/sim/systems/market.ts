@@ -1,3 +1,4 @@
+import { activeFeatures, featureCeiling, featureReach } from './features';
 import { SIM_CONFIG } from '../config';
 import type { EventSink } from '../core/events';
 import { entriesFor, record } from '../core/ledger';
@@ -83,6 +84,11 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
     const cause = entriesFor(state, p.id, ['decision']).find((e) => e.text.key === 'ledger.event.streamer_preview.give_build');
     factors.push({ amount: -C.events.previewBugPenalty, text: { key: 'factor.preview_bugs' }, causes: cause ? [cause.id] : [] });
   }
+  // Features (AW.D.1): what they added, or what a shipped problem cost.
+  if (p.features?.length) {
+    const fc = featureCeiling(p);
+    factors.push({ amount: fc * 0.85, text: { key: (p.featureIgnored ?? []).length ? 'factor.features_trouble' : fc >= 0.2 ? 'factor.features_good' : 'factor.features_meh', params: { count: activeFeatures(p).length } }, causes: started });
+  }
   const promise = entriesFor(state, p.id, ['promise'])[0];
   if (promise) factors.push({ amount: 0.05, text: { key: 'factor.promise' }, causes: [promise.id] });
 
@@ -126,7 +132,7 @@ export function marketWeek(state: GameState, emit: EventSink): void {
     // Players accept higher prices for better games: optimum price ~ expected / 1.1.
     const expectedPrice = 4 + r.averageScore * 1.2 + (C.market.sizePriceBonus[p.size] ?? 0);
     const priceFactor = Math.min(2.2, Math.exp(-1.1 * (r.price / expectedPrice - 1)));
-    const noise = nextRange(state.rng.market, 0.9, 1.1) * salesBoost(state, p);
+    const noise = nextRange(state.rng.market, 0.9, 1.1) * salesBoost(state, p) * featureReach(p);
     const units = Math.round(
       C.market.baseAudience * (C.market.sizeAudience[p.size] ?? 1) * topic.interest * demandFactor(state, topic.id) * appeal * visibility * priceFactor * Math.pow(C.market.weeklySalesDecay, w) * noise,
     );

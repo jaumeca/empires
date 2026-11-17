@@ -57,6 +57,21 @@ export const P = {
   fabricBlueDark: add('fabricBlueDark', 0x55729f),
 };
 
+/** Wall and floor finishes (AW.C.3): [back wall, wainscot, side wall] and floor colors. */
+export const WALL_FINISH: Record<string, [number, number, number]> = {
+  cream: [P.wall, P.wallShade, P.wallPeach],
+  mint: [add('wallMint', 0xdcefe6), add('wallMintShade', 0xc5e2d5), add('wallMintSide', 0xbfe0d0)],
+  sky: [add('wallSky', 0xe0eaf6), add('wallSkyShade', 0xccdcef), add('wallSkySide', 0xc4d6ee)],
+  lavender: [add('wallLav', 0xece4f6), add('wallLavShade', 0xddd2ef), add('wallLavSide', 0xd6c9ee)],
+  sand: [add('wallSand', 0xf2e2c6), add('wallSandShade', 0xe4d0ab), add('wallSandSide', 0xedcb9b)],
+};
+export const FLOOR_FINISH: Record<string, { planks?: number[]; seam?: number; tiles?: [number, number]; carpet?: [number, number] }> = {
+  oak: { planks: [P.woodLight, P.woodPale, P.woodLight, P.woodMid], seam: P.woodMid },
+  walnut: { planks: [add('walnutA', 0x9b6a45), add('walnutB', 0xa8784f), add('walnutA2', 0x96653f), add('walnutC', 0x875a39)], seam: add('walnutSeam', 0x7a5034) },
+  tiles: { tiles: [add('tileA', 0xf4efe6), add('tileB', 0xdcd3c4)] },
+  carpet: { carpet: [add('carpetA', 0x86a3d2), add('carpetB', 0x7a98c9)] },
+};
+
 /** Empirian customization catalogs (indices into PALETTE_HEX). */
 export const SKIN_TONES = [0xffe0c7, 0xf6cfa9, 0xe8b48a, 0xd59a6e, 0xb97c52, 0x9a6040, 0x7a4a31, 0x5a3524].map((h, i) => add(`skin${i}`, h));
 export const SKIN_SHADES = [0xf2c9ad, 0xe6b791, 0xd69d74, 0xc1845a, 0xa46a44, 0x845036, 0x663d28, 0x4a2b1d].map((h, i) => add(`skinShade${i}`, h));

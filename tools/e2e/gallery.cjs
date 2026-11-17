@@ -83,7 +83,7 @@ const VARIANTS = [
   await page.click('#start-project');
 
   // 08/09 active development + bubbles close-up
-  await page.click('[data-speed="1"]');
+  await ev(() => window.__empires.ui.setSpeed(1));
   await ev(() => window.__empires.advance(30));
   await shot('g08-development', 6000);
   await frame({ x: 26, y: 16, z: 18, viewH: 2.6 });
@@ -242,11 +242,11 @@ const VARIANTS = [
   await page.click('#start-project');
   await ev(() => window.__empires.advance(8 * 4));
   for (let i = 0; i < 10 && (await ev(() => !!window.__empires.game.state.pendingDecision)); i++) { await page.keyboard.press('1'); await page.waitForTimeout(300); }
-  await page.click('[data-speed="1"]');
+  await ev(() => window.__empires.ui.setSpeed(1));
   await shot('g31-team-working', 4000);
 
   // 33-34 More Life (ML.2/ML.3): the studio story and the trophies.
-  await page.click('[data-speed="0"]');
+  await ev(() => window.__empires.ui.setSpeed(0));
   await ev(() => { window.__empires.game.state.company.money = 120000; window.__empires.advance(8); });
   await page.waitForTimeout(400);
   for (let i = 0; i < 4 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(200); }
@@ -267,6 +267,14 @@ const VARIANTS = [
   await shot('g34-tutorial', 1200);
   await page.keyboard.press('?');
   await shot('g35-help', 600);
+  await page.click('.card .close');
+  // 42 Features & prototype (AW.D), in the new-project dialog.
+  await page.keyboard.press('p');
+  await page.click('[data-topic="pirates"]');
+  await page.click('[data-feature="story"]');
+  await page.check('#np-prototype');
+  await shot('g41-features', 600);
+  await page.click('.card .close');
 
   // 37 Living office (AW.B): a chat break between two Empirians.
   await page.goto(`${base}/?fresh&debug&seed=50`);
@@ -284,14 +292,35 @@ const VARIANTS = [
     g.dispatch({ type: 'hire', candidateId: 'H-g' });
     g.dispatch({ type: 'start_project', name: 'P', topicId: 'kart', size: 'medium', focus: 0.7, budget: 3000, days: 98, price: 14.99 });
   });
-  await page.click('[data-speed="1"]');
+  await ev(() => window.__empires.ui.setSpeed(1));
   for (let i = 0; i < 400 && !(await ev(() => window.__empires.game.state.empirians.some((e) => e.activity === 'chatting'))); i++) {
     for (let j = 0; j < 4 && (await ev(() => !!window.__empires.game.state.pendingDecision)); j++) { await page.keyboard.press('1'); await page.waitForTimeout(200); }
     await page.waitForTimeout(80);
   }
   await page.waitForTimeout(2600); // they walk to each other and talk for a few seconds
-  await page.click('[data-speed="0"]');
+  await ev(() => window.__empires.ui.setSpeed(0));
   await shot('g36-living-office', 300);
+
+  // 38-40 Identity (AW.C): character sheet, appearance editor, walls & floor.
+  await page.keyboard.press('f');
+  await shot('g37-character-sheet', 600);
+  await page.click('#edit-empirian');
+  await shot('g38-editor', 800);
+  await page.click('#editor-cancel');
+  await page.waitForTimeout(300);
+  await ev(() => window.__empires.ui.decor.open());
+  await page.click('[data-cat="style"]');
+  await page.click('[data-wall="mint"]');
+  await page.click('[data-floor="tiles"]');
+  await shot('g39-walls-floor', 800);
+  await page.click('#decor-done');
+
+  // 41 Bigger studio (AW.E.1).
+  await ev(() => { const g = window.__empires.game; g.state.company.money = Math.max(g.state.company.money, 40000); g.dispatch({ type: 'expand_office' }); });
+  await page.waitForTimeout(400);
+  for (let i = 0; i < 4 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(200); }
+  await shot('g40-bigger-studio', 2500);
+
 
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });

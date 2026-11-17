@@ -6,6 +6,7 @@ import type { Candidate, Empirian, GameState, Hiring, PlacedItem, SkillId, Trait
 import { EMPIRIAN_NAMES } from '../../content/names';
 import { founderDesk, getItemDef, officeEffects, type OfficeEffects } from './office';
 import { rememberFarewell, rememberHire } from './story';
+import { OFFICE_SIZES } from '../../content/officeSizes';
 
 /**
  * Team growth (GT.1–GT.3): applicants, hiring and firing, weekly salaries,
@@ -18,6 +19,11 @@ export const TRAITS: readonly TraitId[] = ['perfectionist', 'night_owl', 'sociab
 
 export function createHiring(): Hiring {
   return { candidates: [], nextRefreshDay: 1, hired: 0, salariesPaid: 0 };
+}
+
+/** How many people the current office holds besides the founder (AW.E.1). */
+export function maxEmployees(state: GameState): number {
+  return OFFICE_SIZES[state.office.size ?? 'room'].maxEmployees;
 }
 
 export function employees(state: GameState): Empirian[] {
@@ -124,7 +130,7 @@ export function hiringDay(state: GameState, emit: EventSink): void {
   h.candidates = h.candidates.filter((c) => c.expiresDay > state.day);
   if (!hiringUnlocked(state) || state.day < h.nextRefreshDay) return;
   h.nextRefreshDay = state.day + K().refreshDays;
-  if (employees(state).length >= K().maxEmployees) return;
+  if (employees(state).length >= maxEmployees(state)) return;
   let added = 0;
   while (h.candidates.length < K().candidatesPerRefresh) { h.candidates.push(makeCandidate(state)); added++; }
   if (added) emit({ type: 'candidates_arrived', count: added, severity: 'important' });
@@ -135,7 +141,7 @@ export function hiringDay(state: GameState, emit: EventSink): void {
 export function hire(state: GameState, candidateId: string, emit: EventSink): string | null {
   const c = state.hiring.candidates.find((x) => x.id === candidateId);
   if (!c) return 'candidate_gone';
-  if (employees(state).length >= K().maxEmployees) return 'team_full';
+  if (employees(state).length >= maxEmployees(state)) return 'team_full';
   const desk = freeWorkstations(state)[0];
   if (!desk) return 'no_free_desk';
   if (state.company.money < c.salary) return 'not_enough_money';

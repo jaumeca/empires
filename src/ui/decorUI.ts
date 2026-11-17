@@ -6,6 +6,9 @@ import { iconUrl, type IconName } from '../render/icons';
 import type { OfficeScene, TapTarget } from '../render/officeScene';
 import { fmtMoney, t } from '../i18n/i18n';
 import { achievementForItem, isUnlocked } from '../sim/systems/story';
+import { DEFAULT_STYLE, FLOOR_STYLES, STYLE_PRICE, WALL_STYLES } from '../content/officeStyles';
+import { NEXT_SIZE } from '../content/officeSizes';
+import { FLOOR_FINISH, hexToCss, PALETTE_HEX, WALL_FINISH } from '../render/palette';
 import { clear, h } from './dom';
 
 /**
@@ -20,6 +23,8 @@ interface Host {
   save(): void;
   pause(): () => void; // returns a restore function
   refreshHud(): void;
+  /** Opens the "bigger studio" offer (AW.E.1). */
+  expand(): void;
 }
 
 type Placement = { mode: 'buy' | 'move'; defId: string; uid?: string; x: number; z: number; rot: Rot };
@@ -52,7 +57,9 @@ export class DecorUI {
   private placement: Placement | null = null;
   private pickDeskFor: string | null = null;
   private selected: string | null = null;
-  private category: ItemCategory = 'computer';
+  private category: ItemCategory | 'style' = 'computer';
+  /** Finish being tried in the office (not bought yet). */
+  private styleDraft: { wall: string; floor: string } | null = null;
   private restore: (() => void) | null = null;
 
   constructor(private root: HTMLElement, private scene: OfficeScene, private host: Host) {}
@@ -72,6 +79,9 @@ export class DecorUI {
 
   close(): void {
     if (!this.el) return;
+    // A finish that wasn't applied goes away with the preview.
+    this.styleDraft = null;
+    this.scene.previewRoomStyle(null);
     this.scene.setDecorMode(false);
     this.el.remove();
     this.el = null;
@@ -265,6 +275,7 @@ export class DecorUI {
       h('div.decor-top', null,
         h('div.pill', null, icon('coin'), h('span', null, t('decor.money', { money: s.company.money }))),
         fx.upkeep > 0 ? h('div.pill.small', null, t('decor.upkeep_total', { upkeep: fx.upkeep })) : null,
+        NEXT_SIZE[s.office.size ?? 'room'] ? h('button.big-btn.ghost', { id: 'decor-expand', onclick: () => { this.close(); this.host.expand(); } }, t('expand.button')) : null,
         h('button.big-btn.mint', { id: 'decor-done', onclick: () => this.close() }, t('decor.done')),
       ),
     );
@@ -313,8 +324,18 @@ export class DecorUI {
     const cats = CATEGORY_ORDER.filter((c) => ITEMS.some((d) => d.category === c));
     const desk = founderDesk(s.office);
     const installed = new Set([desk?.mounts?.computer, desk?.mounts?.chair]);
+    const tabs = h('div.decor-tabs', null,
+      h('button', { class: this.category === 'style' ? 'on' : '', dataset: { cat: 'style' }, onclick: () => { this.category = 'style'; this.render(); } }, t('decor.style_tab')),
+      ...cats.map((c) => h('button', { class: c === this.category ? 'on' : '', dataset: { cat: c }, onclick: () => { this.category = c; this.render(); } }, t(`cat.${c}`))),
+    );
+    const cozy = officeEffects(s.office).cozy;
+    const cozyHint = h(`div.hint.cozy${cozy ? '.on' : ''}`, null, t(cozy ? 'decor.cozy_on' : 'decor.cozy_off'));
+    if (this.category === 'style') {
+      el.append(h('div.decor-sheet.card', null, tabs, this.styleSheet(s), cozyHint));
+      return;
+    }
     el.append(h('div.decor-sheet.card', null,
-      h('div.decor-tabs', null, ...cats.map((c) => h('button', { class: c === this.category ? 'on' : '', dataset: { cat: c }, onclick: () => { this.category = c; this.render(); } }, t(`cat.${c}`)))),
+      tabs,
       h('div.decor-items', null, ...ITEMS.filter((d) => d.category === this.category).sort((a, b) => Number(isUnlocked(s, b.id)) - Number(isUnlocked(s, a.id))).map((d) => {
         const isInstalled = d.layer === 'mount' && installed.has(d.id);
         const earned = isUnlocked(s, d.id);
@@ -331,8 +352,40 @@ export class DecorUI {
           ),
         );
       })),
+      cozyHint,
       h('div.hint', null, t('decor.hint')),
     ));
+  }
+
+  /** Walls & floor (AW.C.3): pick a finish, see it in the office, pay only if you apply it. */
+  private styleSheet(s: GameState): HTMLElement {
+    const real = s.office.style ?? DEFAULT_STYLE;
+    const draft = this.styleDraft ?? { ...real };
+    const pick = (part: 'wall' | 'floor', id: string) => {
+      this.styleDraft = { ...draft, [part]: id };
+      this.scene.previewRoomStyle(this.styleDraft);
+      this.render();
+    };
+    const swatch = (part: 'wall' | 'floor', id: string) => {
+      const color = part === 'wall' ? WALL_FINISH[id]![0] : (FLOOR_FINISH[id]!.planks?.[0] ?? FLOOR_FINISH[id]!.tiles?.[0] ?? FLOOR_FINISH[id]!.carpet?.[0])!;
+      return h('button.finish', { class: draft[part] === id ? 'on' : '', dataset: { [part]: id }, onclick: () => pick(part, id) },
+        h('i', { style: { background: hexToCss(PALETTE_HEX[color] ?? 0) } }), t(`style.${part}.${id}`), real[part] === id ? h('span.cur', null, ' ✓') : null);
+    };
+    const cost = (draft.wall !== real.wall ? STYLE_PRICE.wall : 0) + (draft.floor !== real.floor ? STYLE_PRICE.floor : 0);
+    return h('div.style-sheet', null,
+      h('div.label', null, t('decor.walls')), h('div.finishes', null, ...WALL_STYLES.map((id) => swatch('wall', id))),
+      h('div.label', null, t('decor.floors')), h('div.finishes', null, ...FLOOR_STYLES.map((id) => swatch('floor', id))),
+      h('div.row.between', null,
+        h('span.hint', null, t('decor.style_hint')),
+        h('button.big-btn.mint.small', { id: 'style-apply', disabled: cost === 0 || s.company.money < cost, onclick: () => {
+          const r = this.host.dispatch({ type: 'set_office_style', wall: draft.wall, floor: draft.floor });
+          if (!r.ok) return this.host.toast(t(`error.${r.error}`), 'alert');
+          this.styleDraft = null;
+          this.scene.previewRoomStyle(null, { ...draft });
+          this.render();
+        } }, t('decor.style_apply', { cost })),
+      ),
+    );
   }
 }
 

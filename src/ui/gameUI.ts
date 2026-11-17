@@ -3,8 +3,12 @@ import type { SimEvent } from '../sim/core/events';
 import { PROJECT_LIMITS } from '../sim/commands';
 import { SIM_CONFIG } from '../sim/config';
 import { estimatePlan, estimateProgress, teamSpeedFactor } from '../sim/estimates';
-import { employees, freeWorkstations, hiringUnlocked } from '../sim/systems/team';
+import { employees, freeWorkstations, hiringUnlocked, maxEmployees } from '../sim/systems/team';
+import { NEXT_SIZE, OFFICE_SIZES } from '../content/officeSizes';
 import { ACHIEVEMENTS, memoriesOf } from '../sim/systems/story';
+import { biography } from '../sim/systems/biography';
+import { FEATURE_CFG, featureLock } from '../sim/systems/features';
+import { FEATURE_SLOTS, FEATURES, getFeature } from '../content/features';
 import type { Game } from '../sim/game';
 import type { Appearance, GameState, Memory, MemoryKind, PendingDecision, Project, ProjectSize, SkillId } from '../sim/model/state';
 import { progressToNext, SKILLS, specializations } from '../sim/systems/progression';
@@ -80,6 +84,7 @@ export class GameUI {
       dispatch: (cmd) => this.game.dispatch(cmd),
       toast: (text, ic) => this.toast(text, ic),
       save: () => this.services.save(),
+      expand: () => this.showExpand(),
       pause: () => {
         const before = this.game.clock.speed;
         this.game.clock.setSpeed(0);
@@ -217,7 +222,7 @@ export class GameUI {
         h('div.pill.speeds', null, speedBtn(0, icon('pause', 18)), speedBtn(1, '1x'), speedBtn(2, '2x'), speedBtn(4, '4x'), speedBtn(8, '8x')),
         h('button.icon-btn.badge-host', { 'aria-label': t('daily.button'), title: t('kbd.tip', { label: t('daily.button'), key: 'N' }), id: 'hud-news', onclick: () => this.showDaily() }, icon('news'), this.unreadNews() ? h('span.badge', null, String(Math.min(9, this.unreadNews()))) : null),
         h('button.icon-btn', { 'aria-label': t('decor.button'), title: t('kbd.tip', { label: t('decor.button'), key: 'D' }), id: 'hud-decor', onclick: () => this.decor.open() }, icon('decor')),
-        hiringUnlocked(s) || s.empirians.length > 1 ? h('button.icon-btn.badge-host', { 'aria-label': t('team.button'), title: t('kbd.tip', { label: t('team.button'), key: 'T' }), id: 'hud-team', onclick: () => this.showTeam() }, icon('team'), s.hiring.candidates.length && s.empirians.length - 1 < SIM_CONFIG.team.maxEmployees ? h('span.badge', null, String(s.hiring.candidates.length)) : null) : null,
+        hiringUnlocked(s) || s.empirians.length > 1 ? h('button.icon-btn.badge-host', { 'aria-label': t('team.button'), title: t('kbd.tip', { label: t('team.button'), key: 'T' }), id: 'hud-team', onclick: () => this.showTeam() }, icon('team'), s.hiring.candidates.length && s.empirians.length - 1 < maxEmployees(s) ? h('span.badge', null, String(s.hiring.candidates.length)) : null) : null,
         h('button.icon-btn', { 'aria-label': t('hud.menu'), title: t('kbd.tip', { label: t('hud.menu'), key: 'M' }), id: 'hud-menu', onclick: () => this.showMenu() }, icon('menu')),
       ),
     );
@@ -456,6 +461,34 @@ export class GameUI {
     this.scene.setFocus(true);
     const update = () => this.scene.setAppearance(founder.id, a);
 
+    const nameInput = h('input', { type: 'text', placeholder: t('creator.name'), id: 'founder-name', maxLength: 24, value: name, oninput: (e: Event) => (name = (e.target as HTMLInputElement).value) });
+    const companyInput = h('input', { type: 'text', placeholder: t('creator.company'), id: 'company-name', maxLength: 32, value: company, oninput: (e: Event) => (company = (e.target as HTMLInputElement).value) });
+
+    const card = h('div.card', null,
+      h('h2', null, t('creator.title')),
+      h('p.sub', null, t('creator.sub')),
+      h('div.section', null, nameInput),
+      h('div.section', null, companyInput),
+      ...this.appearanceControls(a, update),
+      h('div.actions', null,
+        h('button.big-btn.ghost', { onclick: () => { a.skin = rnd(8); a.hairStyle = rnd(8); a.hairColor = rnd(12); a.top = rnd(5); a.topColor = rnd(10); a.pantsColor = rnd(6); a.accessory = rnd(6); update(); this.showFounderCreation({ a, name, company }); } }, t('creator.random')),
+        h('button.big-btn.mint', { id: 'start-game', onclick: () => {
+          const finalName = name.trim() || 'Alex';
+          const res = this.game.dispatch({ type: 'setup_founder', name: finalName, companyName: company.trim() || `${finalName} Games`, appearance: a });
+          if (!res.ok) return this.toast(t(`error.${res.error}`));
+          this.scene.setFocus(false);
+          this.closeModal();
+          this.services.save();
+          this.renderHud(true);
+        } }, t('creator.start')),
+      ),
+    );
+    this.openModal('creator', card, { cls: 'creator' });
+  }
+
+
+  /** Appearance controls shared by the founder creator and the editor (AW.C). */
+  private appearanceControls(a: Appearance, update: () => void): HTMLElement[] {
     const swatches = (list: number[], key: keyof Appearance) => {
       const row = h('div.row');
       const draw = () => {
@@ -474,14 +507,7 @@ export class GameUI {
       draw();
       return h('div.stepper', null, h('button', { 'aria-label': t('common.prev'), onclick: () => mv(-1) }, '‹'), label, h('button', { 'aria-label': t('common.next'), dataset: { step: key }, onclick: () => mv(1) }, '›'));
     };
-    const nameInput = h('input', { type: 'text', placeholder: t('creator.name'), id: 'founder-name', maxLength: 24, value: name, oninput: (e: Event) => (name = (e.target as HTMLInputElement).value) });
-    const companyInput = h('input', { type: 'text', placeholder: t('creator.company'), id: 'company-name', maxLength: 32, value: company, oninput: (e: Event) => (company = (e.target as HTMLInputElement).value) });
-
-    const card = h('div.card', null,
-      h('h2', null, t('creator.title')),
-      h('p.sub', null, t('creator.sub')),
-      h('div.section', null, nameInput),
-      h('div.section', null, companyInput),
+    return [
       h('div.grid2', null,
         h('div.section', null, h('div.label', null, t('creator.hair')), stepper(names('hair', HAIR_STYLE_COUNT), 'hairStyle')),
         h('div.section', null, h('div.label', null, t('creator.top')), stepper(names('top', TOP_COUNT), 'top')),
@@ -493,20 +519,46 @@ export class GameUI {
         h('div.section', null, h('div.label', null, t('creator.pants')), swatches(PANTS_COLORS, 'pantsColor')),
         h('div.section', null, h('div.label', null, t('creator.accessory')), stepper(names('acc', ACCESSORY_COUNT), 'accessory')),
       ),
+    ];
+  }
+
+  /**
+   * Edit an Empirian's looks, name and nickname (AW.C). Only those change:
+   * skills, personality, experience, salary and memories are untouched.
+   */
+  showEditor(id: string): void {
+    const e = this.state.empirians.find((x) => x.id === id);
+    if (!e) return;
+    const original: Appearance = { ...e.appearance };
+    const a: Appearance = { ...e.appearance };
+    let name = e.name;
+    let nickname = e.nickname ?? '';
+    this.scene.setFocus(true, id);
+    const update = () => this.scene.setAppearance(id, a);
+    const finish = (save: boolean) => {
+      if (save) {
+        const r = this.game.dispatch({ type: 'edit_empirian', empirianId: id, name, nickname, appearance: a });
+        if (!r.ok) return this.toast(t(`error.${r.error}`), 'alert');
+        this.services.save();
+        this.toast(t('editor.saved', { name: name.trim() }), 'check');
+      } else this.scene.setAppearance(id, original);
+      this.scene.setFocus(false);
+      this.closeModal(true);
+    };
+    const card = h('div.card.editor', null,
+      h('h2', null, t('editor.title', { name: e.name })),
+      h('p.sub', null, t('editor.sub')),
+      h('div.grid2', null,
+        h('div.section', null, h('div.label', null, t('editor.name')), h('input', { type: 'text', id: 'editor-name', maxLength: 24, value: name, oninput: (ev: Event) => (name = (ev.target as HTMLInputElement).value) })),
+        h('div.section', null, h('div.label', null, t('editor.nickname')), h('input', { type: 'text', id: 'editor-nickname', maxLength: 16, placeholder: t('editor.nickname_ph'), value: nickname, oninput: (ev: Event) => (nickname = (ev.target as HTMLInputElement).value) })),
+      ),
+      ...this.appearanceControls(a, update),
       h('div.actions', null,
-        h('button.big-btn.ghost', { onclick: () => { a.skin = rnd(8); a.hairStyle = rnd(8); a.hairColor = rnd(12); a.top = rnd(5); a.topColor = rnd(10); a.pantsColor = rnd(6); a.accessory = rnd(6); update(); this.showFounderCreation({ a, name, company }); } }, t('creator.random')),
-        h('button.big-btn.mint', { id: 'start-game', onclick: () => {
-          const finalName = name.trim() || 'Alex';
-          const res = this.game.dispatch({ type: 'setup_founder', name: finalName, companyName: company.trim() || `${finalName} Games`, appearance: a });
-          if (!res.ok) return this.toast(t(`error.${res.error}`));
-          this.scene.setFocus(false);
-          this.closeModal();
-          this.services.save();
-          this.renderHud(true);
-        } }, t('creator.start')),
+        h('button.big-btn.ghost', { id: 'editor-cancel', onclick: () => finish(false) }, t('editor.cancel')),
+        h('button.big-btn.mint', { id: 'editor-save', onclick: () => finish(true) }, t('editor.save')),
       ),
     );
-    this.openModal('creator', card, { cls: 'creator' });
+    this.openModal('editor', card, { cls: 'creator', pause: true });
   }
 
   // ------------------------------------------------------------ new project
@@ -523,13 +575,17 @@ export class GameUI {
       budget: Math.min(1500, maxBudget),
       days: 42,
       price: 9.99,
+      features: [] as string[],
+      prototype: false,
     };
     const est = h('div.row');
     const budgetLbl = h('span');
     const daysLbl = h('span');
     const focusLbl = h('span');
     const refresh = () => {
-      const e = estimatePlan(founder, plan.size, plan.focus, plan.budget, plan.days, teamSpeedFactor(s, plan.focus));
+      // Features and a prototype add work (AW.D): the estimate includes them.
+      const extra = plan.features.reduce((a, id) => a + (getFeature(id)?.work ?? 0), 0) + (plan.prototype ? FEATURE_CFG.prototypeWork : 0);
+      const e = estimatePlan(founder, plan.size, plan.focus, plan.budget, plan.days, teamSpeedFactor(s, plan.focus) / (1 + extra));
       clear(est);
       const verdict = { too_short: 'bad', tight: 'warn', ok: 'good', generous: 'warn' }[e.verdict];
       est.append(
@@ -544,13 +600,47 @@ export class GameUI {
     const drawTopics = () => {
       clear(topicTiles);
       for (const topic of TOPICS) {
-        topicTiles.append(h('button.tile', { class: plan.topicId === topic.id ? 'on' : '', dataset: { topic: topic.id }, onclick: () => { plan.topicId = topic.id; drawTopics(); } },
+        topicTiles.append(h('button.tile', { class: plan.topicId === topic.id ? 'on' : '', dataset: { topic: topic.id }, onclick: () => { plan.topicId = topic.id; drawTopics(); drawFeatures(); } },
           h('div.t', null, t(`topic.${topic.id}.name`)),
           (() => { const m = topicMood(s, topic.id); return m === 'calm' ? null : h(`span.mood.${m}`, null, t(`mood.${m}`)); })(),
           h('div.d', null, t(`topic.${topic.id}.blurb`))));
       }
     };
     drawTopics();
+    // Features (AW.D.1): toggles with words, not numbers.
+    const featureBox = h('div.features');
+    const drawFeatures = () => {
+      clear(featureBox);
+      const slots = FEATURE_SLOTS[plan.size] ?? 2;
+      plan.features = plan.features.filter((id) => { const f = getFeature(id); return f && !featureLock(s, f, plan.size); }).slice(0, slots);
+      featureBox.append(h('label', null, t('np.features', { n: slots })));
+      const grid = h('div.feature-grid');
+      for (const f of FEATURES) {
+        const lock = featureLock(s, f, plan.size);
+        const on = plan.features.includes(f.id);
+        const fit = f.fit[plan.topicId] ?? 0;
+        const chips = [
+          t(f.work <= 0.2 ? 'fchip.work_low' : f.work <= 0.3 ? 'fchip.work_mid' : 'fchip.work_high'),
+          f.risk >= 0.3 ? t('fchip.risk_high') : f.risk >= 0.2 ? t('fchip.risk') : null,
+          f.appeal > 0 && fit >= 0.5 ? t('fchip.fit_good') : f.appeal > 0 && fit <= -0.3 ? t('fchip.fit_bad') : null,
+          f.reach >= 0.1 ? t('fchip.reach') : null,
+        ].filter(Boolean) as string[];
+        grid.append(h(`button.feature${on ? '.on' : ''}${lock ? '.locked' : ''}`, { dataset: { feature: f.id }, disabled: !!lock || (!on && plan.features.length >= slots), title: lock ? t(`flock.${lock}`) : t(`feature.${f.id}.desc`), onclick: () => {
+          plan.features = on ? plan.features.filter((x) => x !== f.id) : [...plan.features, f.id];
+          drawFeatures();
+          refresh();
+        } },
+          h('div.t', null, t(`feature.${f.id}`)),
+          lock ? h('div.d', null, t(`flock.${lock}`)) : h('div.chips', null, ...chips.map((c) => h(`span.chip${c === t('fchip.fit_bad') || c === t('fchip.risk_high') ? '.bad' : c === t('fchip.fit_good') || c === t('fchip.reach') ? '.good' : ''}`, null, c))),
+        ));
+      }
+      featureBox.append(grid, h('div.hint', null, t('np.features_hint')),
+        h('label.check', null,
+          h('input', { type: 'checkbox', id: 'np-prototype', checked: plan.prototype, onchange: (e: Event) => { plan.prototype = (e.target as HTMLInputElement).checked; refresh(); } }),
+          ` ${t('np.prototype', { cost: FEATURE_CFG.prototypeCost })}`),
+        h('div.hint', null, t('np.prototype_hint')));
+    };
+    drawFeatures();
     const seg = (options: [string, string][], get: () => string, set: (v: string) => void) => {
       const el = h('div.seg');
       const draw = () => {
@@ -570,7 +660,7 @@ export class GameUI {
           h('div.section', null, h('label', null, t('np.name')), nameInput),
           h('div.section', null, h('label', null, t('np.topic')), topicTiles),
           h('div.grid2', null,
-            h('div.section', null, h('label', null, t('np.size')), seg([['small', t('np.size.small')], ['medium', t('np.size.medium')]], () => plan.size, (v) => (plan.size = v as ProjectSize))),
+            h('div.section', null, h('label', null, t('np.size')), seg([['small', t('np.size.small')], ['medium', t('np.size.medium')]], () => plan.size, (v) => { plan.size = v as ProjectSize; drawFeatures(); })),
             h('div.section', null, h('label', null, t('np.price')), seg(PROJECT_LIMITS.prices.map((p) => [String(p), fmtPrice(p)]), () => String(plan.price), (v) => (plan.price = Number(v)))),
           ),
         ),
@@ -585,6 +675,7 @@ export class GameUI {
             h('input', { type: 'range', min: PROJECT_LIMITS.minDays, max: PROJECT_LIMITS.maxDays, step: 7, value: plan.days, 'aria-label': t('np.deadline'), oninput: (e: Event) => { plan.days = Number((e.target as HTMLInputElement).value); refresh(); } }),
             h('div.hint', null, daysLbl)),
           est,
+          h('div.section', null, featureBox),
         ),
       ),
       h('div.actions.sticky', null,
@@ -772,7 +863,7 @@ export class GameUI {
       case 'first_hire': case 'hire': return 'team';
       case 'first_contract': case 'money': return 'coin';
       case 'skill_master': return 'idea';
-      case 'first_decor': return 'decor';
+      case 'first_decor': case 'office_moved': return 'decor';
       default: return 'alert';
     }
   }
@@ -812,8 +903,10 @@ export class GameUI {
   }
 
   // -------------------------------------------------------------- empirian
+  /** Character sheet (AW.C): beside the office on desktop, made of real facts. */
   private showEmpirian(id: string): void {
-    const e = this.state.empirians.find((x) => x.id === id);
+    const s = this.state;
+    const e = s.empirians.find((x) => x.id === id);
     if (!e) return;
     this.tutorial.mark('meet');
     const skillIcon: Record<SkillId, IconName> = { tech: 'code', design: 'design', creativity: 'idea', management: 'calendar' };
@@ -825,27 +918,47 @@ export class GameUI {
         h('div.bar.skill-bar', null, h('i', { style: { width: `${Math.round(progressToNext(e, k) * 100)}%` } })),
       );
     const specs = specializations(e);
-    const card = h('div.card.narrow', null, this.closeBtn(),
-      h('div.row', { style: { flexWrap: 'nowrap' } }, this.portrait(id), h('div', null, h('h2', null, e.name), h('p.sub', null, t(`emp.activity.${e.activity}`)))),
-      h('div.row', null,
-        h(`span.chip.${e.energy < 30 ? 'bad' : 'good'}`, null, icon('sweat', 16), t('emp.energy', { n: e.energy })),
-        h('span.chip', null, icon('heart', 16), t('emp.morale', { n: e.morale })),
+    const p = getActiveProject(s);
+    const working = ['coding', 'designing', 'testing', 'thinking'].includes(e.activity);
+    const task = working && p ? t('emp.task.project', { project: projectName(p) }) : working && s.contracts.active ? t('emp.task.contract', { client: s.contracts.active.clientId }) : t(`emp.activity.${e.activity}`);
+    const since = e.id === s.founderId ? 1 : e.hiredDay ?? 1;
+    const mems = memoriesOf(s, { empirianId: e.id }).slice(-5).reverse();
+    const big = this.portraitOf(e.appearance, e.energy < 30 ? 'tired' : e.morale >= 60 ? 'happy' : 'neutral');
+    big.classList.add('big');
+    const card = h('div.card.narrow.sheet', null, this.closeBtn(),
+      h('div.row.sheet-head', { style: { flexWrap: 'nowrap' } }, big,
+        h('div', null,
+          h('h2', null, e.name, e.nickname ? h('span.nick', null, ` «${e.nickname}»`) : null),
+          h('div.row', null,
+            e.trait ? h('span.chip.trait', { title: t(`trait.${e.trait}.desc`) }, t(`trait.${e.trait}`)) : h('span.chip.trait', null, t('team.founder')),
+            h(`span.chip.${e.energy < 30 ? 'bad' : 'good'}`, null, icon('sweat', 16), t('emp.energy', { n: e.energy })),
+            h('span.chip', null, icon('heart', 16), t('emp.morale', { n: e.morale })),
+          ),
+        ),
       ),
+      h('p.hint.task', null, h('b', null, `${t('emp.task')}: `), task),
+      h('p.hint', null, t('emp.since', { day: since, days: Math.max(0, s.day - since) })),
+      h('div.bio', null, ...biography(s, e).map((b) => h('p', null, tr(b)))),
+      e.trait ? h('p.hint', null, t(`trait.${e.trait}.desc`)) : null,
       h('div.section', null, h('div.label', null, t('emp.skills')), ...SKILLS.map(skillRow), h('div.hint', null, t('emp.learning_hint'))),
       h('div.section', null, h('div.label', null, t('emp.specialties')),
         specs.length ? h('div.row', null, ...specs.map((sp) => h('span.chip.good', null, icon('star', 16), t('emp.specialty', { topic: sp.topicId, bonus: sp.bonus })))) : h('div.hint', null, t('emp.no_specialty'))),
-      e.trait ? h('div.section', null, h('div.label', null, t('team.personality')),
-        h('div.row', null, h('span.chip.trait', null, t(`trait.${e.trait}`)), h('span.hint', null, t(`trait.${e.trait}.desc`)))) : null,
-      e.salary !== undefined ? h('div.row.between', null,
-        h('span.chip', null, icon('coin', 16), t('team.salary_week', { salary: e.salary })),
-        h('button.big-btn.coral.small', { id: 'fire-btn', onclick: () => {
-          if (!confirm(t('team.fire_confirm', { name: e.name, severance: e.salary! * SIM_CONFIG.team.severanceWeeks }))) return;
-          const r = this.game.dispatch({ type: 'fire', empirianId: e.id });
-          if (!r.ok) return this.toast(t(`error.${r.error}`), 'alert');
-          this.closeModal(true);
-        } }, t('team.fire'))) : null,
+      h('div.section', null, h('div.label', null, t('emp.story')),
+        mems.length ? h('ul.memories', null, ...mems.map((m) => this.memoryRow(m))) : h('div.hint', null, t('emp.no_memories'))),
+      h('div.row.between', null,
+        e.salary !== undefined ? h('span.chip', null, icon('coin', 16), t('team.salary_week', { salary: e.salary })) : h('span'),
+        h('div.row', null,
+          h('button.big-btn.ghost.small', { id: 'edit-empirian', onclick: () => this.showEditor(e.id) }, t('emp.edit')),
+          e.salary !== undefined ? h('button.big-btn.coral.small', { id: 'fire-btn', onclick: () => {
+            if (!confirm(t('team.fire_confirm', { name: e.name, severance: e.salary! * SIM_CONFIG.team.severanceWeeks }))) return;
+            const r = this.game.dispatch({ type: 'fire', empirianId: e.id });
+            if (!r.ok) return this.toast(t(`error.${r.error}`), 'alert');
+            this.closeModal(true);
+          } }, t('team.fire')) : null,
+        ),
+      ),
     );
-    this.openModal('empirian', card, { pause: false });
+    this.openModal('empirian', card, { pause: false, cls: 'desk-side' });
   }
 
   // ---------------------------------------------------------------- team (GT.1)
@@ -854,7 +967,7 @@ export class GameUI {
     this.tutorial.mark('hiring');
     const free = freeWorkstations(s).length;
     const staff = employees(s);
-    const full = staff.length >= SIM_CONFIG.team.maxEmployees;
+    const full = staff.length >= maxEmployees(s);
     const skillMini = (sk: Record<SkillId, number>) => h('div.mini-skills', null,
       ...(['tech', 'design', 'creativity', 'management'] as SkillId[]).map((k) => h('span.mini', { title: t(`skill.${k}`) }, icon(({ tech: 'code', design: 'design', creativity: 'idea', management: 'calendar' } as Record<SkillId, IconName>)[k], 14), String(Math.floor(sk[k])))));
     const payroll = staff.reduce((a, e) => a + (e.salary ?? 0), 0);
@@ -891,6 +1004,8 @@ export class GameUI {
         }))),
       !full && free === 0 ? h('div.row.between.desk-hint', null, h('span.hint', null, t('team.need_desk')),
         h('button.big-btn.ghost.small', { id: 'team-buy-desk', onclick: () => { this.closeModal(); this.decor.open(); } }, icon('decor', 16), ` ${t('team.go_decor')}`)) : null,
+      NEXT_SIZE[s.office.size ?? 'room'] && (full || free === 0) ? h('div.row.between.desk-hint', null, h('span.hint', null, t('team.expand_hint')),
+        h('button.big-btn.ghost.small', { id: 'team-expand', onclick: () => this.showExpand() }, t('expand.button'))) : null,
     );
     this.openModal('team', card, { cls: 'desk-side' });
   }
@@ -1011,6 +1126,36 @@ export class GameUI {
       this.debug ? h('p.hint.version', null, t('menu.debug_sandbox')) : null,
     );
     this.openModal('menu', card);
+  }
+
+  /** A bigger studio (AW.E.1): what it gives, what it costs. */
+  showExpand(): void {
+    const s = this.state;
+    const next = NEXT_SIZE[s.office.size ?? 'room'];
+    if (!next) return;
+    const spec = OFFICE_SIZES[next];
+    const cur = OFFICE_SIZES[s.office.size ?? 'room'];
+    const card = h('div.card.narrow.expand', null, this.closeBtn(),
+      h('h2', null, t(`expand.title.${next}`)),
+      h('p.sub', null, t(`expand.sub.${next}`)),
+      h('ul.expand-list', null,
+        h('li', null, t('expand.space', { w: spec.w, d: spec.d, cw: cur.w, cd: cur.d })),
+        h('li', null, t('expand.people', { n: spec.maxEmployees + 1 })),
+        h('li', null, t('expand.keep')),
+        h('li', null, t('expand.rent', { rent: spec.rent })),
+      ),
+      h('div.actions', null,
+        h('button.big-btn.ghost', { onclick: () => this.closeModal(true) }, t('expand.later')),
+        h('button.big-btn.mint', { id: 'expand-confirm', disabled: s.company.money < spec.price, title: s.company.money < spec.price ? t('error.not_enough_money') : '', onclick: () => {
+          const r = this.game.dispatch({ type: 'expand_office' });
+          if (!r.ok) return this.toast(t(`error.${r.error}`), 'alert');
+          this.closeModal(true);
+          this.services.save();
+          this.toast(t('expand.done'), 'star');
+        } }, t('expand.confirm', { price: spec.price })),
+      ),
+    );
+    this.openModal('expand', card);
   }
 
   /** Help (AW.A): short guide by topic, keyboard shortcuts on desktop, restart the tutorial. */

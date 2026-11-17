@@ -105,6 +105,10 @@ class EmpirianActor {
   nextWander = 0;
   /** Cosmetic coffee break triggered by the sim's morning coffee (world time). */
   coffeeUntil = 0;
+  /** Position before the editor brought it to the front. */
+  savedPos?: [number, number];
+  /** Last appearance applied (to notice edits). */
+  appearanceKey = '';
   /** A break stays visible for a few world seconds (a 1-hour break is too short to walk at 1x). */
   breakVisual: { kind: 'drink' | 'rest' | 'chat'; until: number } | null = null;
   /** Curious: looking at a newly placed item until this world time. */
@@ -165,6 +169,8 @@ export class OfficeScene {
   readonly camera: OrthographicCamera;
   readonly bubbles: BubbleSystem;
   private lastProjectPace: string | null = null;
+  private sun: DirectionalLight | null = null;
+  private focusId: string | null = null;
   onTap: (t: TapTarget) => void = () => {};
   /** Mouse hover over the floor (decoration mode only): the cell under the cursor. */
   onHover: (cell: [number, number] | null) => void = () => {};
@@ -217,6 +223,7 @@ export class OfficeScene {
     // Lighting: warm key light from the viewer side, soft sky fill, lamp + window glow.
     this.scene.add(new HemisphereLight(0xfff3e2, 0xb9a6e8, 1.9));
     const sun = new DirectionalLight(0xffe2bd, 1.9);
+    this.sun = sun;
     sun.position.set(7.5, 9, 6.5);
     sun.target.position.set(2.6, 0, 2.2);
     sun.castShadow = true;
@@ -277,12 +284,55 @@ export class OfficeScene {
     return m;
   }
 
-  private buildRoom(): void {
-    const shell = new Mesh(meshVoxels(buildRoomShell(), { jitter: 0.035, skipBottom: true }), VOXEL_MATERIAL);
+  private shell: Mesh | null = null;
+  private shellKey = '';
+  private shellDims = '';
+  /** Decoration preview of a finish not bought yet (null = show the real one). */
+  private stylePreview: { wall: string; floor: string } | null = null;
+  private realStyle = { wall: 'cream', floor: 'oak' };
+
+  /** Rebuilds the room shell when its finish changes (AW.C.3). */
+  private applyRoomStyle(style: { wall: string; floor: string }): void {
+    const key = `${style.wall}|${style.floor}`;
+    const dimsKey = `${this.officeW}x${this.officeD}`;
+    if (dimsKey !== this.shellDims) { this.shellDims = dimsKey; this.shellKey = ''; }
+    if (key === this.shellKey && this.shell) return;
+    this.shellKey = key;
+    if (this.shell) {
+      this.scene.remove(this.shell);
+      this.pickables = this.pickables.filter((p) => p !== this.shell);
+      this.shell.geometry.dispose();
+    }
+    const shell = new Mesh(meshVoxels(buildRoomShell(style, { w: this.officeW * CELL, d: this.officeD * CELL }), { jitter: 0.035, skipBottom: true }), VOXEL_MATERIAL);
     shell.receiveShadow = true;
     shell.userData.kind = 'floor';
     this.scene.add(shell);
     this.pickables.push(shell);
+    this.shell = shell;
+  }
+
+  /** Sunlight and shadows cover the whole room, whatever its size. */
+  private fitLight(): void {
+    const sun = this.sun;
+    if (!sun) return;
+    const c = fw(this.officeW * CELL / 2, 0, this.officeD * CELL / 2);
+    const half = Math.max(5, Math.max(this.officeW, this.officeD) * CELL * VOXEL * 0.6);
+    sun.target.position.set(c.x, 0, c.z);
+    sun.position.set(c.x + 4.9, 9, c.z + 4.3);
+    sun.shadow.camera.left = -half; sun.shadow.camera.right = half;
+    sun.shadow.camera.top = half; sun.shadow.camera.bottom = -half;
+    sun.shadow.camera.updateProjectionMatrix();
+  }
+
+  /** Decoration mode: try a finish before paying for it (null restores the real one). */
+  previewRoomStyle(style: { wall: string; floor: string } | null, applied?: { wall: string; floor: string }): void {
+    this.stylePreview = style;
+    if (applied) this.realStyle = applied; // just bought: no flash of the old finish
+    this.applyRoomStyle(style ?? this.realStyle);
+  }
+
+  private buildRoom(): void {
+    this.applyRoomStyle(this.realStyle);
     // Wall fixtures (not part of the catalog yet).
     this.place(buildPoster(), 2, 18, 0, 'poster', 0.01);
     this.place(buildCorkBoard(), 0, 16, 5, 'news', 0.01);
@@ -342,11 +392,18 @@ export class OfficeScene {
 
   /** Rebuilds the furniture that changed (cheap when nothing did). */
   syncOffice(office: Office): void {
-    const key = JSON.stringify(office.items);
+    const key = `${office.w}x${office.d}|${JSON.stringify(office.items)}`;
     if (key === this.officeKey) return;
     this.officeKey = key;
-    this.officeW = office.w;
-    this.officeD = office.d;
+    if (office.w !== this.officeW || office.d !== this.officeD) {
+      // A bigger studio (AW.E.1): new walls and floor, grid and framing; furniture keeps its place.
+      this.officeW = office.w;
+      this.officeD = office.d;
+      if (this.decorGrid) { this.scene.remove(this.decorGrid); this.decorGrid.geometry.dispose(); this.decorGrid = null; if (this.decorMode) this.setDecorMode(true); }
+      this.applyRoomStyle(this.stylePreview ?? this.realStyle);
+      this.fitLight();
+      this.resize();
+    }
     const desk = founderDesk(office);
     const seen = new Set<string>();
     for (const item of office.items) {
@@ -521,8 +578,37 @@ export class OfficeScene {
   }
 
   /** Founder creation: zoom on the Empirian. */
-  setFocus(on: boolean): void {
+  /** Editor spot: the free floor cell closest to the camera (nothing in front of the character). */
+  private focusSpot(): Poi {
+    let best: [number, number] = [30, 31];
+    let score = -1;
+    for (let z = 1; z < this.officeD; z++) for (let x = 1; x < this.officeW; x++) {
+      if (this.blocked[x + z * this.officeW]) continue;
+      // Front-most, but not glued to the edge, and with free cells in front (towards the camera).
+      const front = (x + 1 < this.officeW ? this.blocked[x + 1 + z * this.officeW] ?? 0 : 0) + (z + 1 < this.officeD ? this.blocked[x + (z + 1) * this.officeW] ?? 0 : 0);
+      const sc = x + z - front * 3 - (x === this.officeW - 1 || z === this.officeD - 1 ? 1 : 0);
+      if (sc > score) { score = sc; best = [x * CELL + CELL / 2, z * CELL + CELL / 2]; }
+    }
+    return { x: best[0], z: best[1], heading: Math.PI * 0.25, pose: 'stand' };
+  }
+
+  /** Founder creation / appearance editor: one Empirian alone at the front of the room (others hidden). */
+  setFocus(on: boolean, id?: string): void {
     this.focus = on;
+    this.focusId = on ? id ?? null : null;
+    for (const [aid, a] of this.actors) {
+      if (on && this.focusId && aid !== this.focusId) a.view.root.visible = false;
+      else a.view.root.visible = true;
+      if (on && (!this.focusId || aid === this.focusId)) {
+        a.savedPos ??= [...a.pos] as [number, number];
+        // Settle into a calm standing pose even while the world is paused.
+        a.view.pose = 'stand';
+        a.view.animate(0, 1, 'idle', 100, false, 1);
+      } else if (!on && a.savedPos) {
+        a.pos = a.savedPos;
+        a.savedPos = undefined;
+      }
+    }
     this.resize();
   }
 
@@ -531,10 +617,14 @@ export class OfficeScene {
     const h = this.container.clientHeight || window.innerHeight;
     this.renderer.setSize(w, h, false);
     const aspect = w / h;
-    const target = this.shot ? fw(this.shot.x, this.shot.y, this.shot.z) : this.focus ? fw(30, 11, 31) : fw(28, 16, 24);
+    const fs = this.focusId ? this.focusSpot() : null;
+    // Room size relative to the starting room (10×8 cells): bigger studios are framed wider.
+    const grow = Math.max(this.officeW / 10, this.officeD / 8);
+    const roomCenter = fw(this.officeW * CELL / 2 - 2, 16, this.officeD * CELL / 2);
+    const target = this.shot ? fw(this.shot.x, this.shot.y, this.shot.z) : fs ? fw(fs.x, 11, fs.z) : this.focus ? fw(30, 11, 31) : roomCenter;
     // Fit the diorama: by height in landscape, by width in portrait.
-    let viewH = this.shot ? this.shot.viewH : this.focus ? 2.2 : 6.1;
-    if (!this.focus && !this.shot && aspect < 1.35) viewH = Math.max(viewH, 7.7 / aspect);
+    let viewH = this.shot ? this.shot.viewH : this.focus ? 2.2 : 6.1 * grow;
+    if (!this.focus && !this.shot && aspect < 1.35) viewH = Math.max(viewH, (7.7 * grow) / aspect);
     viewH /= this.zoomLevel;
     const viewW = viewH * aspect;
     this.camera.left = -viewW / 2;
@@ -593,9 +683,18 @@ export class OfficeScene {
   /** Reads the latest simulation state. Cheap: call whenever state changes. */
   sync(state: GameState): void {
     this.lastState = state;
+    this.realStyle = state.office.style ?? { wall: 'cream', floor: 'oak' };
+    if (!this.stylePreview) this.applyRoomStyle(this.realStyle);
     this.lastProjectPace = state.projects.find((p) => p.id === state.activeProjectId)?.pace ?? null;
     this.syncOffice(state.office);
-    for (const e of state.empirians) this.ensureEmpirian(e.id, e.appearance);
+    for (const e of state.empirians) {
+      this.ensureEmpirian(e.id, e.appearance);
+      // Edited looks (AW.C): rebuild only that Empirian's model.
+      const key = JSON.stringify(e.appearance);
+      const actor = this.actors.get(e.id)!;
+      if (actor.appearanceKey && actor.appearanceKey !== key) this.setAppearance(e.id, e.appearance);
+      actor.appearanceKey = key;
+    }
     // Employees who left the studio (GT.1).
     for (const id of [...this.actors.keys()]) {
       if (id.startsWith('stress-') || state.empirians.some((e) => e.id === id)) continue;
@@ -718,6 +817,11 @@ export class OfficeScene {
           if (e.kind === 'chat') actor.view.flash('happy', 2, now);
           break;
         }
+        case 'office_expanded':
+          // A new, bigger studio: everyone celebrates.
+          this.burstConfetti(actor);
+          for (const a of this.actors.values()) { a.view.flash('joyful', 3, now); this.bubbles.spawn(a.view.head, off, 'star', now, { cooldown: 0.2, life: 2.6 }); }
+          break;
         case 'achievement':
           for (const a of this.actors.values()) { a.view.flash('joyful', 2.5, now); this.bubbles.spawn(a.view.head, off, 'star', now, { cooldown: 0.2, life: 2.4 }); }
           break;
@@ -885,11 +989,15 @@ export class OfficeScene {
       const energy = e?.energy ?? 100;
       const center = this.pois.center ?? FIXED_POIS.center!;
       const go = (name: string) => actor.goTo(name, this.pois, this.blocked, this.officeW, this.officeD);
-      if (this.focus) {
-        actor.pos = [center.x, center.z];
+      if (this.focus && (!this.focusId || id === this.focusId)) {
+        const spot = this.focusId ? this.focusSpot() : center;
+        actor.pos = [spot.x, spot.z];
         actor.path = [];
         actor.targetName = 'center';
-        actor.target = { ...center, pose: 'stand' };
+        actor.target = { ...spot, heading: Math.PI * 0.25, pose: 'stand' };
+        actor.view.heading = Math.PI * 0.25;
+        // Paused world: show the preview facing the camera at once.
+        if (dt === 0) actor.view.snap = true;
       } else if (actor.targetName.startsWith('pin:')) {
         // gallery/debug pin: stay
       } else if (t < actor.coffeeUntil && activity !== 'raising_hand' && activity !== 'celebrating') {

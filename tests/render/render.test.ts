@@ -99,4 +99,12 @@ describe('room', () => {
     for (const [x, z] of [[6, 4], [7, 4], [8, 4], [6, 5], [8, 5], [6, 6], [7, 6], [8, 6]] as const) blocked[x + z * w] = 1;
     expect(findPath([3, 3], [7 * 6 + 3, 5 * 6 + 3], blocked, w, d)).toEqual([]);
   });
+  it('appearance limits used by the simulation match the render catalogs', async () => {
+    const pal = await import('../../src/render/palette');
+    const { APPEARANCE_LIMITS } = await import('../../src/content/appearance');
+    expect(APPEARANCE_LIMITS).toEqual({
+      skin: pal.SKIN_TONES.length, hairStyle: pal.HAIR_STYLE_COUNT, hairColor: pal.HAIR_COLORS.length, top: pal.TOP_COUNT,
+      topColor: pal.CLOTH_COLORS.length, pantsColor: pal.PANTS_COLORS.length, accessory: pal.ACCESSORY_COUNT,
+    });
+  });
 });

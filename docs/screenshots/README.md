@@ -43,6 +43,11 @@ Capturas generadas automáticamente con `npm run gallery` (Chromium sin pantalla
 | 35 | [g34-tutorial.jpg](g34-tutorial.jpg) | **Tutorial** (AW.A): tarjeta guía que no bloquea y flecha sobre el fundador. |
 | 36 | [g35-help.jpg](g35-help.jpg) | **Ayuda**: lo esencial por temas, atajos y «Repetir el tutorial». |
 | 37 | [g36-living-office.jpg](g36-living-office.jpg) | **Oficina viva** (AW.B): dos Empirians charlan cara a cara en su pausa (en pausa, todo queda congelado). |
+| 38 | [g37-character-sheet.jpg](g37-character-sheet.jpg) | **Ficha del Empirian** (AW.C): al lado de la oficina, con biografía hecha de hechos reales, tarea, antigüedad e historia. |
+| 39 | [g38-editor.jpg](g38-editor.jpg) | **Editor**: nombre, apodo y aspecto; el personaje se ve de frente y solo. |
+| 40 | [g39-walls-floor.jpg](g39-walls-floor.jpg) | **Paredes y suelo**: se prueban en la oficina antes de pagar. |
+| 41 | [g40-bigger-studio.jpg](g40-bigger-studio.jpg) | **Estudio más grande** (AW.E.1): 14×10 casillas, segunda ventana, todo en su sitio. |
+| 42 | [g41-features.jpg](g41-features.jpg) | **Funcionalidades y prototipo** (AW.D): explicadas con palabras, con bloqueos y huecos por tamaño. |
 
 ## Qué decidir en la revisión (F1.12)
 

@@ -74,6 +74,7 @@ export function t(key: string, params: Record<string, string | number> = {}): st
       case 'client': return t(`client.${v}`);
       case 'ckind': return t(`ckind.${v}`);
       case 'trait': return t(`trait.${v}`);
+      case 'features': return String(v).split(',').filter(Boolean).map((f) => t(`feature.${f}`)).join(', ');
       default: return String(v);
     }
   });

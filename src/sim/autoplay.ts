@@ -50,6 +50,7 @@ export interface AutoplayResult {
 const MOMENT_DEFAULTS: Record<string, string> = {
   exhausted: 'rest', running_late: 'carry_on', polish_plan: 'balanced',
   streamer_preview: 'decline', rival_similar: 'differentiate', critical_bug: 'patch_later', unexpected_idea: 'save',
+  feature_trouble: 'push', prototype_result: 'fix',
 };
 
 /** Picks the autoplay answer for any pending decision. */

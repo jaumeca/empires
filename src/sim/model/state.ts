@@ -40,6 +40,8 @@ export type SkillId = 'tech' | 'design' | 'creativity' | 'management';
 export interface Empirian {
   id: string;
   name: string;
+  /** Optional nickname chosen by the player (AW.C). */
+  nickname?: string;
   appearance: Appearance;
   /** Current levels (1-10, fractional). Derived from baseSkills + xp (systems/progression.ts). */
   skills: Record<SkillId, number>;
@@ -85,7 +87,7 @@ export interface Candidate {
 /** Studio memories (ML.2): meaningful moments, derived from real facts. */
 export type MemoryKind =
   | 'founded' | 'first_release' | 'first_hit' | 'first_flop' | 'hit' | 'record' | 'comeback'
-  | 'first_hire' | 'hire' | 'farewell' | 'first_contract' | 'skill_master' | 'money' | 'decision' | 'first_decor' | 'achievement';
+  | 'first_hire' | 'hire' | 'farewell' | 'first_contract' | 'skill_master' | 'money' | 'decision' | 'first_decor' | 'achievement' | 'office_moved';
 
 export interface Memory {
   id: string;
@@ -138,7 +140,7 @@ export interface DecisionOption {
 
 export interface PendingDecision {
   id: string;
-  kind: 'big_idea' | 'deadline' | 'exhausted' | 'running_late' | 'polish_plan' | 'streamer_preview' | 'rival_similar' | 'critical_bug' | 'unexpected_idea';
+  kind: 'big_idea' | 'deadline' | 'exhausted' | 'running_late' | 'polish_plan' | 'feature_trouble' | 'prototype_result' | 'streamer_preview' | 'rival_similar' | 'critical_bug' | 'unexpected_idea';
   speakerId: string;
   text: TextRef;
   options: DecisionOption[];
@@ -203,6 +205,16 @@ export interface Project {
   /** Fraction of polish-phase work devoted to testing/fixing (0-1). */
   testFocus: number;
   decisionsTaken: string[];
+  /** Chosen features (AW.D.1) and what happened to their hidden risks. */
+  features?: string[];
+  featureTrouble?: string[];
+  featureResolved?: string[];
+  featureDropped?: string[];
+  featureIgnored?: string[];
+  /** Prototype (AW.D.2): planned, finished, and whether it validated the idea. */
+  prototype?: boolean;
+  prototypeDone?: boolean;
+  prototypeValidated?: boolean;
   bigIdeaOffered: boolean;
   /** Contextual moments already offered in this project (systems/moments.ts). */
   momentsOffered?: string[];
@@ -321,6 +333,10 @@ export interface Office {
   w: number;
   d: number;
   items: PlacedItem[];
+  /** Wall and floor finishes (AW.C.3). Missing = the original cream walls and oak floor. */
+  style?: { wall: string; floor: string };
+  /** Office size (AW.E.1). Missing = the starting room. */
+  size?: 'room' | 'studio';
 }
 
 export interface GameState {

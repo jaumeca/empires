@@ -6,7 +6,11 @@ import { canPlace, getItemDef, SELL_REFUND } from './systems/office';
 import { useSavedIdeas } from './systems/events';
 import { fire, hire } from './systems/team';
 import { tutorialCommand } from './systems/tutorial';
-import { isUnlocked, rememberFounding } from './systems/story';
+import { setupFeatures } from './systems/features';
+import { cleanName, sanitizeAppearance } from '../content/appearance';
+import { DEFAULT_STYLE, FLOOR_STYLES, STYLE_PRICE, WALL_STYLES } from '../content/officeStyles';
+import { isUnlocked, remember, rememberFounding } from './systems/story';
+import { NEXT_SIZE, OFFICE_SIZES } from '../content/officeSizes';
 import { acceptContract, cancelContract } from './systems/contracts';
 import { getActiveProject, getFounder } from './state';
 import { getTopic } from '../content/topics';
@@ -21,6 +25,9 @@ export type Command =
       type: 'start_project';
       name: string;
       topicId: string;
+      /** AW.D: chosen features and whether to prototype first. */
+      features?: string[];
+      prototype?: boolean;
       size: ProjectSize;
       focus: number;
       budget: number;
@@ -39,7 +46,10 @@ export type Command =
   | { type: 'cancel_contract' }
   | { type: 'hire'; candidateId: string }
   | { type: 'fire'; empirianId: string }
-  | { type: 'tutorial'; action: 'mark' | 'skip' | 'restart' | 'finish'; step?: string };
+  | { type: 'tutorial'; action: 'mark' | 'skip' | 'restart' | 'finish'; step?: string }
+  | { type: 'edit_empirian'; empirianId: string; name?: string; nickname?: string; appearance?: Appearance }
+  | { type: 'set_office_style'; wall?: string; floor?: string }
+  | { type: 'expand_office' };
 
 /** `error` is a stable code; the UI translates it as `error.<code>`. */
 export type CommandResult = { ok: true } | { ok: false; error: string };
@@ -56,11 +66,11 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
   switch (cmd.type) {
     case 'setup_founder': {
       const f = getFounder(state);
-      const name = cmd.name.trim().slice(0, 24);
+      const name = cleanName(cmd.name, 24);
       if (!name) return fail('name_required');
       f.name = name;
-      f.appearance = { ...cmd.appearance };
-      state.company.name = cmd.companyName.trim().slice(0, 32) || `${name} Studio`;
+      f.appearance = sanitizeAppearance(cmd.appearance);
+      state.company.name = cleanName(cmd.companyName, 32) || `${name} Studio`;
       state.setupComplete = true;
       rememberFounding(state);
       return { ok: true };
@@ -105,16 +115,22 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
         decisionsTaken: [],
         bigIdeaOffered: false,
       };
+      // Features and prototype (AW.D): validated before anything changes.
+      if (cmd.features?.length || cmd.prototype) {
+        const err = setupFeatures(state, p, cmd.features ?? [], !!cmd.prototype, '');
+        if (err) return fail(err);
+      }
       state.projects.push(p);
       state.activeProjectId = p.id;
       useSavedIdeas(state, p);
-      record(state, {
+      const startedId = record(state, {
         kind: 'project_started',
         text: { key: 'ledger.project_started', params: { project: p.name, topic: p.topicId, size: p.size, budget: cmd.budget, days: cmd.days } },
         causes: [],
         tone: 0,
         projectId: p.id,
       });
+      for (const m of p.bugRateMods) if (!m.causeId) m.causeId = startedId;
       emit({ type: 'project_started', projectId: p.id, severity: 'important' });
       return { ok: true };
     }
@@ -235,6 +251,54 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       return err ? fail(err) : { ok: true };
     }
 
+    case 'expand_office': {
+      // A bigger studio (AW.E.1): the grid grows towards the front; nothing moves.
+      const next = NEXT_SIZE[state.office.size ?? 'room'];
+      if (!next) return fail('office_max');
+      const spec = OFFICE_SIZES[next];
+      if (state.company.money < spec.price) return fail('not_enough_money');
+      state.company.money -= spec.price;
+      state.office.size = next;
+      state.office.w = spec.w;
+      state.office.d = spec.d;
+      record(state, { kind: 'office', text: { key: 'ledger.office.expanded', params: { price: spec.price, rent: spec.rent } }, causes: [], tone: 1 });
+      remember(state, `office:${next}`, 'office_moved', { key: 'memory.office_moved', params: { company: state.company.name } }, { tone: 1, empirianIds: state.empirians.map((e) => e.id) }, emit);
+      emit({ type: 'office_expanded', size: next, severity: 'important' });
+      emit({ type: 'office_changed', severity: 'info' });
+      return { ok: true };
+    }
+    case 'set_office_style': {
+      // Paint and floors (AW.C.3): aesthetic only; pay for what changes.
+      const cur = state.office.style ?? DEFAULT_STYLE;
+      const wall = cmd.wall ?? cur.wall;
+      const floor = cmd.floor ?? cur.floor;
+      if (!(WALL_STYLES as readonly string[]).includes(wall) || !(FLOOR_STYLES as readonly string[]).includes(floor)) return fail('unknown_style');
+      const cost = (wall !== cur.wall ? STYLE_PRICE.wall : 0) + (floor !== cur.floor ? STYLE_PRICE.floor : 0);
+      if (cost === 0) return { ok: true };
+      if (state.company.money < cost) return fail('not_enough_money');
+      state.company.money -= cost;
+      state.office.style = { wall, floor };
+      record(state, { kind: 'office', text: { key: 'ledger.office.restyled', params: { cost } }, causes: [], tone: 0 });
+      emit({ type: 'office_changed', severity: 'info' });
+      return { ok: true };
+    }
+    case 'edit_empirian': {
+      // Only looks and names change: skills, personality, experience, salary and history stay (AW.C).
+      const e = state.empirians.find((x) => x.id === cmd.empirianId);
+      if (!e) return fail('unknown_empirian');
+      if (cmd.name !== undefined) {
+        const name = cleanName(cmd.name, 24);
+        if (!name) return fail('name_required');
+        e.name = name;
+      }
+      if (cmd.nickname !== undefined) {
+        const nick = cleanName(cmd.nickname, 16);
+        if (nick) e.nickname = nick; else delete e.nickname;
+      }
+      if (cmd.appearance) e.appearance = sanitizeAppearance(cmd.appearance);
+      emit({ type: 'empirian_changed', empirianId: e.id, severity: 'info' });
+      return { ok: true };
+    }
     case 'tutorial': {
       const err = tutorialCommand(state, cmd.action, cmd.step);
       return err ? fail(err) : { ok: true };

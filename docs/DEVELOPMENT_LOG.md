@@ -4,6 +4,31 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-17 — Octava sesión: The Next Chapter — Bloque C (identidad), E.1 (estudio más grande) y D.1/D.2 (funcionalidades y prototipos) (0.9.0)
+
+### Estado verificado al empezar
+`production-web` = 0.8.0 (`1fdc373`); desarrollo en `95eb89c` sin trabajo posterior; guardado v10.
+
+### Resumen
+- **Editor de Empirians** (fundador y empleados): nombre, apodo, peinado, colores, ropa y accesorios; solo cambia el aspecto y los nombres. El personaje se ve de frente y solo mientras se edita.
+- **Ficha del personaje** al lado de la oficina: retrato, apodo, personalidad, energía, ánimo, tarea actual, antigüedad, habilidades, especialidades, recuerdos y una biografía construida con hechos reales.
+- **Oficina**: 5 colores de pared y 4 suelos con vista previa antes de pagar; puf, alfombra redonda y mesita; rincón acogedor (+1 descanso, sin acumular). La pestaña "Paredes y suelo" va la primera.
+- Ayuda actualizada (editar personajes, paredes y suelo, rincón acogedor, mudanza). Actividades de pausa con texto en la ficha (antes mostraban la clave).
+- **E.1 — estudio más grande** (adelantado porque la habitación solo admitía un empleado): 14×10 casillas, 25 000 € + 60 €/día, hasta 6 empleados; todo se conserva; celebración y recuerdo. Accesos: barra de Decorar y tarjeta de Equipo.
+- **D.1/D.2 — funcionalidades y prototipos** (sobre F3.2 y el motor de momentos de F3.1): 7 funcionalidades con trabajo, riesgo oculto, atractivo según el tema o alcance; huecos por tamaño y desbloqueos; prototipo opcional. Primer reequilibrio medido (D-053): las primeras cifras hacían que las funcionalidades nunca compensaran y que el prototipo no valiera nunca la pena.
+
+### Pruebas ejecutadas
+- `npx vitest run`: **169 pruebas**, todas pasan (nuevas: `tests/sim/biography.test.ts` 3, `tests/sim/officeStyle.test.ts` 4, `tests/sim/expansion.test.ts` 5, `tests/sim/features.test.ts` 7, límites de aspecto contra la paleta).
+- E2E: **identity 13/13**, **style 7/7**, **expansion 8/8**, **features 7/7**, decor 10/10, routines 8/8, pause 16/16, tutorial 20/20, play 21/21, persistence 10/10, desktop 15/15, team 13/13, story 10/10, contracts 10/10.
+
+### Problemas encontrados
+- En el editor el personaje quedaba detrás de un escritorio y de espaldas (mundo en pausa): ahora se coloca en la casilla libre más cercana a la cámara y se gira al instante.
+- Al aplicar un acabado había un parpadeo del anterior hasta el siguiente fotograma: se aplica directamente.
+- La oficina no crecía en pantalla: la vista solo se sincronizaba cuando cambiaban los muebles; ahora también cuando cambia el tamaño.
+- La prueba de pausa falla si se ejecuta a la vez que otras pruebas de navegador (sin fotogramas por el renderizado por software); en solitario, estable (3 de 3).
+
+---
+
 ## 2026-11-17 — Séptima sesión (2.ª parte): A World Alive — Bloque B, oficina viva (0.8.0)
 
 ### Resumen

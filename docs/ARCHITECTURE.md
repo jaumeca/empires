@@ -442,3 +442,18 @@ Todos los sistemas nuevos viven en `src/sim/systems/`, son deterministas (flujos
 
 `src/sim/systems/routines.ts` (`routinesTick` al inicio de cada tick, antes del trabajo; `onBreak` excluye del trabajo y del gasto de energía). Campos opcionales en `Empirian` (`breakUntil`, `breakKind`, `lastBreakDay`, `chatWith`): no necesitan migración. La escena traduce las actividades `drinking/lounging/chatting` a puntos (`drink`, `beanbag`, `chat:<id>`), decide el tiempo libre con `freeTimeSpot` (estado + personalidad, sin azar) y reacciona a eventos (`routine`, `project_released`, `achievement`, `hired`, `fired`, `office_changed`). Todo con el reloj del mundo. `findPath` devuelve `[]` si no hay ruta y el actor se queda en su sitio.
 
+## 21. Identidad (AW.C, 2026-11-17)
+
+- `content/appearance.ts`: límites de aspecto compartidos (prueba que coinciden con la paleta) y limpieza de nombres. Comando `edit_empirian` (evento `empirian_changed`); la escena reconstruye solo el modelo cuyo aspecto cambió (`appearanceKey`).
+- `OfficeScene.setFocus(on, id)`: lleva a un Empirian al frente (`focusSpot`, casilla libre más cercana a la cámara), oculta al resto y restaura sus posiciones al salir; `EmpirianView.snap` aplica la postura al instante con el mundo en pausa.
+- `systems/biography.ts`: biografía como lista de `TextRef` construida solo con hechos del estado.
+- `content/officeStyles.ts` + `palette.WALL_FINISH/FLOOR_FINISH` + `buildRoomShell(style)`; `office.style` opcional (sin migración); `scene.previewRoomStyle()` para probar antes de pagar. `office.cozyCorner()`.
+
+## 22. Tamaño de la oficina (AW.E.1, 2026-11-17)
+
+`content/officeSizes.ts` (`room`, `studio`); `office.size` opcional; comando `expand_office` (cambia `office.w/d`, evento `office_expanded`, recuerdo). La escena reconstruye paredes y suelo (`buildRoomShell(style, size)`), la cuadrícula de decoración, el encuadre (`resize` según `w/d`) y la luz (`fitLight`) cuando cambia el tamaño; la clave de sincronización incluye el tamaño. `team.maxEmployees(state)` depende del tamaño; el alquiler se cobra con los gastos diarios.
+
+## 23. Funcionalidades y prototipos (AW.D, 2026-11-17)
+
+`content/features.ts` (datos), `systems/features.ts` (bloqueos, `setupFeatures` validado antes de crear el proyecto, `featureCeiling` en `qualityCeiling`, `featureReach` en las ventas, riesgo oculto con `hashUnit(seed, proyecto, función)` sin consumir flujos aleatorios, `featuresTick`). Dos momentos nuevos en `moments.ts` (`prototype_result`, `feature_trouble`) reutilizan el motor de F3.1. Campos opcionales en `Project`: no requieren migración.
+

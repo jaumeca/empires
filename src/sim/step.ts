@@ -10,6 +10,7 @@ import { contractsDay, contractTick } from './systems/contracts';
 import { gainXp } from './systems/progression';
 import { ambianceLevel, officeEffects } from './systems/office';
 import { storyDay } from './systems/story';
+import { OFFICE_SIZES } from '../content/officeSizes';
 import { onBreak, routinesTick } from './systems/routines';
 import { coordinationFactor, hiringDay, payroll, teamMoraleBonus, traitDrain, workstationEffects } from './systems/team';
 
@@ -80,8 +81,8 @@ function dayBoundary(state: GameState, emit: EventSink): void {
     }
     e.morale += (target - e.morale) * C.office.moraleDrift;
   }
-  // Running costs of the office (electricity, coffee…).
-  state.company.money -= fx.upkeep;
+  // Running costs of the office (electricity, coffee…) and rent of a bigger studio (AW.E.1).
+  state.company.money -= fx.upkeep + OFFICE_SIZES[state.office.size ?? 'room'].rent;
 
   if (project) {
     if (project.phase !== 'released') gainXp(state, founder, 'management', C.progression.managementPerProjectDay, emit);

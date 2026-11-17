@@ -174,6 +174,8 @@ export interface OfficeEffects {
   rest: number;
   coffee: number;
   drink: number;
+  /** A rest seat with a lamp or plant next to it (AW.C.3): +1 rest, once. */
+  cozy: boolean;
   ambiance: number;
   upkeep: number;
 }
@@ -192,7 +194,7 @@ export function founderDesk(office: Office): PlacedItem | null {
 }
 
 export function officeEffects(office: Office): OfficeEffects {
-  const fx: OfficeEffects = { techSpeed: 1, designSpeed: 1, fatigue: 1, inspiration: 1, rest: 0, coffee: 0, drink: 0, ambiance: 0, upkeep: 0 };
+  const fx: OfficeEffects = { techSpeed: 1, designSpeed: 1, fatigue: 1, inspiration: 1, rest: 0, coffee: 0, drink: 0, cozy: false, ambiance: 0, upkeep: 0 };
   const desk = founderDesk(office);
   const eff = (id?: string): ItemEffects => (id ? getItemDef(id).effects ?? {} : {});
   if (desk) {
@@ -218,7 +220,18 @@ export function officeEffects(office: Office): OfficeEffects {
     for (const m of [it.mounts?.computer, it.mounts?.chair]) if (m) fx.upkeep += getItemDef(m).upkeep ?? 0;
   }
   fx.ambiance = ambianceRaw;
+  fx.cozy = cozyCorner(office);
+  if (fx.cozy) fx.rest += 1;
   return fx;
+}
+
+/** A sofa, armchair or beanbag with a lamp or a plant within two cells (one bonus, never stacks). */
+export function cozyCorner(office: Office): boolean {
+  const box = (it: PlacedItem) => { const rs = rotatedSize(getItemDef(it.defId), it.rot); return { x0: it.x, z0: it.z, x1: it.x + rs.w - 1, z1: it.z + rs.d - 1 }; };
+  const near = (a: ReturnType<typeof box>, b: ReturnType<typeof box>) => Math.max(0, b.x0 - a.x1, a.x0 - b.x1) <= 2 && Math.max(0, b.z0 - a.z1, a.z0 - b.z1) <= 2;
+  const seats = office.items.filter((it) => getItemDef(it.defId).spot?.pose === 'lounge');
+  const cosy = office.items.filter((it) => ['light', 'plant'].includes(getItemDef(it.defId).category));
+  return seats.some((s) => cosy.some((c) => near(box(s), box(c))));
 }
 
 /** 0..1 with strong diminishing returns: the 10th plant adds very little. */

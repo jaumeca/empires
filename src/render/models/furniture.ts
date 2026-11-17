@@ -1,4 +1,4 @@
-import { P } from '../palette';
+import { FLOOR_FINISH, P, WALL_FINISH } from '../palette';
 import { VoxelGrid } from '../voxel';
 
 /**
@@ -9,8 +9,12 @@ import { VoxelGrid } from '../voxel';
 
 export const ROOM = { w: 60, d: 48, wallH: 36, wallT: 3, floorT: 3 } as const;
 
-export function buildRoomShell(): VoxelGrid {
-  const { w, d, wallH, wallT, floorT } = ROOM;
+/** The room: floor, two walls and the window. `style` picks wall paint and floor (AW.C.3). */
+export function buildRoomShell(style: { wall: string; floor: string } = { wall: 'cream', floor: 'oak' }, size: { w: number; d: number } = { w: ROOM.w, d: ROOM.d }): VoxelGrid {
+  const { wallH, wallT, floorT } = ROOM;
+  const { w, d } = size;
+  const [wallBack, wallShade, wallSide] = WALL_FINISH[style.wall] ?? WALL_FINISH.cream!;
+  const fl = FLOOR_FINISH[style.floor] ?? FLOOR_FINISH.oak!;
   // Grid includes the walls (behind / left of the floor area) and the base slab.
   const g = new VoxelGrid(w + wallT, wallH + floorT, d + wallT);
   const X = (x: number) => x + wallT; // floor-space -> grid-space
@@ -20,36 +24,41 @@ export function buildRoomShell(): VoxelGrid {
   g.box(0, 0, 0, w + wallT, floorT - 1, d + wallT, P.baseSide);
   // Floor planks: run along x, 4 voxels wide, staggered seams.
   g.box(X(0), floorT - 1, Z(0), X(w), floorT, Z(d), (x, _y, z) => {
-    const plank = Math.floor((z - wallT) / 4);
-    const seam = ((x - wallT + plank * 7) % 20) === 0;
-    if (seam) return P.woodMid;
-    return [P.woodLight, P.woodPale, P.woodLight, P.woodMid][plank % 4] ?? P.woodLight;
+    const fx = x - wallT, fz = z - wallT;
+    if (fl.tiles) return (Math.floor(fx / 6) + Math.floor(fz / 6)) % 2 === 0 ? fl.tiles[0] : fl.tiles[1];
+    if (fl.carpet) return (fx * 7 + fz * 13) % 5 === 0 ? fl.carpet[1] : fl.carpet[0];
+    const plank = Math.floor(fz / 4);
+    const seam = ((fx + plank * 7) % 20) === 0;
+    if (seam) return fl.seam ?? P.woodMid;
+    return fl.planks![plank % 4] ?? P.woodLight;
   });
   // Back wall (z in [0, wallT)), spanning x.
-  g.box(0, floorT - 1, 0, w + wallT, floorT + wallH - 1, wallT, (_x, y) => (y < floorT + 18 ? P.wall : P.wall));
+  g.box(0, floorT - 1, 0, w + wallT, floorT + wallH - 1, wallT, wallBack);
   // Left wall (x in [0, wallT)), spanning z.
-  g.box(0, floorT - 1, 0, wallT, floorT + wallH - 1, d + wallT, P.wallPeach);
+  g.box(0, floorT - 1, 0, wallT, floorT + wallH - 1, d + wallT, wallSide);
   // Two-tone wainscot on the back wall + skirting boards.
-  g.box(wallT, floorT, wallT - 1, w + wallT, floorT + 12, wallT, P.wallShade);
+  g.box(wallT, floorT, wallT - 1, w + wallT, floorT + 12, wallT, wallShade);
   g.box(wallT, floorT, wallT - 1, w + wallT, floorT + 2, wallT, P.skirting);
   g.box(wallT - 1, floorT, wallT, wallT, floorT + 2, d + wallT, P.skirting);
   // Top trim on the wall edges (gives the cut-away diorama look).
   g.box(0, floorT + wallH - 2, 0, w + wallT, floorT + wallH - 1, wallT, P.woodDark);
   g.box(0, floorT + wallH - 2, 0, wallT, floorT + wallH - 1, d + wallT, P.woodDark);
 
-  // Window in the back wall.
-  const wx0 = X(40), wx1 = X(56), wy0 = floorT + 14, wy1 = floorT + 30;
-  g.box(wx0, wy0, 0, wx1, wy1, wallT, P.woodDark); // frame
-  g.box(wx0 + 1, wy0 + 1, 0, wx1 - 1, wy1 - 1, wallT, (x, y) => {
-    // Sky gradient with a couple of soft clouds.
-    const cloud = (y === wy0 + 9 && x > wx0 + 3 && x < wx0 + 8) || (y === wy0 + 10 && x > wx0 + 4 && x < wx0 + 7) || (y === wy0 + 5 && x > wx0 + 9 && x < wx0 + 13);
-    if (cloud) return P.white;
-    return y > wy0 + 8 ? P.sky : P.skyLight;
-  });
-  g.box(wx0 + 1, wy0 + 1, wallT - 1, wx1 - 1, wy1 - 1, wallT, 0); // recess glass 1 voxel
-  g.box(wx0 + 7, wy0 + 1, wallT - 1, wx0 + 8, wy1 - 1, wallT, P.woodDark); // mullion
-  g.box(wx0 + 1, wy0 + 8, wallT - 1, wx1 - 1, wy0 + 9, wallT, P.woodDark);
-  g.box(wx0 - 1, wy0 - 1, wallT, wx1 + 1, wy0, wallT + 2, P.skirting); // sill
+  // Windows in the back wall (a bigger studio gets a second one).
+  for (const wx of w >= 80 ? [40, 66] : [40]) {
+    const wx0 = X(wx), wx1 = X(wx + 16), wy0 = floorT + 14, wy1 = floorT + 30;
+    g.box(wx0, wy0, 0, wx1, wy1, wallT, P.woodDark); // frame
+    g.box(wx0 + 1, wy0 + 1, 0, wx1 - 1, wy1 - 1, wallT, (x, y) => {
+      // Sky gradient with a couple of soft clouds.
+      const cloud = (y === wy0 + 9 && x > wx0 + 3 && x < wx0 + 8) || (y === wy0 + 10 && x > wx0 + 4 && x < wx0 + 7) || (y === wy0 + 5 && x > wx0 + 9 && x < wx0 + 13);
+      if (cloud) return P.white;
+      return y > wy0 + 8 ? P.sky : P.skyLight;
+    });
+    g.box(wx0 + 1, wy0 + 1, wallT - 1, wx1 - 1, wy1 - 1, wallT, 0); // recess glass 1 voxel
+    g.box(wx0 + 7, wy0 + 1, wallT - 1, wx0 + 8, wy1 - 1, wallT, P.woodDark); // mullion
+    g.box(wx0 + 1, wy0 + 8, wallT - 1, wx1 - 1, wy0 + 9, wallT, P.woodDark);
+    g.box(wx0 - 1, wy0 - 1, wallT, wx1 + 1, wy0, wallT + 2, P.skirting); // sill
+  }
   return g;
 }
 

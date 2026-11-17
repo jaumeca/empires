@@ -34,7 +34,8 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
     await page.waitForTimeout(300);
     const moving1 = await snap();
     await page.waitForTimeout(400);
-    check(`world animates at ${speed}x`, (await snap()) !== moving1);
+    const moving2 = await snap();
+    check(`world animates at ${speed}x`, moving2 !== moving1, moving2 !== moving1 ? '' : await page.evaluate(() => JSON.stringify({ speed: window.__empires.game.clock.speed, pend: window.__empires.game.state.pendingDecision?.kind, modal: document.querySelector('.backdrop')?.className, tut: document.getElementById('tutorial-coach')?.dataset.step })));
     await page.click('[data-speed="0"]');
     await page.waitForTimeout(100);
     const a = await snap(); const ta = await tick();

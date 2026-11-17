@@ -585,13 +585,13 @@ Una bienvenida, no una obligación: guía contextual que acompaña con acciones 
 ### 26.2 Oficina viva `[IMPLEMENTADO]` (1.ª versión, D-050)
 Rutinas con propósito según energía, ánimo, personalidad y muebles: café, descanso, charlas, estiramientos, celebraciones, reacciones a malas noticias. Deterministas, con efectos moderados y congeladas en pausa.
 
-### 26.3 Personalidades que se notan `[CONFIRMADO]`
+### 26.3 Personalidades que se notan `[IMPLEMENTADO]` (hábitos AW.B, ficha AW.C)
 Cada rasgo se expresa con gestos, burbujas y comportamientos reconocibles, sin estereotipos rígidos. La ficha muestra nombre, apodo, aspecto, personalidad, estado, habilidades, tarea y una pequeña biografía, con el personaje visible.
 
-### 26.4 Identidad del estudio y de los personajes `[CONFIRMADO]`
+### 26.4 Identidad del estudio y de los personajes `[IMPLEMENTADO]` (D-051)
 Colores de paredes y suelos, nuevos muebles, rincón de bebidas; editar aspecto, nombre y apodo sin tocar progresión ni historia.
 
-### 26.5 Variedad en los proyectos y eventos que generan historias `[CONFIRMADO]`
+### 26.5 Variedad en los proyectos y eventos que generan historias `[CONFIRMADO]` (funcionalidades y prototipos `[IMPLEMENTADO]`, D-053)
 Más decisiones durante el desarrollo (funcionalidades, prototipo, alcance, deuda técnica, pruebas, comentarios, tendencias, lanzar o retrasar) y eventos contextuales con consecuencias, reflejados en la Historia del estudio, con límites de frecuencia.
 
 ### 26.6 Pequeñas satisfacciones `[CONFIRMADO]`

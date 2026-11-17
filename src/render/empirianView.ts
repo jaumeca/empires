@@ -43,6 +43,8 @@ export class EmpirianView {
   private nextBlink = 2;
   private appearance!: Appearance;
   pose: Pose = 'stand';
+  /** Apply the next pose instantly (no easing). Cleared after one frame. */
+  snap = false;
   /** Stretching at the desk (AW.B): arms up for a moment. */
   stretching = false;
   /** Facing angle (radians, 0 = +z). */
@@ -275,7 +277,8 @@ export class EmpirianView {
       }
     }
 
-    const k = 1 - Math.exp(-dt * 14);
+    // `snap`: jump straight to the pose (editor preview while the world is paused).
+    const k = this.snap ? 1 : 1 - Math.exp(-dt * 14);
     const lerp = (a: number, b: number) => a + (b - a) * k;
     this.body.position.y = lerp(this.body.position.y, target.bodyY);
     this.torso.position.y = lerp(this.torso.position.y, target.torsoY);
@@ -294,7 +297,8 @@ export class EmpirianView {
     let d = this.heading - this.root.rotation.y;
     while (d > Math.PI) d -= Math.PI * 2;
     while (d < -Math.PI) d += Math.PI * 2;
-    this.root.rotation.y += d * (1 - Math.exp(-dt * 10));
+    this.root.rotation.y += d * (this.snap ? 1 : 1 - Math.exp(-dt * 10));
+    this.snap = false;
   }
 
   /** Height of the top of the head in world units (for bubbles). */

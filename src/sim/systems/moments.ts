@@ -2,7 +2,10 @@ import { SIM_CONFIG } from '../config';
 import type { EventSink } from '../core/events';
 import { newId, record } from '../core/ledger';
 import type { DecisionOption, Empirian, GameState, PendingDecision, Project, TextRef } from '../model/state';
-import { pointsPerTick } from './project';
+import { pointsPerTick, productionProgress } from './project';
+import { cutTrouble, FEATURE_CFG, fixTrouble, ignoreTrouble, openTrouble } from './features';
+
+const productionShare = (p: Project) => productionProgress(p);
 
 /**
  * Contextual Decisive Moments (F3.1, GDD §7 and §16). Each moment is triggered
@@ -34,6 +37,42 @@ export function projectedProductionDays(p: Project, f: Empirian): number {
 }
 
 const MOMENTS: MomentDef[] = [
+  {
+    // AW.D.2: the prototype found a problem while it is still cheap to fix.
+    kind: 'prototype_result',
+    trigger: (_s, p) => !!p.prototype && !p.prototypeDone && p.phase !== 'concept' && openTrouble(p).length > 0,
+    build: (_s, p) => ({
+      text: k('moment.prototype_result.text', { project: p.name, features: openTrouble(p).join(',') }),
+      options: [
+        opt('fix', 'prototype_result', ['hint.work_up_small', 'hint.keeps_feature']),
+        opt('cut', 'prototype_result', ['hint.work_down', 'hint.less_appeal']),
+      ],
+    }),
+    resolve: (state, p, _f, o) => {
+      p.prototypeDone = true;
+      record(state, { kind: 'decision', text: k(`ledger.moment.prototype_result.${o}`, { features: openTrouble(p).join(',') }), causes: [], tone: o === 'fix' ? 1 : 0, projectId: p.id });
+      if (o === 'fix') fixTrouble(p, true); else cutTrouble(p, true);
+    },
+  },
+  {
+    // AW.D.1: without a prototype, a risky feature shows its problem mid-production.
+    kind: 'feature_trouble',
+    trigger: (_s, p) => !p.prototype && p.phase === 'production' && productionShare(p) >= FEATURE_CFG.discoverAt && openTrouble(p).length > 0,
+    build: (_s, p) => ({
+      text: k('moment.feature_trouble.text', { project: p.name, features: openTrouble(p).join(',') }),
+      options: [
+        opt('push', 'feature_trouble', ['hint.work_up', 'hint.keeps_feature']),
+        opt('cut', 'feature_trouble', ['hint.work_down', 'hint.interest_cut']),
+        opt('ship', 'feature_trouble', ['hint.no_delay', 'hint.quality_down', 'hint.bugs_up']),
+      ],
+    }),
+    resolve: (state, p, _f, o) => {
+      const id = record(state, { kind: 'decision', text: k(`ledger.moment.feature_trouble.${o}`, { features: openTrouble(p).join(',') }), causes: [], tone: o === 'ship' ? -1 : 0, projectId: p.id });
+      if (o === 'push') fixTrouble(p, false);
+      else if (o === 'cut') cutTrouble(p, false);
+      else ignoreTrouble(p, id);
+    },
+  },
   {
     // The founder is worn out.
     kind: 'exhausted',

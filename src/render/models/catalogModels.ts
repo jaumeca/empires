@@ -255,6 +255,43 @@ function neonSign(): VoxelGrid {
   return g;
 }
 
+function beanbag(): VoxelGrid {
+  const g = new VoxelGrid(12, 8, 12);
+  // A soft, squashed pouf: wider at the bottom, a dent where you sit.
+  for (let y = 0; y < 8; y++) {
+    const r = 6 - Math.max(0, y - 3) * 0.8;
+    g.box(0, y, 0, 12, y + 1, 12, (x, _y, z) => {
+      const dx = x - 5.5, dz = z - 5.5;
+      if (dx * dx + dz * dz > r * r) return 0;
+      if (y >= 5 && dx * dx + (dz - 1) * (dz - 1) < 8) return 0; // seat dent
+      return (x + z + y) % 7 === 0 ? P.coralDark : P.coral;
+    });
+  }
+  return g;
+}
+
+function rugRound(): VoxelGrid {
+  const g = new VoxelGrid(18, 1, 18);
+  g.box(0, 0, 0, 18, 1, 18, (x, _y, z) => {
+    const d = Math.hypot(x - 8.5, z - 8.5);
+    if (d > 9) return 0;
+    if (d > 7.6) return P.mintDark;
+    if (d > 6.4) return P.cream;
+    return Math.floor(d) % 2 === 0 ? P.mint : P.skyLight;
+  });
+  return g;
+}
+
+function sideTable(): VoxelGrid {
+  const g = new VoxelGrid(6, 13, 6);
+  g.box(2, 0, 2, 4, 8, 4, P.woodDark);
+  g.box(1, 0, 1, 5, 1, 5, P.woodDeep);
+  g.box(0, 8, 0, 6, 9, 6, P.woodMid);
+  g.box(1, 9, 1, 3, 11, 3, P.terracotta); g.box(1, 11, 1, 3, 13, 3, P.leaf); // tiny plant
+  g.box(4, 9, 3, 5, 11, 5, P.coral); // mug
+  return g;
+}
+
 function waterCooler(): VoxelGrid {
   const g = new VoxelGrid(6, 22, 6);
   g.box(0, 0, 0, 6, 12, 6, P.cream); // cabinet
@@ -336,6 +373,12 @@ export function itemModel(model: string): ItemModel {
       return { parts: [{ grid: bonsai(), at: [0, 0, 0] }] };
     case 'neon_sign':
       return { parts: [{ grid: neonSign(), at: [0, 0, 0] }], light: [6, 17, 5] };
+    case 'beanbag':
+      return { parts: [{ grid: beanbag(), at: [0, 0, 0] }] };
+    case 'rug_round':
+      return { parts: [{ grid: rugRound(), at: [0, 0, 0] }] };
+    case 'side_table':
+      return { parts: [{ grid: sideTable(), at: [0, 0, 0] }] };
     case 'water_cooler':
       return { parts: [{ grid: waterCooler(), at: [0, 0, 0] }] };
     case 'lucky_cactus':
