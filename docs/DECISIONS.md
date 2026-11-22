@@ -398,6 +398,8 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Medido:** en carreras de un año todos aparecen en juego normal (con un empleado: formación y discusión en 5–6 de cada 10 partidas). Los eventos cambian la suerte de las semillas: con 6 semillas el escenario "encargos tras un fracaso" pasaba de 1,07× a 0,90× los juegos puros; con 52 semillas queda en 0,94–1,0× (antes ≈ 1,0–1,07×): ferias y críticas premian un poco más publicar juegos. La prueba de economía usa ahora 12 semillas y exige ≥ 0,92× (antes 0,95× con 6).
 - **Simulador:** las carreras contestan los eventos como un jugador sensato (adoptar la idea, cobrar los cambios, mesa en la feria, entrevista, término medio, libros); `autoplay` usa opciones neutras.
 
+> **Pendientes de confirmar por el propietario tras jugar:** D-053, D-054 y D-055 (provisionales). Próxima decisión prevista: D-056 (relaciones en el equipo, E.3).
+
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
 - **Q-005 Dominio:** el dominio disponible es **expires.top** (no es errata). El juego se llama EMPIRES. Uso pendiente.

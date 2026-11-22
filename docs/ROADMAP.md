@@ -4,6 +4,8 @@
 >
 > Estados: ⬜ Pendiente · 🟦 En curso · ✅ Hecho · ⏸ Bloqueado (esperando aprobación)
 
+> **Estado al cierre (2026-11-22):** 0.10.0 publicada en `production-web` (`ff906b1`). Siguiente tarea: E.3 relaciones en el equipo. Ver `docs/CONTINUAR_DESARROLLO.md`.
+
 ## Resumen
 
 | Fase | Nombre | Estado | Entregable |
