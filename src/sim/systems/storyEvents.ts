@@ -9,6 +9,7 @@ import { gainXp } from './progression';
 import { remember } from './story';
 import { employees } from './team';
 import type { EventDef } from './events';
+import { bond, changeBond } from './relations';
 
 /**
  * Story events (AW.D events, "The Next Chapter"): the studio's people and the
@@ -206,9 +207,10 @@ export const STORY_EVENTS: EventDef[] = [
       const p = getActiveProject(s);
       const staff = employees(s);
       if (!p || !staff.length || p.phase !== 'production' || seen(p, 'team_debate')) return null;
-      const a = pick(s.rng.events, staff);
-      const others = s.empirians.filter((e) => e.id !== a.id);
-      const b = pick(s.rng.events, others);
+      // Disagreements surface where relationships are weakest (E.3); ties are decided by the seed.
+      const pairs = staff.flatMap((a) => s.empirians.filter((b) => b.id !== a.id).map((b) => [a, b] as const));
+      const lowest = Math.min(...pairs.map(([a, b]) => bond(s, a.id, b.id)));
+      const [a, b] = pick(s.rng.events, pairs.filter(([x, y]) => bond(s, x.id, y.id) === lowest));
       return { projectId: p.id, aId: a.id, bId: b.id };
     },
     build: (s, c) => {
@@ -224,12 +226,14 @@ export const STORY_EVENTS: EventDef[] = [
         ],
       };
     },
-    resolve: (s, c, o) => {
+    resolve: (s, c, o, emit: EventSink) => {
       const p = proj(s, c.projectId)!;
       const a = person(s, c.aId);
       const b = person(s, c.bId);
       mark(p, 'team_debate');
       const id = story(s, 'team_debate', o, { a: a?.name ?? '', b: b?.name ?? '', project: p.name }, 0, [a?.id, b?.id].filter((x): x is string => !!x), p.id);
+      // Who loses the argument resents it a little; a compromise brings them closer (E.3).
+      if (a && b) changeBond(s, a.id, b.id, o === 'both' ? SIM_CONFIG.relations.debateCompromise : -SIM_CONFIG.relations.debateLose, emit);
       if (o === 'clean') {
         p.requiredPoints *= 1 + K().debateWork;
         p.bugRateMods.push({ factor: K().debateCleanBugs, causeId: id });

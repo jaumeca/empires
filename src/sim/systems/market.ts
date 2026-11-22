@@ -1,4 +1,5 @@
 import { activeFeatures, featureCeiling, featureReach } from './features';
+import { relationsRelease } from './relations';
 import { SIM_CONFIG } from '../config';
 import type { EventSink } from '../core/events';
 import { entriesFor, record } from '../core/ledger';
@@ -107,6 +108,7 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
   state.company.reputation = Math.max(0, Math.min(100, state.company.reputation + (averageScore - 5) * 4));
   founder.activity = 'celebrating';
   gainXp(state, founder, 'management', C.progression.managementPerRelease, emit);
+  relationsRelease(state, p, emit);
   state.activeProjectId = null;
   record(state, { kind: 'released', text: { key: 'ledger.released', params: { project: p.name, score: averageScore } }, causes: explanation, tone: averageScore >= 6 ? 1 : -1, projectId: p.id });
   compactHistory(state);

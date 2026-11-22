@@ -73,6 +73,28 @@ export type Role = 'auto' | 'design' | 'code' | 'test';
 
 export type BreakKind = 'drink' | 'rest' | 'chat';
 
+/** Professional relationship between two Empirians (E.3 / D-056). `a` < `b`. */
+export interface Relation {
+  a: string;
+  b: string;
+  /** −100 (rivals) … 100 (close friends). Only facts change it. */
+  bond: number;
+  /** Working days spent together. */
+  days: number;
+  /** Launches shipped together, and how many were hits. */
+  shared: number;
+  hits: number;
+  /** Day they met. */
+  since: number;
+  /** Who mentors whom right now, and in what. */
+  mentor?: string;
+  mentorSkill?: SkillId;
+  /** This pair already had its mentoring. */
+  mentorDone?: boolean;
+}
+
+export type RelationKind = 'friends' | 'good_team' | 'respect' | 'mentor' | 'tension' | 'rivals';
+
 /** Personality traits (GT.1/GT.2). Each one helps in something and costs in something else. */
 export type TraitId = 'perfectionist' | 'night_owl' | 'sociable' | 'curious';
 
@@ -91,7 +113,7 @@ export interface Candidate {
 /** Studio memories (ML.2): meaningful moments, derived from real facts. */
 export type MemoryKind =
   | 'founded' | 'first_release' | 'first_hit' | 'first_flop' | 'hit' | 'record' | 'comeback'
-  | 'first_hire' | 'hire' | 'farewell' | 'first_contract' | 'skill_master' | 'money' | 'decision' | 'first_decor' | 'achievement' | 'office_moved';
+  | 'first_hire' | 'hire' | 'farewell' | 'first_contract' | 'skill_master' | 'money' | 'decision' | 'first_decor' | 'achievement' | 'office_moved' | 'relation';
 
 export interface Memory {
   id: string;
@@ -381,6 +403,8 @@ export interface GameState {
   hiring: Hiring;
   /** Memories and achievements (ML.2, ML.3). */
   story: Story;
+  /** Professional relationships (E.3). Optional: older saves start with none. */
+  relations?: Relation[];
   /** Tutorial for new players (AW.A). */
   tutorial: Tutorial;
   /** Deferred consequences (LS.7). */

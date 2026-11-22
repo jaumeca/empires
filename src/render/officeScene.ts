@@ -756,7 +756,9 @@ export class OfficeScene {
 
   // ------------------------------------------------------------------ events
   handleEvents(events: SimEvent[], now: number): void {
-    for (const e of events) {
+    // Relationship moments go last so routine work bubbles never push them out (E.3).
+    const ordered = [...events.filter((e) => e.type !== 'relation'), ...events.filter((e) => e.type === 'relation')];
+    for (const e of ordered) {
       const actor = 'empirianId' in e ? this.actors.get(e.empirianId) : this.actors.values().next().value;
       if (!actor) continue;
       const head = actor.view.head;
@@ -812,9 +814,24 @@ export class OfficeScene {
             this.pois[`chat:${e.empirianId}`] = { x: a[0], z: a[1], heading: ha, pose: 'stand' };
             this.pois[`chat:${e.partnerId}`] = { x: b[0], z: b[1], heading: ha + Math.PI, pose: 'stand' };
           }
-          const ic = e.kind === 'drink' ? 'cup' : e.kind === 'rest' ? 'zzz' : 'chat';
+          // Mentoring (E.3) looks like a chat, with a book over the mentor and ideas over the learner.
+          const mentor = e.mentoring && this.lastState?.relations?.some((r) => r.mentor === e.empirianId);
+          const ic = e.kind === 'drink' ? 'cup' : e.kind === 'rest' ? 'zzz' : e.mentoring ? (mentor ? 'book' : 'idea') : 'chat';
           this.bubbles.spawn(head, off, ic, now, { cooldown: 0.5, life: 2.2 });
           if (e.kind === 'chat') actor.view.flash('happy', 2, now);
+          break;
+        }
+        case 'relation': {
+          // A relationship changes (E.3): hearts, a little storm cloud, or a book — over both of them.
+          const bad = e.kind === 'tension' || e.kind === 'rivals';
+          const ic = bad ? 'storm' : e.kind === 'mentor' ? 'book' : e.kind === 'friends' ? 'heart' : 'star';
+          for (const id of [e.a, e.b]) {
+            const a = this.actors.get(id);
+            if (!a) continue;
+            a.view.flash(bad ? 'frustrated' : 'joyful', 2.2, now);
+            // Higher than the usual bubbles, so it isn't hidden behind the chat bubble of the same moment.
+            this.bubbles.spawn(a.view.head, off + 0.5, ic, now, { cooldown: 0.2, life: 3 });
+          }
           break;
         }
         case 'office_expanded':

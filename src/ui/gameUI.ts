@@ -7,10 +7,11 @@ import { employees, freeWorkstations, hiringUnlocked, maxEmployees } from '../si
 import { NEXT_SIZE, OFFICE_SIZES } from '../content/officeSizes';
 import { ACHIEVEMENTS, memoriesOf } from '../sim/systems/story';
 import { biography } from '../sim/systems/biography';
+import { notableRelations } from '../sim/systems/relations';
 import { FEATURE_CFG, featureLock } from '../sim/systems/features';
 import { FEATURE_SLOTS, FEATURES, getFeature } from '../content/features';
 import type { Game } from '../sim/game';
-import type { Appearance, GameState, Memory, MemoryKind, PendingDecision, Project, ProjectSize, Role, SkillId } from '../sim/model/state';
+import type { Appearance, GameState, Memory, MemoryKind, PendingDecision, Project, ProjectSize, RelationKind, Role, SkillId } from '../sim/model/state';
 import { progressToNext, SKILLS, specializations } from '../sim/systems/progression';
 import { getActiveProject, getFounder, getProject } from '../sim/state';
 import { mixPenalty, productionProgress } from '../sim/systems/project';
@@ -853,6 +854,22 @@ export class GameUI {
       h('ul.memories', null, ...mems.map((m) => this.memoryRow(m))));
   }
 
+  /** E.3: a few lines on who they get on with (not a table). */
+  private relationsSection(id: string): HTMLElement {
+    const s = this.state;
+    const rels = notableRelations(s, id).slice(0, 3);
+    const icons: Record<RelationKind, IconName> = { friends: 'heart', good_team: 'team', respect: 'star', mentor: 'book', tension: 'storm', rivals: 'storm' };
+    return h('div.section.relations', null, h('div.label', null, t('bond.title')),
+      rels.length ? h('ul.rel-list', null, ...rels.map((r) => {
+        const o = s.empirians.find((x) => x.id === r.with);
+        if (!o) return null;
+        const key = r.kind === 'mentor' ? (r.mentorOf ? 'bond.mentor_of' : 'bond.mentored_by') : `bond.${r.kind}`;
+        return h(`li.rel.${r.kind}`, { dataset: { rel: r.kind, with: r.with }, title: t(`bond.${r.kind}.desc`) },
+          icon(icons[r.kind], 18), this.portraitOf(o.appearance, r.kind === 'tension' || r.kind === 'rivals' ? 'neutral' : 'happy'),
+          h('div', null, h('div.t', null, t(key, { name: o.name, skill: r.skill ?? 'tech' })), h('div.hint', null, t(`bond.${r.kind}.desc`))));
+      })) : h('div.hint', null, t('bond.none')));
+  }
+
   private memoryIcon(kind: MemoryKind): IconName {
     switch (kind) {
       case 'founded': return 'rocket';
@@ -861,6 +878,7 @@ export class GameUI {
       case 'first_flop': case 'farewell': return 'sweat';
       case 'comeback': return 'heart';
       case 'first_hire': case 'hire': return 'team';
+      case 'relation': return 'heart';
       case 'first_contract': case 'money': return 'coin';
       case 'skill_master': return 'idea';
       case 'first_decor': case 'office_moved': return 'decor';
@@ -943,6 +961,7 @@ export class GameUI {
       h('div.section', null, h('div.label', null, t('emp.skills')), ...SKILLS.map(skillRow), h('div.hint', null, t('emp.learning_hint'))),
       h('div.section', null, h('div.label', null, t('emp.specialties')),
         specs.length ? h('div.row', null, ...specs.map((sp) => h('span.chip.good', null, icon('star', 16), t('emp.specialty', { topic: sp.topicId, bonus: sp.bonus })))) : h('div.hint', null, t('emp.no_specialty'))),
+      s.empirians.length >= 2 ? this.relationsSection(e.id) : null,
       h('div.section', null, h('div.label', null, t('emp.story')),
         mems.length ? h('ul.memories', null, ...mems.map((m) => this.memoryRow(m))) : h('div.hint', null, t('emp.no_memories'))),
       h('div.row.between', null,
@@ -1197,7 +1216,7 @@ export class GameUI {
       h('p.sub', null, t('help.sub')),
       h('div.help-grid', null,
         topic('games', 'rocket'), topic('time', 'clock'), topic('energy', 'sweat'), topic('decisions', 'idea'),
-        topic('sales', 'coin'), topic('office', 'decor'), topic('team', 'team'), topic('story', 'star'),
+        topic('sales', 'coin'), topic('office', 'decor'), topic('team', 'team'), topic('relations', 'heart'), topic('story', 'star'),
       ),
       desk ? h('p.hint', null, t('menu.shortcuts')) : null,
       h('div.actions', null,

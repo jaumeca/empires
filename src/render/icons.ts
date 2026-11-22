@@ -4,12 +4,14 @@
  */
 export type IconName =
   | 'code' | 'design' | 'bug' | 'check' | 'idea' | 'star' | 'sweat' | 'test' | 'zzz' | 'alert' | 'coin' | 'heart'
-  | 'pause' | 'play' | 'menu' | 'clock' | 'box' | 'rocket' | 'calendar' | 'decor' | 'rotate' | 'news' | 'team' | 'cup' | 'chat';
+  | 'pause' | 'play' | 'menu' | 'clock' | 'box' | 'rocket' | 'calendar' | 'decor' | 'rotate' | 'news' | 'team' | 'cup' | 'chat' | 'storm' | 'book';
 
 const ICONS: Record<IconName, { px: string[]; colors: Record<string, string> }> = {
   decor: { px: ['........', '.aaaaaa.', '.abbbba.', '.aaaaaa.', '....c...', '....c...', '...ddd..', '...ddd..'], colors: { a: '#3b3a40', b: '#ff8a7a', c: '#8c5a3c', d: '#3b3a40' } },
   rotate: { px: ['..aaaa..', '.a....a.', 'a......a', 'a.....aaa', 'a......a.', '.a......', '..aaa...', '........'].map((r) => r.slice(0, 8)), colors: { a: '#3b3a40' } },
   cup: { px: ['..a.a...', '...a.a..', '.bbbbb..', '.bcccbdd', '.bcccb.d', '.bcccbdd', '.bbbbb..', '........'], colors: { a: '#c9e4ff', b: '#ff8a7a', c: '#8c5a3c', d: '#ff8a7a' } },
+  storm: { px: ['..aaaa..', '.abbbba.', 'abbbbbba', '.aaaaaa.', '...cc...', '..cc....', '...cc...', '....c...'], colors: { a: '#5f5a57', b: '#8c8580', c: '#f2c14e' } },
+  book: { px: ['........', 'aaa..aaa', 'abba.bba', 'abbaabba', 'abbaabba', 'abbaabba', 'aaaaaaaa', '...cc...'], colors: { a: '#3d9c84', b: '#fff7e8', c: '#8c5a3c' } },
   chat: { px: ['.aaaaaa.', 'abbbbbba', 'abcbcbba', 'abbbbbba', '.aaaaaa.', '..a.....', '.a......', '........'], colors: { a: '#3b3a40', b: '#fff7e8', c: '#3b3a40' } },
   team: { px: ['..a..b..', '.aaabbb.', '..a..b..', '.cccddd.', 'cccccddd', 'cccccddd', '.c.c.d.d', '.c.c.d.d'], colors: { a: '#e8b48e', b: '#c98a62', c: '#7fd1b9', d: '#ff8a7a' } },
   news: { px: ['aaaaaaa.', 'abbbbba.', 'acccccab', 'abbbbbab', 'acccccab', 'abbbbbab', 'acccccab', 'aaaaaaab'], colors: { a: '#3b3a40', b: '#fff7e8', c: '#8c8580' } },

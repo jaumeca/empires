@@ -12,6 +12,7 @@ import { ambianceLevel, officeEffects } from './systems/office';
 import { storyDay } from './systems/story';
 import { OFFICE_SIZES } from '../content/officeSizes';
 import { onBreak, routinesTick } from './systems/routines';
+import { harmony, relationsDay } from './systems/relations';
 import { coordinationFactor, hiringDay, payroll, teamMoraleBonus, traitDrain, workstationEffects } from './systems/team';
 
 const C = SIM_CONFIG;
@@ -29,7 +30,7 @@ export function step(state: GameState, emit: EventSink): void {
     workTick(state, project, founder, emit);
   } else if (contract && !state.pendingDecision) {
     // The whole team works on the contract (GT.1).
-    const coord = coordinationFactor(state.empirians.length);
+    const coord = coordinationFactor(state.empirians.length) * harmony(state);
     for (const e of state.empirians) {
       if (onBreak(state, e)) continue;
       contractTick(state, e, emit, coord);
@@ -91,6 +92,8 @@ function dayBoundary(state: GameState, emit: EventSink): void {
   }
   contractsDay(state);
   hiringDay(state, emit);
+  // Relationships (E.3): a working day together, mentoring, tension fading.
+  relationsDay(state, (!!project && !resting && project.phase !== 'released') || (!project && !!state.contracts.active), emit, project?.pace === 'crunch' && !resting);
   storyDay(state, emit);
   if (state.contracts.active) gainXp(state, founder, 'management', C.progression.managementPerProjectDay, emit);
   applyScheduled(state, emit);

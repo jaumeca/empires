@@ -194,6 +194,48 @@ export const SIM_CONFIG = {
     previewBugThreshold: 5,
   },
 
+  /** Relationships (E.3 / D-056): bond −100…100 from real facts; moderate, capped effects. */
+  relations: {
+    workTogether: 0.4,
+    /** Working side by side builds a bond only up to here (beyond, it takes chats and hits). */
+    workCap: 20,
+    /** Crunch strains every pair a little each day. */
+    crunchStrain: 0.6,
+    chat: 3,
+    hitScore: 7,
+    hitBond: 6,
+    shipBond: 2,
+    flopScore: 5,
+    flopStrain: 4,
+    flopUniteAbove: 30,
+    flopUnite: 3,
+    debateLose: 14,
+    debateCompromise: 5,
+    tensionFade: 0.3,
+    friendsAbove: 45,
+    respectHits: 2,
+    respectBond: 10,
+    goodTeamShared: 2,
+    goodTeamBond: 15,
+    tensionBelow: -15,
+    rivalsBelow: -40,
+    friendMorale: 0.15,
+    tensionMorale: 0.15,
+    rivalMorale: 0.25,
+    moraleCap: 0.3,
+    harmonyPerBond: 0.1,
+    maxHarmony: 0.05,
+    mentorAfterDays: 5,
+    mentorMinSkill: 6.5,
+    mentorGap: 2,
+    menteeXp: 3,
+    mentorXp: 1,
+    graduateGap: 0.5,
+    graduateBond: 10,
+    /** Hour of the working day when a mentor goes to help (every other day). */
+    mentorHour: 5,
+  },
+
   /** Story events ("The Next Chapter"): see systems/storyEvents.ts. */
   storyEvents: {
     moraleBig: 8,

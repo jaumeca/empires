@@ -6,6 +6,7 @@ import type { Candidate, Empirian, GameState, Hiring, PlacedItem, SkillId, Trait
 import { EMPIRIAN_NAMES } from '../../content/names';
 import { founderDesk, getItemDef, officeEffects, type OfficeEffects } from './office';
 import { rememberFarewell, rememberHire } from './story';
+import { forgetRelations } from './relations';
 import { OFFICE_SIZES } from '../../content/officeSizes';
 
 /**
@@ -173,6 +174,7 @@ export function fire(state: GameState, empirianId: string, emit: EventSink): str
   const severance = (e.salary ?? 0) * K().severanceWeeks;
   state.company.money -= severance;
   state.empirians = state.empirians.filter((x) => x.id !== empirianId);
+  forgetRelations(state, empirianId);
   for (const it of state.office.items) if (it.assignedTo === empirianId) delete it.assignedTo;
   for (const o of state.empirians) o.morale = Math.max(0, o.morale - K().fireMorale);
   state.company.reputation = Math.max(0, state.company.reputation - K().fireReputation);

@@ -133,5 +133,7 @@ export function career(seed: number, st: Strategy, horizon = 365) {
   return {
     money: g.state.company.money, minMoney, games: scores.length, score: mean(scores), contracts, late,
     spentOffice, hires, salaries: g.state.hiring.salariesPaid, team: g.state.empirians.length, rep: g.state.company.reputation, skill: `${f.skills.tech.toFixed(1)}/${f.skills.design.toFixed(1)}/${f.skills.creativity.toFixed(1)}/${f.skills.management.toFixed(1)}`, decisions,
+    relations: (g.state.relations ?? []).map((r) => ({ bond: Math.round(r.bond), shared: r.shared, hits: r.hits, days: r.days, mentor: !!r.mentor, mentorDone: !!r.mentorDone })),
+    memories: g.state.story.memories.filter((m) => m.kind === 'relation').map((m) => `${m.day}:${m.text.key.split('.').pop()}`),
   };
 }
