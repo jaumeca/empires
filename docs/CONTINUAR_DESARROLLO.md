@@ -15,7 +15,7 @@ Cierre ordenado: 2026-11-22. Todo el trabajo está confirmado y subido; no hay n
 - Pruebas: `tests/sim/roles.test.ts`, `tests/sim/storyEvents.test.ts`; e2e `tools/e2e/roles.cjs`, `tools/e2e/events.cjs`. Ayudas de depuración (`?debug`): `__empires.play(n)` y `__empires.forceEvent(kind)`.
 
 ## Tareas pendientes (orden recomendado)
-1. **E.3 Relaciones en el equipo** (siguiente paso exacto): afinidades/rivalidades guardadas por pareja a partir de hechos reales (discusiones `team_debate`, charlas de `routines.ts`, celebraciones, mentoría cuando alguien con habilidad alta trabaja con otro). Efecto moderado en ánimo y velocidad; visible en la ficha; con pruebas de determinismo y guardado. Registrar como D-056.
+1. ~~E.3 Relaciones~~ hecho en 0.11.0 (D-056, `src/sim/systems/relations.ts`). Siguiente paso exacto: **Fase 2 — proyectos (D.3)**: deuda técnica y ajustes de alcance como decisiones durante el desarrollo, sobre el motor de momentos (`src/sim/systems/moments.ts`) y funcionalidades (`features.ts`), con prueba de no-dominancia.
 2. **D.3/D.4:** decisiones de alcance, deuda técnica y comentarios de usuarios; diferenciar juego indie, ambicioso y por encargo (F3).
 3. **GT.6 productos persistentes** (y el evento aplazado "un juego antiguo vuelve a estar de moda"); **GT.7** reequilibrio económico; **AW.F** pequeñas satisfacciones.
 4. Que la estimación de plazo al crear un juego tenga en cuenta los papeles.

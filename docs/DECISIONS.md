@@ -398,7 +398,16 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Medido:** en carreras de un año todos aparecen en juego normal (con un empleado: formación y discusión en 5–6 de cada 10 partidas). Los eventos cambian la suerte de las semillas: con 6 semillas el escenario "encargos tras un fracaso" pasaba de 1,07× a 0,90× los juegos puros; con 52 semillas queda en 0,94–1,0× (antes ≈ 1,0–1,07×): ferias y críticas premian un poco más publicar juegos. La prueba de economía usa ahora 12 semillas y exige ≥ 0,92× (antes 0,95× con 6).
 - **Simulador:** las carreras contestan los eventos como un jugador sensato (adoptar la idea, cobrar los cambios, mesa en la feria, entrevista, término medio, libros); `autoplay` usa opciones neutras.
 
-> **Pendientes de confirmar por el propietario tras jugar:** D-053, D-054 y D-055 (provisionales). Próxima decisión prevista: D-056 (relaciones en el equipo, E.3).
+### D-056 — Relaciones en el equipo (E.3)
+- **Fecha:** 2026-11-22 · **Estado:** Aplicada (provisional hasta pruebas de juego)
+- **Compromisos de diseño:** ligeras y basadas en hechos (nada aleatorio: no hay "química" por sorteo, solo rasgos), explicables en una línea, efectos moderados con tope y una tensión que siempre se suaviza. Ninguna relación mala puede hundir el estudio.
+- **Modelo:** `state.relations` (opcional; partidas antiguas empiezan sin relaciones, sin migración). Por pareja: vínculo −100…100, días trabajados juntos, lanzamientos y éxitos compartidos, mentoría. Los tipos (amistad ≥ 45, buen equipo, respeto, mentoría, tensión ≤ −15, rivalidad ≤ −40) se derivan, no se guardan.
+- **Hechos:** charla +3 (×1,25 por cada sociable, ×0,8 por cada perfeccionista, ×1,2 si ambos curiosos); día trabajando juntos +0,4 solo mientras el vínculo < 20; crunch −0,6 al día; lanzamiento +2, éxito (≥ 7) +6, fracaso (< 5) −4 (o +3 entre amigos); perder una discusión −14, acuerdo +5; la tensión se recupera +0,3 al día. Las ganancias se reducen al acercarse a ±100.
+- **Efectos:** coordinación × (1 ± hasta 5 %) según el vínculo medio; ánimo ±0,3/día como máximo; mentoría: +3 de experiencia diaria al aprendiz y +1 de gestión al mentor, se cierra al quedar a 0,5 niveles (+10 de vínculo). Los amigos también tienen días de charla; nadie charla con quien tiene tensión; las discusiones (`team_debate`) surgen entre la pareja con peor vínculo.
+- **Medido (carreras de un año con un empleado):** según la semilla aparece respeto (2 éxitos compartidos), amistad (con un compañero sociable) o mentoría; sin crunch ni discusiones no aparecen tensiones. Una primera versión hacía amigos a todos (trabajar juntos sumaba sin límite): corregido con el tope.
+- **Pendiente:** más reacciones visibles (p. ej. el mentor en el puesto del aprendiz en vez de cara a cara) y relaciones como causa de eventos (oferta de otra empresa, cambio de especialización).
+
+> **Pendientes de confirmar por el propietario tras jugar:** D-053, D-054 y D-055 (provisionales). D-056 (relaciones) también es provisional.
 
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 

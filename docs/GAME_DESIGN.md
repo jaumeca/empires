@@ -535,6 +535,12 @@ El fundador deja de estar solo. Es la siguiente gran etapa y también la forma d
 - Aprenden haciendo con el mismo modelo que el fundador (§23.1), tienen **energía y ánimo propios**, cobran **cada semana** y pueden cansarse, alegrarse o desanimarse.
 - Los rasgos tienen efecto y expresión visual (p. ej. *perfeccionista*: menos bugs y más lento; *noctámbulo*: rinde más con crunch y se agota antes; *sociable*: mejora el ánimo de los demás; *curioso*: aprende más rápido). Ningún rasgo es siempre mejor.
 
+### 24.2b Relaciones en el equipo `[IMPLEMENTADO]` (E.3, D-056)
+- Cada pareja tiene un **vínculo** (−100…100) que solo cambia por hechos: charlar en los descansos (más con alguien sociable, menos con un perfeccionista; dos curiosos conectan), trabajar juntos (solo hasta "buen equipo"), lanzar juegos juntos (un éxito une; un fracaso distancia, salvo a los amigos), perder una discusión (distancia) o llegar a un acuerdo (acerca), y el crunch (desgasta).
+- De ahí surgen **amistad**, **buen equipo**, **respeto** (éxitos compartidos), **mentoría** (alguien claramente mejor en su habilidad principal enseña al otro; cada dos días se sientan juntos y quien aprende progresa más rápido hasta casi alcanzarle), **tensión** y **rivalidad**.
+- **Efectos pequeños y con tope:** coordinación del equipo ±5 %, ánimo ±0,3 al día, aprendizaje del aprendiz. Los amigos charlan más; quienes tienen tensión no charlan entre sí; las discusiones salen donde la relación es más débil. La tensión se suaviza sola con el tiempo: nunca hunde el estudio.
+- **Se ve:** corazones, nube o libro sobre los dos cuando cambia la relación; sesiones de mentoría; sección "Con el equipo" en la ficha (como mucho 3 líneas) y recuerdos en la Historia con ambos.
+
 ### 24.3 Trabajo en equipo `[IMPLEMENTADO]` (coordinación GT.3; reparto D-054)
 - Reparto del trabajo (programar, diseñar, probar) entre los Empirians; la coordinación tiene **rendimientos decrecientes**: dos personas no son el doble de rápidas.
 - Cada Empirian va a su puesto y se le ve hacer su parte.

@@ -341,6 +341,24 @@ const VARIANTS = [
   await shot('g43-team-idea', 1800);
   await page.keyboard.press('1');
 
+  // 45-46 Relationships (E.3): a friendship forms (hearts over both), and the sheet tells it.
+  const pair = await ev(() => {
+    const g = window.__empires.game; const s = g.state;
+    const [x, y] = [s.empirians[0].id, s.empirians[1].id].sort();
+    s.relations = [{ a: x, b: y, bond: 42, days: 3, shared: 0, hits: 0, since: 0 }];
+    s.empirians[1].trait = 'sociable';
+    let ok = false;
+    const off = g.onUpdate((evs) => { if (evs.some((e) => e.type === 'relation' && e.kind === 'friends')) ok = true; });
+    for (let i = 0; i < 8 * 8 && !ok; i++) { const d = s.pendingDecision; if (d) g.dispatch({ type: 'choose_option', decisionId: d.id, optionId: d.options[d.options.length - 1].id }); else g.tick(); }
+    off();
+    window.__empires.ui.setSpeed(0);
+    return s.empirians[1].id;
+  });
+  for (let i = 0; i < 4 && (await page.isVisible('.card .close')); i++) { await page.click('.card .close'); await page.waitForTimeout(150); }
+  await shot('g44-friends', 500);
+  await ev((id) => window.__empires.ui.showEmpirian(id), pair);
+  await shot('g45-relations-sheet', 600);
+
 
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });

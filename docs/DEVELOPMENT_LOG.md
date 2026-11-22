@@ -4,6 +4,29 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-22 — Novena sesión: People & Possibilities — E.3 relaciones en el equipo (0.11.0)
+
+### Estado verificado al empezar
+Coincide con lo comunicado: `production-web` = 0.10.0 (`ff906b1`), desarrollo en `10b0826`, 187 pruebas, sin trabajo a medias. Diferencia de entorno: este contenedor tiene npm 10.9.9 (D-028 pide ≥ 11); `npm ci` y el build funcionan igual.
+
+### Resumen
+- **Relaciones profesionales** (D-056, `src/sim/systems/relations.ts`): vínculo por pareja que solo cambia por hechos (charlas, días trabajando juntos con tope, lanzamientos y éxitos compartidos, discusiones y acuerdos, crunch). Surgen amistad, buen equipo, respeto, mentoría, tensión y rivalidad.
+- **Consecuencias moderadas:** coordinación ±5 %, ánimo ±0,3/día, mentoría (el aprendiz aprende más rápido), los amigos charlan más, la tensión evita charlas y las discusiones surgen donde la relación es peor. La tensión se suaviza con el tiempo.
+- **En la oficina:** corazones, nube de tormenta o libro sobre los dos cuando cambia una relación; sesiones de mentoría cara a cara cada dos días. **Ficha:** sección "Con el equipo" (≤ 3 líneas con su significado). **Historia:** recuerdos con ambos. Ayuda: tema "Relaciones".
+
+### Pruebas ejecutadas
+- `npx vitest run`: **197 pruebas** (nuevas: `tests/sim/relations.test.ts` 10).
+- E2E en serie sobre el build publicado: **relations 7/7** (nueva), tutorial 20/20, roles 10/10, events 9/9, features 7/7, expansion 8/8, style 7/7, identity 13/13, decor 10/10, routines 8/8, pause 16/16, play 21/21, persistence 10/10, desktop 15/15, team 13/13, story 10/10, contracts 10/10.
+- Galería: 46 capturas (nuevas g44 amistad, g45 ficha con relaciones). Actualización real 0.10.0 → 0.11.0 sin errores.
+
+### Problemas encontrados
+- Primera versión: todos acababan siendo amigos (trabajar juntos sumaba sin límite todo el año). Ahora trabajar juntos solo lleva hasta "buen equipo"; la amistad requiere charlas o éxitos.
+- "Respeto" y "buen equipo" nunca se anunciaban (se medía el estado anterior después de contar el lanzamiento): corregido.
+- Los corazones quedaban tapados por la burbuja de charla del mismo instante o expulsados por burbujas de trabajo en lotes de muchos ticks: ahora se dibujan más arriba y se procesan al final del lote.
+- La clave `rel.` ya se usaba para "publicar": las nuevas usan `bond.`.
+
+---
+
 ## 2026-11-17 — Octava sesión (2.ª parte): reparto de tareas y primeros eventos de historia (0.10.0)
 
 ### Estado verificado al empezar

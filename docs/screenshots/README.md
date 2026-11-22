@@ -50,6 +50,8 @@ Capturas generadas automáticamente con `npm run gallery` (Chromium sin pantalla
 | 42 | [g41-features.jpg](g41-features.jpg) | **Funcionalidades y prototipo** (AW.D): explicadas con palabras, con bloqueos y huecos por tamaño. |
 | 43 | [g42-roles.jpg](g42-roles.jpg) | **Reparto de tareas** (AW.E.2): Auto, Diseño, Código o Pruebas por persona, con reparto automático. |
 | 44 | [g43-team-idea.jpg](g43-team-idea.jpg) | **Evento de historia** (D-055): una empleada propone una idea; tres opciones con consecuencias distintas. |
+| 45 | [g44-friends.jpg](g44-friends.jpg) | **Relaciones** (E.3): tras una charla se hacen amigos; corazones sobre los dos. |
+| 46 | [g45-relations-sheet.jpg](g45-relations-sheet.jpg) | **Con el equipo** en la ficha: la relación en una línea y su recuerdo en la historia. |
 
 ## Qué decidir en la revisión (F1.12)
 
