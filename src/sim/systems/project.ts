@@ -10,6 +10,7 @@ import { gainTopicXp, gainXp, topicBonus } from './progression';
 import { officeEffects, type OfficeEffects } from './office';
 import { toolMultiplier } from './world';
 import { harmony } from './relations';
+import { accrueDebt, debtBugs, debtCeiling, debtSpeed } from './debt';
 import { coordinationFactor, traitBugs, traitSpeed, workstationEffects } from './team';
 import { onBreak } from './routines';
 import { featureCeiling, featuresTick } from './features';
@@ -42,7 +43,7 @@ export function qualityCeiling(p: Project, founder: Empirian): number {
   const skill = skillFor(founder, p.focus);
   const mods = p.ceilingMods.reduce((a, m) => a + m.amount, 0);
   const creativity = (founder.skills.creativity - 5) * C.progression.creativityCeiling;
-  return Math.max(1, C.quality.baseCeiling + (skill - 5) * 0.35 + creativity + topicBonus(founder, p.topicId) + fitModifier(p) + mods + featureCeiling(p) - mixPenalty(p));
+  return Math.max(1, C.quality.baseCeiling + (skill - 5) * 0.35 + creativity + topicBonus(founder, p.topicId) + fitModifier(p) + mods + featureCeiling(p) - mixPenalty(p) - debtCeiling(p));
 }
 
 /**
@@ -117,7 +118,7 @@ function bugRate(p: Project, e: Empirian): number {
   const fatigue = e.energy >= t ? 0 : (t - e.energy) / t;
   const mods = p.bugRateMods.reduce((a, m) => a * m.factor, 1);
   const skillMod = 1.25 - e.skills.tech * 0.05; // tech skill 5 => 1.0
-  return C.bugs.ratePerTechPoint * (C.pace.bugMultiplier[p.pace] ?? 1) * (1 + fatigue) * mods * skillMod * traitBugs(e);
+  return C.bugs.ratePerTechPoint * (C.pace.bugMultiplier[p.pace] ?? 1) * (1 + fatigue) * mods * skillMod * traitBugs(e) * debtBugs(p);
 }
 
 // ---------------------------------------------------------------------------
@@ -159,7 +160,8 @@ function contribute(state: GameState, p: Project, e: Empirian, founder: Empirian
     const roll = nextFloat(rngW);
     const isTech = role === 'code' ? true : role === 'design' ? false : roll < p.focus;
     const specialist = role === 'code' || role === 'design' ? C.roles.specialistSpeed : testerNow ? C.roles.testerBuild : 1;
-    const pts = specialist * basePts * officeWorkMultiplier(fx, p.phase === 'concept' && !isTech ? 'concept' : isTech ? 'tech' : 'design') * toolMultiplier(state, isTech ? 'tech' : 'design');
+    // Technical debt slows programming down (F3.4).
+    const pts = specialist * basePts * (isTech ? debtSpeed(p) : 1) * officeWorkMultiplier(fx, p.phase === 'concept' && !isTech ? 'concept' : isTech ? 'tech' : 'design') * toolMultiplier(state, isTech ? 'tech' : 'design');
     if (isTech) p.workDone.tech += pts;
     else p.workDone.design += pts;
     e.activity = testerNow ? 'testing' : p.phase === 'concept' && nextFloat(rngW) < 0.4 ? 'thinking' : isTech ? 'coding' : 'designing';
@@ -177,6 +179,8 @@ function contribute(state: GameState, p: Project, e: Empirian, founder: Empirian
     // With a tester reviewing as the game is built, fewer mistakes slip in.
     const review = p.phase === 'production' && hasActiveTester(state) ? C.roles.reviewBugs : 1;
     const newBugs = sampleCount(state.rng.bugs, techPts * bugRate(p, e) * conceptMod * review);
+    // Building leaves some technical debt (more in a hurry, less with skill and care).
+    if (p.phase === 'production' && isTech) accrueDebt(state, p, e, pts);
     if (newBugs > 0) {
       let hidden = 0;
       for (let i = 0; i < newBugs; i++) if (nextFloat(state.rng.bugs) < C.bugs.hiddenShare) hidden++;

@@ -167,6 +167,7 @@ export interface DecisionOption {
 export interface PendingDecision {
   id: string;
   kind: 'big_idea' | 'deadline' | 'exhausted' | 'running_late' | 'polish_plan' | 'feature_trouble' | 'prototype_result' | 'streamer_preview' | 'rival_similar' | 'critical_bug' | 'unexpected_idea'
+    | 'tech_shortcut' | 'debt_review'
     | 'team_idea' | 'contract_change' | 'game_fair' | 'influential_review' | 'team_debate' | 'training_request';
   speakerId: string;
   text: TextRef;
@@ -253,6 +254,9 @@ export interface Project {
   /** Dynamic events already seen in this project (LS.7). */
   previewGiven?: string;
   eventsSeen?: number;
+  /** Technical debt of this project's code, 0…100 (F3.4), and what caused it. */
+  debt?: number;
+  debtCauses?: string[];
   /** Story events already raised for this project (each one at most once). */
   storyEvents?: string[];
   rivalAnnounced?: boolean;
@@ -385,6 +389,10 @@ export interface GameState {
     reputation: number; // 0-100
     /** Ideas saved for later (ledger ids), used by the next projects. */
     savedIdeas?: string[];
+    /** Technical debt left in the studio's code for the next game (F3.4). */
+    techDebt?: number;
+    /** A solid base built in a past project (ledger id): the next game needs less work. */
+    solidBase?: string;
   };
   founderId: string;
   empirians: Empirian[];

@@ -4,6 +4,7 @@ import { newId, record } from './core/ledger';
 import type { Appearance, GameState, Project, ProjectSize, Role, Rot } from './model/state';
 import { canPlace, getItemDef, SELL_REFUND } from './systems/office';
 import { useSavedIdeas } from './systems/events';
+import { inheritDebt } from './systems/debt';
 import { fire, hire } from './systems/team';
 import { tutorialCommand } from './systems/tutorial';
 import { setupFeatures } from './systems/features';
@@ -124,6 +125,7 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       state.projects.push(p);
       state.activeProjectId = p.id;
       useSavedIdeas(state, p);
+      inheritDebt(state, p, emit);
       const startedId = record(state, {
         kind: 'project_started',
         text: { key: 'ledger.project_started', params: { project: p.name, topic: p.topicId, size: p.size, budget: cmd.budget, days: cmd.days } },

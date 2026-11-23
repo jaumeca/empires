@@ -4,6 +4,8 @@ import { newId, record } from '../core/ledger';
 import type { DecisionOption, Empirian, GameState, PendingDecision, Project, TextRef } from '../model/state';
 import { pointsPerTick, productionProgress } from './project';
 import { cutTrouble, FEATURE_CFG, fixTrouble, ignoreTrouble, openTrouble } from './features';
+import { debtLevel, refactorCost } from './debt';
+import { remember } from './story';
 
 const productionShare = (p: Project) => productionProgress(p);
 
@@ -26,7 +28,8 @@ const opt = (id: string, kind: string, hints: string[]): DecisionOption => ({ id
 interface MomentDef {
   kind: PendingDecision['kind'];
   trigger(state: GameState, p: Project, f: Empirian): boolean;
-  build(state: GameState, p: Project, f: Empirian): { text: TextRef; options: DecisionOption[] };
+  /** speakerId: who raises it (default: the founder). */
+  build(state: GameState, p: Project, f: Empirian): { text: TextRef; options: DecisionOption[]; speakerId?: string };
   resolve(state: GameState, p: Project, f: Empirian, optionId: string): void;
 }
 
@@ -34,6 +37,16 @@ interface MomentDef {
 export function projectedProductionDays(p: Project, f: Empirian): number {
   const remaining = Math.max(0, p.requiredPoints - p.workDone.design - p.workDone.tech);
   return remaining / Math.max(0.01, pointsPerTick(p, f) * SIM_CONFIG.ticksPerDay);
+}
+
+/** Who on the team knows the code best (they raise code-quality questions). */
+function bestCoder(state: GameState): Empirian {
+  return [...state.empirians].sort((a, b) => b.skills.tech - a.skills.tech || (a.id < b.id ? -1 : 1))[0]!;
+}
+
+/** Remember a code decision in the Story, with who raised it. */
+function rememberCode(state: GameState, id: string, key: string, params: TextRef['params'], tone: -1 | 0 | 1, p: Project, who?: string): void {
+  remember(state, `code:${id}`, 'decision', { key, params }, { tone, projectId: p.id, empirianIds: who && who !== state.founderId ? [who] : undefined });
 }
 
 const MOMENTS: MomentDef[] = [
@@ -154,6 +167,70 @@ const MOMENTS: MomentDef[] = [
       p.testFocus = tf;
     },
   },
+  {
+    // The best coder proposes a shortcut early in production (F3.4).
+    kind: 'tech_shortcut',
+    // Raised by an employee (a solo founder doesn't argue with themself).
+    trigger: (s, p) => s.empirians.length >= 2 && p.phase === 'production' && productionShare(p) >= 0.2 && productionShare(p) <= 0.5,
+    build: (state, p) => {
+      const c = bestCoder(state);
+      return {
+        speakerId: c.id,
+        text: k('moment.tech_shortcut.text', { name: c.name, project: p.name }),
+        options: [
+          opt('shortcut', 'tech_shortcut', ['hint.work_down', 'hint.debt_up']),
+          opt('proper', 'tech_shortcut', ['hint.no_changes']),
+          opt('solid_base', 'tech_shortcut', ['hint.work_up_small', 'hint.debt_down', 'hint.next_project_faster']),
+        ],
+      };
+    },
+    resolve: (state, p, _f, o) => {
+      const D = SIM_CONFIG.debt;
+      const who = bestCoder(state).id;
+      const id = record(state, { kind: 'decision', text: k(`ledger.moment.tech_shortcut.${o}`, { project: p.name }), causes: [], tone: o === 'shortcut' ? -1 : o === 'solid_base' ? 1 : 0, projectId: p.id });
+      if (o === 'shortcut') {
+        const done = p.workDone.design + p.workDone.tech;
+        p.requiredPoints = done + Math.max(0, p.requiredPoints - done) * (1 - D.shortcutSaving);
+        p.debt = Math.min(D.max, (p.debt ?? 0) + D.shortcutDebt);
+        p.debtCauses = [...(p.debtCauses ?? []), id];
+      } else if (o === 'solid_base') {
+        p.requiredPoints *= 1 + D.solidBaseWork;
+        p.debt = Math.max(0, (p.debt ?? 0) - D.solidBaseDebtCut);
+        state.company.solidBase = id;
+      }
+      if (o !== 'proper') rememberCode(state, id, `ledger.moment.tech_shortcut.${o}`, { project: p.name }, o === 'shortcut' ? -1 : 1, p, who);
+    },
+  },
+  {
+    // The code has become fragile: refactor now or live with it (F3.4).
+    kind: 'debt_review',
+    trigger: (_s, p) => (p.phase === 'production' || p.phase === 'polish') && (p.debt ?? 0) >= SIM_CONFIG.debt.reviewAt,
+    build: (state, p) => {
+      const c = bestCoder(state);
+      const days = (share: number) => Math.max(1, Math.round(refactorCost(p, share) / Math.max(0.1, pointsPerTick(p, c) * SIM_CONFIG.ticksPerDay * state.empirians.length)));
+      return {
+        speakerId: c.id,
+        text: k('moment.debt_review.text', { name: c.name, project: p.name, level: debtLevel(p.debt ?? 0) }),
+        options: [
+          { ...opt('refactor', 'debt_review', ['hint.debt_down2', 'hint.bugs_down']), label: k('moment.debt_review.refactor', { days: days(0.75) }) },
+          { ...opt('patch', 'debt_review', ['hint.debt_down']), label: k('moment.debt_review.patch', { days: days(0.4) }) },
+          opt('live_with', 'debt_review', ['hint.no_delay', 'hint.next_project_debt']),
+        ],
+      };
+    },
+    resolve: (state, p, _f, o) => {
+      const who = bestCoder(state).id;
+      const id = record(state, { kind: 'decision', text: k(`ledger.moment.debt_review.${o}`, { project: p.name }), causes: [], tone: o === 'live_with' ? -1 : 1, projectId: p.id });
+      const share = o === 'refactor' ? 0.75 : o === 'patch' ? 0.4 : 0;
+      if (share) {
+        p.requiredPoints += refactorCost(p, share);
+        p.debt = (p.debt ?? 0) * (1 - share);
+      } else {
+        p.debtCauses = [...(p.debtCauses ?? []), id];
+      }
+      rememberCode(state, id, `ledger.moment.debt_review.${o}`, { project: p.name }, o === 'live_with' ? -1 : 1, p, who);
+    },
+  },
 ];
 
 export function maybeOfferMoment(state: GameState, p: Project, founder: Empirian, emit: EventSink): void {
@@ -163,12 +240,13 @@ export function maybeOfferMoment(state: GameState, p: Project, founder: Empirian
   if (p.lastMomentDay !== undefined && state.day - p.lastMomentDay < MOMENT_RULES.minGapDays) return;
   for (const m of MOMENTS) {
     if (offered.includes(m.kind) || !m.trigger(state, p, founder)) continue;
-    const { text, options } = m.build(state, p, founder);
-    const decision: PendingDecision = { id: newId(state, 'D'), kind: m.kind, speakerId: founder.id, text, options, createdTick: state.tick };
+    const { text, options, speakerId } = m.build(state, p, founder);
+    const speaker = state.empirians.find((e) => e.id === speakerId) ?? founder;
+    const decision: PendingDecision = { id: newId(state, 'D'), kind: m.kind, speakerId: speaker.id, text, options, createdTick: state.tick };
     p.momentsOffered = [...offered, m.kind];
     p.lastMomentDay = state.day;
     state.pendingDecision = decision;
-    founder.activity = 'raising_hand';
+    speaker.activity = 'raising_hand';
     emit({ type: 'decision_requested', decisionId: decision.id, severity: 'decisive' });
     return;
   }

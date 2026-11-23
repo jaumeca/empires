@@ -194,6 +194,34 @@ export const SIM_CONFIG = {
     previewBugThreshold: 5,
   },
 
+  /** Technical debt (F3.4 / D-057): 0…100 per project; part is inherited by the next game. */
+  debt: {
+    max: 100,
+    perTechPoint: 0.1,
+    pace: { relaxed: 0.5, normal: 1, crunch: 2 } as Record<string, number>,
+    skillEffect: 0.08,
+    perfectionist: 0.7,
+    harmonyEffect: 4,
+    slowdownPerPoint: 0.004,
+    maxSlowdown: 0.2,
+    bugsPerPoint: 0.01,
+    ceilingFree: 10,
+    ceilingPerPoint: 0.015,
+    maxCeiling: 0.6,
+    patchedAt: 12,
+    fragileAt: 35,
+    refactorPointsPerDebt: 0.8,
+    carryShare: 0.4,
+    companyDecay: 0.5,
+    maxCompany: 40,
+    solidBaseSaving: 0.1,
+    shortcutSaving: 0.12,
+    shortcutDebt: 12,
+    solidBaseWork: 0.04,
+    solidBaseDebtCut: 8,
+    reviewAt: 20,
+  },
+
   /** Relationships (E.3 / D-056): bond −100…100 from real facts; moderate, capped effects. */
   relations: {
     workTogether: 0.4,

@@ -51,7 +51,7 @@ const MOMENT_DEFAULTS: Record<string, string> = {
   exhausted: 'rest', running_late: 'carry_on', polish_plan: 'balanced',
   streamer_preview: 'decline', rival_similar: 'differentiate', critical_bug: 'patch_later', unexpected_idea: 'save',
   team_idea: 'save', contract_change: 'paid', game_fair: 'skip', influential_review: 'decline', team_debate: 'both', training_request: 'not_now',
-  feature_trouble: 'push', prototype_result: 'fix',
+  feature_trouble: 'push', prototype_result: 'fix', tech_shortcut: 'proper', debt_review: 'patch',
 };
 
 /** Picks the autoplay answer for any pending decision. */

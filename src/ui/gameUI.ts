@@ -8,6 +8,7 @@ import { NEXT_SIZE, OFFICE_SIZES } from '../content/officeSizes';
 import { ACHIEVEMENTS, memoriesOf } from '../sim/systems/story';
 import { biography } from '../sim/systems/biography';
 import { notableRelations } from '../sim/systems/relations';
+import { debtLevel } from '../sim/systems/debt';
 import { FEATURE_CFG, featureLock } from '../sim/systems/features';
 import { FEATURE_SLOTS, FEATURES, getFeature } from '../content/features';
 import type { Game } from '../sim/game';
@@ -585,7 +586,7 @@ export class GameUI {
     const focusLbl = h('span');
     const refresh = () => {
       // Features and a prototype add work (AW.D): the estimate includes them.
-      const extra = plan.features.reduce((a, id) => a + (getFeature(id)?.work ?? 0), 0) + (plan.prototype ? FEATURE_CFG.prototypeWork : 0);
+      const extra = plan.features.reduce((a, id) => a + (getFeature(id)?.work ?? 0), 0) + (plan.prototype ? FEATURE_CFG.prototypeWork : 0) - (s.company.solidBase ? SIM_CONFIG.debt.solidBaseSaving : 0);
       const e = estimatePlan(founder, plan.size, plan.focus, plan.budget, plan.days, teamSpeedFactor(s, plan.focus) / (1 + extra));
       clear(est);
       const verdict = { too_short: 'bad', tight: 'warn', ok: 'good', generous: 'warn' }[e.verdict];
@@ -593,6 +594,10 @@ export class GameUI {
         h('span.chip', null, icon('clock', 16), t('np.production_est', { min: e.productionDays[0], max: e.productionDays[1] })),
         h(`span.chip.${verdict}`, null, t(`np.verdict.${e.verdict}`)),
       );
+      // F3.4: what the studio's code brings into this game.
+      const inherited = s.company.techDebt ?? 0;
+      if (debtLevel(inherited) !== 'solid') est.append(h('span.chip.warn', { id: 'np-debt', title: t('newproject.inherited_debt', { level: debtLevel(inherited) }) }, icon('code', 16), `${t('project.code')}: ${t(`debt.${debtLevel(inherited)}`)}`));
+      if (s.company.solidBase) est.append(h('span.chip.good', { id: 'np-solid', title: t('newproject.solid_base') }, icon('star', 16), t('newproject.solid_base')));
       budgetLbl.textContent = t('np.budget_value', { budget: plan.budget, marketing: plan.budget * 0.3 });
       daysLbl.textContent = t('np.deadline_value', { days: plan.days, day: s.day + plan.days });
       focusLbl.textContent = t(plan.focus < 0.35 ? 'np.focus.design' : plan.focus > 0.65 ? 'np.focus.tech' : 'np.focus.balanced');
@@ -716,6 +721,8 @@ export class GameUI {
         h('span.chip', null, t('pp.content', { pct: prog })),
         h('span.chip', null, icon('star', 16), t('pp.quality', { min: est.quality[0], max: est.quality[1] })),
         h('span.chip', null, icon('bug', 16), t('pp.bugs', { known: p.bugs.known, min: est.hiddenBugs[0], max: est.hiddenBugs[1] })),
+        // F3.4: the state of the code in words, not a number.
+        ((lvl) => h(`span.chip.code.${lvl === 'solid' ? 'good' : lvl === 'patched' ? 'warn' : 'bad'}`, { id: 'pp-code', title: t('help.debt.text') }, icon('code', 16), `${t('project.code')}: ${t(`debt.${lvl}`)}`))(debtLevel(p.debt ?? 0)),
         h(`span.chip.${founder.energy < 30 ? 'bad' : 'good'}`, null, icon('sweat', 16), t('pp.energy', { n: founder.energy })),
         h('span.chip', null, icon('heart', 16), t('pp.hype', { n: p.hype })),
         h('span.chip', null, icon('coin', 16), t('pp.spent', { spent: p.spent, budget: p.budget })),
@@ -1216,7 +1223,7 @@ export class GameUI {
       h('p.sub', null, t('help.sub')),
       h('div.help-grid', null,
         topic('games', 'rocket'), topic('time', 'clock'), topic('energy', 'sweat'), topic('decisions', 'idea'),
-        topic('sales', 'coin'), topic('office', 'decor'), topic('team', 'team'), topic('relations', 'heart'), topic('story', 'star'),
+        topic('sales', 'coin'), topic('office', 'decor'), topic('team', 'team'), topic('relations', 'heart'), topic('debt', 'code'), topic('story', 'star'),
       ),
       desk ? h('p.hint', null, t('menu.shortcuts')) : null,
       h('div.actions', null,

@@ -90,11 +90,13 @@ export function resolveDecision(
   if (!p || !founder) return { ok: false, error: 'no_active_project' };
 
   state.pendingDecision = null;
-  founder.activity = 'idle';
-  gainXp(state, founder, 'management', SIM_CONFIG.progression.managementPerDecision, emit);
+  founder.activity = 'idle'; // the speaker lowers their hand
+  // Moments may be raised by an employee (F3.4); deciding is still the founder's job.
+  const boss = state.empirians.find((e) => e.id === state.founderId) ?? founder;
+  gainXp(state, boss, 'management', SIM_CONFIG.progression.managementPerDecision, emit);
   p.decisionsTaken.push(`${d.kind}:${optionId}`);
 
-  if (resolveMoment(state, p, founder, d.kind, optionId)) {
+  if (resolveMoment(state, p, boss, d.kind, optionId)) {
     // handled by systems/moments.ts
   } else if (d.kind === 'big_idea') {
     const extraDays = p.size === 'small' ? 10 : 14;

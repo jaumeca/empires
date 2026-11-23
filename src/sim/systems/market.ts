@@ -1,5 +1,6 @@
 import { activeFeatures, featureCeiling, featureReach } from './features';
 import { relationsRelease } from './relations';
+import { carryDebt, debtCeiling, debtLevel, debtOf } from './debt';
 import { SIM_CONFIG } from '../config';
 import type { EventSink } from '../core/events';
 import { entriesFor, record } from '../core/ledger';
@@ -95,6 +96,12 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
     const fc = featureCeiling(p);
     factors.push({ amount: fc * 0.85, text: { key: (p.featureIgnored ?? []).length ? 'factor.features_trouble' : fc >= 0.2 ? 'factor.features_good' : 'factor.features_meh', params: { count: activeFeatures(p).length } }, causes: started });
   }
+  // Technical debt (F3.4): a fragile codebase, with what caused it.
+  const dc = debtCeiling(p);
+  if (dc > 0.05) {
+    const crunch = entriesFor(state, p.id, ['pace_changed']).filter((e) => e.text.key === 'ledger.pace.crunch').map((e) => e.id);
+    factors.push({ amount: -dc, text: { key: 'factor.debt', params: { level: debtLevel(debtOf(p)) } }, causes: [...new Set([...(p.debtCauses ?? []), ...crunch])] });
+  }
   const promise = entriesFor(state, p.id, ['promise'])[0];
   if (promise) factors.push({ amount: 0.05, text: { key: 'factor.promise' }, causes: [promise.id] });
 
@@ -109,6 +116,7 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
   founder.activity = 'celebrating';
   gainXp(state, founder, 'management', C.progression.managementPerRelease, emit);
   relationsRelease(state, p, emit);
+  carryDebt(state, p);
   state.activeProjectId = null;
   record(state, { kind: 'released', text: { key: 'ledger.released', params: { project: p.name, score: averageScore } }, causes: explanation, tone: averageScore >= 6 ? 1 : -1, projectId: p.id });
   compactHistory(state);
