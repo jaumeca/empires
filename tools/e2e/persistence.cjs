@@ -77,8 +77,10 @@ const company = (page) => page.evaluate(() => { try { return JSON.parse(localSto
   await page.click('#hud-menu');
   const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.click('text=Importar partida')]);
   await chooser.setFiles(file);
-  await page.waitForTimeout(2500);
-  check('import restores the exported game', (await company(page)) === v1Name && (await page.textContent('#ui')).includes(v1Name));
+  // The import reloads the page: wait until the HUD is back (up to 10 s) instead of a fixed time.
+  for (let i = 0; i < 40 && !(((await page.textContent('#ui').catch(() => '')) || '').includes(v1Name)); i++) await page.waitForTimeout(250);
+  const got = await company(page); const ui = await page.textContent('#ui');
+  check('import restores the exported game', got === v1Name && ui.includes(v1Name), `got ${got} want ${v1Name} url ${page.url()} ui ${ui.slice(0, 80)}`);
 
   check('no page errors', errors.length === 0, errors.join(' | '));
   console.log(`\n${checks.filter(Boolean).length}/${checks.length} checks passed`);

@@ -4,6 +4,26 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-23 — Novena sesión (3.ª parte): idea de alcance y tester revisado (0.13.0)
+
+### Resumen
+- **Idea de alcance** (D-058): a mitad de producción, si quedan huecos, la persona más creativa propone añadir la funcionalidad que mejor encaja (o la que llega a más gente si el tema está de moda): añadirla, añadirla con 7 días más o seguir con lo planeado. Queda en la Historia.
+- **Ritmo:** una sola propuesta de equipo por proyecto (atajo de código o idea de alcance), para no interrumpir más.
+- **Tester revisado** (corrige D-054): con un plan de pulido equilibrado el tester nunca compensaba; ahora construye la mitad del tiempo, reduce más los bugs de los demás y, al revisar el código, reduce a la mitad la deuda técnica del equipo. Gana en medianos ajustados, empata en holgados, pierde en pequeños.
+
+### Pruebas ejecutadas
+- `npx vitest run`: **210 pruebas** (nuevas: `tests/sim/scope.test.ts` 4; `roles.test.ts` medido con plan equilibrado; guardado < 5 KB por producto).
+- E2E en serie sobre el build publicado: **scope 5/5** (nueva), debt 9/9, relations 7/7, tutorial 20/20, roles 10/10, events 9/9, features 7/7, expansion 8/8, style 7/7, identity 13/13, decor 10/10, routines 8/8, pause 16/16, play 21/21, persistence 10/10, desktop 15/15, team 13/13, story 10/10, contracts 10/10.
+- Galería 47 (g46 ahora es "propuesta del equipo"). Actualización real 0.12.0 → 0.13.0 sin errores.
+
+### Problemas encontrados
+- La medida de D-054 era engañosa (dependía de una política extrema del simulador). Corregido el tester y la prueba.
+- `pause` falló 1 de 3 veces (un giro del fundador durante la pausa a 4x) y pasó en las dos repeticiones; no se encontró la causa (las tarjetas de decisión no mueven la cámara ni a nadie). Se deja anotado como intermitente.
+- `persistence` fallaba a veces: al importar, la página se recarga y la prueba miraba la interfaz a los 2,5 s. La partida se restauraba bien; ahora la prueba espera a que vuelva el HUD (3 de 3).
+- `pause` y `debt` se adaptaron: ahora contestan las decisiones que aparecen (nuevas ideas en solitario) y eligen el proyecto que recibe el atajo.
+
+---
+
 ## 2026-11-23 — Novena sesión (2.ª parte): F3.4 deuda técnica (0.12.0)
 
 ### Revisión previa (para no duplicar)

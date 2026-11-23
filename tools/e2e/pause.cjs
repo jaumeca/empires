@@ -19,6 +19,8 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   const snap = () => page.evaluate(() => window.__empires.scene.worldSnapshot());
   const tick = () => page.evaluate(() => window.__empires.game.state.tick);
   const answerAll = async () => { for (let i = 0; i < 10 && (await page.evaluate(() => !!window.__empires.game.state.pendingDecision)); i++) { await page.keyboard.press('1'); await page.waitForTimeout(250); } };
+  // Decisions (moments, ideas) may pop up at any time and pause the game: answer before clicking a speed.
+  const speed = async (v) => { await answerAll(); await page.click(`[data-speed="${v}"]`); };
   await page.goto(`${base}/?fresh&debug&seed=21`);
   await page.waitForTimeout(1500);
   await page.click('#start-game');
@@ -26,29 +28,29 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.click('#start-project');
   await answerAll();
 
-  for (const speed of ['1', '4', '8']) {
-    await page.click(`[data-speed="${speed}"]`);
+  for (const sp of ['1', '4', '8']) {
+    await speed(sp);
     await page.waitForTimeout(1500);
     await answerAll();
-    await page.click(`[data-speed="${speed}"]`);
+    await speed(sp);
     await page.waitForTimeout(300);
     const moving1 = await snap();
     await page.waitForTimeout(400);
     const moving2 = await snap();
-    check(`world animates at ${speed}x`, moving2 !== moving1, moving2 !== moving1 ? '' : await page.evaluate(() => JSON.stringify({ speed: window.__empires.game.clock.speed, pend: window.__empires.game.state.pendingDecision?.kind, modal: document.querySelector('.backdrop')?.className, tut: document.getElementById('tutorial-coach')?.dataset.step })));
-    await page.click('[data-speed="0"]');
+    check(`world animates at ${sp}x`, moving2 !== moving1, moving2 !== moving1 ? '' : await page.evaluate(() => JSON.stringify({ speed: window.__empires.game.clock.speed, pend: window.__empires.game.state.pendingDecision?.kind, modal: document.querySelector('.backdrop')?.className, tut: document.getElementById('tutorial-coach')?.dataset.step })));
+    await speed('0');
     await page.waitForTimeout(100);
     const a = await snap(); const ta = await tick();
     await page.waitForTimeout(1500);
     const b = await snap(); const tb = await tick();
-    check(`pause at ${speed}x freezes poses, bubbles and screen`, a === b, a === b ? '' : `${a.slice(0, 120)} vs ${b.slice(0, 120)}`);
-    check(`pause at ${speed}x stops simulation time`, ta === tb, `${ta} → ${tb}`);
+    check(`pause at ${sp}x freezes poses, bubbles and screen`, a === b, a === b ? '' : `${a.slice(0, 120)} vs ${b.slice(0, 120)}`);
+    check(`pause at ${sp}x stops simulation time`, ta === tb, `${ta} → ${tb}`);
   }
   await page.screenshot({ path: path.join(out, 'paused.png') });
 
   // UI keeps working while paused: menu, newspaper, camera zoom, decoration.
   await answerAll();
-  await page.click('[data-speed="0"]');
+  await speed('0');
   await page.waitForTimeout(200);
   const frozen = await snap();
   await page.keyboard.press('n'); await page.waitForTimeout(300);
@@ -62,7 +64,7 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   check('…and the world stays frozen meanwhile', (await snap()) === frozen);
 
   // Resume: continues from the same pose (first frame barely changes it).
-  await page.click('[data-speed="1"]');
+  await speed('1');
   await page.waitForTimeout(50);
   const r1 = JSON.parse(await snap()).actors[0];
   const f = JSON.parse(frozen).actors[0];

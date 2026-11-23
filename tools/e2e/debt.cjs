@@ -30,6 +30,9 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
     for (let z = 0; z < s.office.d && !ok; z++) for (let x = 0; x < s.office.w && !ok; x++) for (const rot of [0, 1, 2, 3]) if (!ok) ok = g.dispatch({ type: 'buy_item', defId: 'desk_basic', x, z, rot }).ok;
     s.hiring.candidates.push({ id: 'H-code', name: 'Kai', appearance: { skin: 1, hairStyle: 6, hairColor: 2, top: 4, topColor: 6, pantsColor: 3, accessory: 3 }, baseSkills: { tech: 8, design: 4, creativity: 5, management: 4 }, trait: 'curious', salary: 600, expiresDay: 99 });
     g.dispatch({ type: 'hire', candidateId: 'H-code' });
+    // One team proposal per project (D-058): pick the project id that gets the code shortcut (test only).
+    const hashUnit = (seed, a, b) => { let h = 2166136261 ^ seed; for (const ch of `${a}|${b}`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995); h ^= h >>> 15; return (h >>> 0) / 4294967296; };
+    while (hashUnit(s.seed, `P-${s.nextId}`, 'proposal') >= 0.5) s.nextId++;
     g.dispatch({ type: 'start_project', name: 'Atajos', topicId: 'pirates', size: 'small', focus: 0.45, budget: 1500, days: 42, price: 9.99 });
     // Run until the shortcut question (answering anything else sensibly).
     for (let i = 0; i < 20000; i++) {

@@ -4,7 +4,7 @@
 >
 > Estados: ⬜ Pendiente · 🟦 En curso · ✅ Hecho · ⏸ Bloqueado (esperando aprobación)
 
-> **Estado (2026-11-23):** E.3 relaciones (D-056, 0.11.0) y F3.4 deuda técnica (D-057) hechas. Ver `docs/CONTINUAR_DESARROLLO.md`.
+> **Estado (2026-11-23):** E.3 relaciones (D-056, 0.11.0), F3.4 deuda técnica (D-057, 0.12.0) e idea de alcance (D-058) hechas. Ver `docs/CONTINUAR_DESARROLLO.md`.
 
 ## Resumen
 
@@ -186,7 +186,7 @@ Objetivo: el fundador deja de estar solo. Contratar, convivir y trabajar en equi
 | GT.3 | **Trabajo en equipo y asignación**: repartir programación, diseño y pruebas; coordinación con rendimientos decrecientes | F4 | Cada Empirian va a su puesto y hace su actividad | Dos personas no son el doble de rápidas (prueba); asignar bien rinde más que asignar mal | GT.2 | ✅ Coordinación (×0,87 por persona con 2) y asignación de tareas (D-054, 0.10.0) |
 | GT.4 | **Ampliar la oficina y nuevas ubicaciones** (habitación → garaje/estudio más grande) | F4 | Mudanza con cajas; habitación más grande | Inversión grande con beneficio claro (más puestos, más ambiente) y coste recurrente | GT.1 | ✅ 1.ª ampliación: habitación 10×8 → estudio 14×10 (25 000 €, 60 €/día, hasta 6 personas + fundador), `content/officeSizes.ts`, `tests/sim/expansion.test.ts`, `tools/e2e/expansion.cjs` 8/8 (D-052). Pendiente: más ubicaciones (garaje, edificio) |
 | GT.8 | **Relaciones en el equipo** (E.3): afinidades, buen equipo, respeto, mentoría, tensión y rivalidad a partir de hechos reales | F4 | Charlas más frecuentes entre amigos, corazones/nube/libro sobre ambos, sesiones de mentoría; sección "Con el equipo" en la ficha | Nada aleatorio; efectos moderados y con tope; la tensión se suaviza; determinista y guardado (pruebas) | GT.2, AW.B | ✅ D-056, `systems/relations.ts`, `tests/sim/relations.test.ts` 10, e2e `relations.cjs` 7/7 |
-| GT.5 | **Otros tipos de software: aplicaciones y herramientas** con factores de éxito propios | F7 | Pantallas y cajas distintas | Cada tipo tiene ≥ 2 factores propios que cambian la estrategia (prueba) | F3.2 | ⬜ |
+| GT.5 | **Otros tipos de software: aplicaciones y herramientas** con factores de éxito propios | F7 | Pantallas y cajas distintas | Cada tipo tiene ≥ 2 factores propios que cambian la estrategia (prueba) | F3.2 | 🟦 1.ª versión (AW.D.1) + idea de alcance a mitad de producción (D-058, `tests/sim/scope.test.ts`, e2e `scope.cjs` 5/5); falta recortar funcionalidades por decisión propia |
 | GT.6 | **Productos persistentes**: mantenimiento, actualizaciones y parches; usuarios; abandono con consecuencias | F5 | Tocar la caja de la estantería abre la historia del producto y sus acciones | Un producto mantenido vende más tiempo; uno abandonado pierde reputación (prueba) | LS.6, GT.3 | ⬜ |
 | GT.7 | **Reequilibrio económico** con sueldos y ampliaciones (cierra Q-011) | D-034 | — | `economy.report.ts` antes/después; estudio pequeño viable; el dinero tiene usos con sentido | GT.1–GT.4 | ⬜ |
 
