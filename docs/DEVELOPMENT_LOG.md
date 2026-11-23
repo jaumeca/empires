@@ -4,6 +4,30 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-23 — Undécima sesión: From Little to Empire — progresión por desbloqueos (0.16.0)
+
+### Estado verificado al empezar
+Coincide: `production-web` = 0.15.0 (`f40fb50`), desarrollo `5bdcae4`, 230 pruebas.
+
+### Resumen
+- **Auditoría** de lo que ve un jugador nuevo (`tools/e2e/firstminutes.cjs`), antes y después, con capturas en `docs/screenshots/progression/`.
+- **Diseño** en `docs/PROGRESSION.md` y D-062: 7 desbloqueos por hitos reales (mejor equipo, planificar, periódico, encargos, equipo, estudio, ampliación), nunca por esperar días; nada se vuelve a bloquear.
+- **Simulación:** `systems/progress.ts`, guardado v11 con migración que reconstruye el progreso de las partidas antiguas sin avisos; primer juego sin eventos del estudio ni ideas de alcance; ofertas de encargos solo tras desbloquearse; contratar con el desbloqueo «equipo».
+- **Interfaz:** HUD, primer juego, tarjeta del proyecto, Decorar (incluidos trofeos sin ganar) y atajos de teclado solo muestran lo desbloqueado; una línea anuncia lo siguiente; aviso «¡Nuevo!», confeti, recuerdo y punto «nuevo» de 3 días.
+
+### Pruebas ejecutadas
+- `npx vitest run`: **239 pruebas** (nuevas: `tests/sim/progress.test.ts` 9; las pruebas de mecánicas usan `unlockAll`).
+- E2E en serie sobre el build publicado: **progression 15/15** (nueva) y las otras 21 suites en verde. Las suites de mecánicas llaman a `__empires.unlockAll()` (prueban la mecánica, no cuándo se desbloquea).
+- Galería 49. Actualización real 0.15.0 → 0.16.0 (v10 → v11) sin errores ni tutorial forzado; partida antigua con un juego publicado: conserva planificar, periódico y encargos sin avisos.
+
+### Problemas encontrados
+- El simulador anual dejó de contratar (0 contrataciones): solo contrataba entre proyectos, y el desbloqueo «equipo» llega ahora con el segundo lanzamiento, cuando ya ha empezado el siguiente juego. Un jugador puede contratar siempre; el simulador ahora también.
+- La estrategia «solo encargos desde el día 1» ya no es posible por diseño (los clientes llegan con las primeras ventas).
+- Pruebas e2e que daban por hecho que todo existía desde el principio (periódico, encargos, funcionalidades, categorías de Decorar) o que el último recuerdo era el suyo: adaptadas.
+- `tutorial` falló una vez en el paso 11 (contratar) y pasó en 4 repeticiones; queda un diagnóstico en la prueba por si vuelve.
+
+---
+
 ## 2026-11-23 — Décima sesión (2.ª parte): D.4 tipos de proyecto y decisiones conectadas (0.15.0)
 
 ### Revisión previa

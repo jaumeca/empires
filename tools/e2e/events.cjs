@@ -59,9 +59,10 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.keyboard.press('1');
   await page.waitForTimeout(500);
   s = await st();
-  const mem = s.story.memories[s.story.memories.length - 1];
+  // Look it up by content: an unlock memory (D-062) can be added in the same moment.
+  const mem = s.story.memories.find((m) => m.text.key === 'ledger.event.team_idea.adopt') || {};
   check('digit 1 adopts the idea (more ceiling, more morale)', !s.pendingDecision && s.projects[0].ceilingMods.length === ceil0 + 1);
-  check('it is remembered in the Story with them', mem.text.key === 'ledger.event.team_idea.adopt' && (mem.empirianIds || []).includes(iris.id));
+  check('it is remembered in the Story with them', !!mem.text && (mem.empirianIds || []).includes(iris.id));
   await closeCards();
   await page.click(`[data-speed="0"]`).catch(() => {});
   await page.evaluate((id) => window.__empires.ui.showEmpirian(id), iris.id);
