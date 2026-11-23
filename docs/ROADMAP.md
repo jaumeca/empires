@@ -4,7 +4,7 @@
 >
 > Estados: ⬜ Pendiente · 🟦 En curso · ✅ Hecho · ⏸ Bloqueado (esperando aprobación)
 
-> **Estado (2026-11-23):** E.3 relaciones (0.11.0), F3.4 deuda técnica (0.12.0), idea de alcance (0.13.0), pausa y reputación (0.14.0), D.4 tipos de proyecto (D-060) y conexiones (D-061) hechas. Ver `docs/CONTINUAR_DESARROLLO.md`.
+> **Estado (2026-11-23):** E.3 relaciones (0.11.0), F3.4 deuda técnica (0.12.0), idea de alcance (0.13.0), pausa y reputación (0.14.0), D.4 tipos de proyecto y conexiones (0.15.0) y **progresión por desbloqueos** (D-062, `docs/PROGRESSION.md`) hechas. Ver `docs/CONTINUAR_DESARROLLO.md`.
 
 ## Resumen
 
@@ -124,6 +124,17 @@ Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, of
 **Orden de implementación:** el del propietario (LS.1 → LS.2–LS.4 → LS.5 → LS.7 → LS.8 → LS.9), con LS.6 junto a LS.5 porque los resurgimientos y las ventas residuales dependen de las noticias y alimentan los eventos sobre productos antiguos. F3.2 (funcionalidades y alcance) y el resto de F3 continúan después de LS o intercalados si el tiempo lo permite; no hay tareas de F3 a medio hacer (F3.1 está terminada).
 
 **Ideas registradas para fases posteriores (sin implementar ahora):** investigación tecnológica (F6), mantenimiento y actualizaciones de productos, expansiones y secuelas, portabilidad a nuevas plataformas (F5/F7), formación y descanso como actividades (F4), ferias y oportunidades comerciales (F9), gestión de productos antiguos y venta/licencia (F5/F8), historia del producto al tocar su caja (F3.9/F5), servidores en etapas posteriores de la oficina (F4/F8), eventos encadenados largos y crisis (F9).
+
+---
+
+## PR — Progresión: de pequeño a imperio (D-062)
+
+| ID | Tarea | Estado |
+|---|---|---|
+| PR.1 | Diseño y documento de progresión (`docs/PROGRESSION.md`), auditoría antes/después (`tools/e2e/firstminutes.cjs`) | ✅ |
+| PR.2 | Desbloqueos por hitos en la simulación, guardado v11 con migración, primer juego tranquilo | ✅ `systems/progress.ts`, `tests/sim/progress.test.ts` |
+| PR.3 | Interfaz progresiva: HUD, primer juego, tarjeta del proyecto, Decorar; avisos, celebración, recuerdo y punto «nuevo» | ✅ e2e `progression.cjs` 15/15 |
+| PR.4 | [FUTURO] Etapa «Imperio» con productos persistentes (GT.6) y clientes importantes; tutorial aún más ligero tras pruebas del propietario | ⬜ |
 
 ---
 

@@ -19,6 +19,7 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.goto(`${base}/?fresh&debug&seed=8`);
   await page.waitForTimeout(1500);
   await page.click('#start-game');
+  await page.evaluate(() => window.__empires.unlockAll()); // tests the mechanic, not when it unlocks (D-062)
   await page.evaluate(() => { window.__empires.game.state.company.money = 20000; });
   await page.waitForTimeout(300);
 

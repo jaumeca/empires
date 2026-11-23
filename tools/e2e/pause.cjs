@@ -32,6 +32,7 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.goto(`${base}/?fresh&debug&seed=21`);
   await page.waitForTimeout(1500);
   await page.click('#start-game');
+  await page.evaluate(() => window.__empires.unlockAll()); // tests the pause, not progression (D-062)
   await page.keyboard.press('p');
   await page.click('#start-project');
   await answerAll();
@@ -58,13 +59,20 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
     await speed(sp);
     await page.waitForTimeout(300);
     const wt = () => page.evaluate(() => ({ t: window.__empires.world.time, tick: window.__empires.game.state.tick, frames: window.__empires.scene.frames ?? null }));
-    const w1 = await wt();
-    const moving1 = await snap();
     // Compare once world time has really advanced: the headless software renderer
-    // sometimes draws no frame at all for a few hundred ms (sim and world both stop).
-    let w2 = w1;
-    for (let i = 0; i < 30 && w2.t < w1.t + 0.3; i++) { await page.waitForTimeout(100); w2 = await wt(); }
-    const moving2 = await snap();
+    // sometimes draws no frame at all for a few hundred ms (sim and world both stop),
+    // and a decision can pop up and pause the game meanwhile (then answer and measure again).
+    let w1, w2, moving1, moving2;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      w1 = await wt();
+      moving1 = await snap();
+      w2 = w1;
+      for (let i = 0; i < 30 && w2.t < w1.t + 0.3 && !(await page.evaluate(() => !!window.__empires.game.state.pendingDecision)); i++) { await page.waitForTimeout(100); w2 = await wt(); }
+      moving2 = await snap();
+      if (w2.t >= w1.t + 0.3) break;
+      await speed(sp);
+      await page.waitForTimeout(300);
+    }
     if (process.env.EMPIRES_DIAG) console.log('WT', sp, JSON.stringify(w1), JSON.stringify(w2), moving1 === moving2 ? 'SAME' : 'diff');
     check(`world animates at ${sp}x`, moving2 !== moving1, moving2 !== moving1 ? '' : moving1 + ' ' + await page.evaluate(() => JSON.stringify({ wt: window.__empires.world.time, act: window.__empires.game.state.empirians[0].activity, tick: window.__empires.game.state.tick, speed: window.__empires.game.clock.speed, pend: window.__empires.game.state.pendingDecision?.kind, modal: document.querySelector('.backdrop')?.className, tut: document.getElementById('tutorial-coach')?.dataset.step })));
     await speed('0');

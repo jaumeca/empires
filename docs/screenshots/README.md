@@ -63,3 +63,7 @@ Capturas generadas automáticamente con `npm run gallery` (Chromium sin pantalla
 - ¿Escala 0,78 del Empirian frente al mobiliario, o agrandar los muebles? (D-022)
 - ¿Paleta y ambiente "Cozy Voxel Tech Tycoon" en la dirección deseada?
 - Peinados que no convencen, prendas o accesorios que faltan.
+
+## Progresión (D-062): antes y después
+
+Capturas de `tools/e2e/firstminutes.cjs` en `progression/`: `before-*` (0.15.0) y `after-*` (0.16.0) para la oficina inicial, el primer juego, la tarjeta del proyecto y Decorar, con el recuento de controles en `before-summary.json` y `after-summary.json`.

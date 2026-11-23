@@ -172,7 +172,8 @@ const VARIANTS = [
   await page.waitForTimeout(1500);
   await page.click('#start-game');
   await page.evaluate(() => window.__empires.game.dispatch({ type: 'tutorial', action: 'skip' })); // general shots without the guide
-  await ev(() => { window.__empires.game.state.company.money = 30000; });
+  // From here on the gallery shows later systems: open them as an experienced studio would have (D-062).
+  await ev(() => { window.__empires.game.state.company.money = 30000; window.__empires.unlockAll(); });
   await ev(() => window.__empires.advance(8 * 40));
   await page.waitForTimeout(500);
   await page.click('#hud-decor');
@@ -270,7 +271,8 @@ const VARIANTS = [
   await page.keyboard.press('?');
   await shot('g35-help', 600);
   await page.click('.card .close');
-  // 42 Features & prototype (AW.D), in the new-project dialog.
+  // 42 Features & prototype (AW.D), in the new-project dialog (a studio that has unlocked them, D-062).
+  await ev(() => window.__empires.unlockAll());
   await page.keyboard.press('p');
   await page.click('[data-topic="pirates"]');
   await page.click('[data-feature="story"]');
