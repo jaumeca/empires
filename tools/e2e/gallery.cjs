@@ -380,6 +380,17 @@ const VARIANTS = [
   await ev(() => { window.__empires.ui.setSpeed(0); window.__empires.game.state.company.fame = { quality: 6, reliability: 2.5, innovation: -2 }; window.__empires.ui.showStory(); });
   await shot('g47-studio-fame', 600);
 
+  // 49 Kinds of project (D.4): an ambitious plan (medium game, two features), told in the same dialog.
+  for (let i = 0; i < 4 && (await page.isVisible('.card .close')); i++) { await page.click('.card .close'); await page.waitForTimeout(150); }
+  await ev(() => window.__empires.ui.showNewProject());
+  await page.waitForTimeout(300);
+  if (await page.isVisible('.seg button')) {
+    await page.locator('.seg button', { hasText: /^(Mediano|Medium)/ }).first().click();
+    const feats = page.locator('button.feature:not([disabled])');
+    for (let i = 0, n = await feats.count(); i < n && (await page.locator('button.feature.on').count()) < 2; i++) await feats.nth(i).click();
+    await shot('g48-ambitious-plan', 400);
+  }
+
 
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });

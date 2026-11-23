@@ -433,7 +433,20 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Historia:** llegar a "famosos"/"mala fama" en un aspecto, y **salir** de una mala fama, quedan como recuerdos (repetibles tras recuperarse), con reacción del equipo en la oficina.
 - **Medido (3 semillas, 4 juegos):** con juegos de 6–7 la calidad queda en "juegos cuidados"; un fracaso inicial (nota 3, 25–41 fallos) la hunde a "calidad irregular" y tres juegos normales la devuelven a neutral; cuatro juegos del mismo tema dan "algo repetitivos", cuatro temas distintos no. Los hitos de fama solo llegan con éxitos sostenidos (≥ 7,7 sin fallos) o fracasos repetidos.
 
-> **Pendientes de confirmar por el propietario tras jugar:** D-053, D-054 y D-055 (provisionales). D-056 (relaciones), D-057 (deuda técnica), D-058 (alcance; corrige D-054) y D-059 (reputación) también son provisionales.
+### D-060 — Proyectos diferentes sobre el mismo sistema (D.4)
+- **Fecha:** 2026-11-23 · **Estado:** Aplicada (provisional hasta pruebas de juego)
+- **Sin modos separados:** el tipo de proyecto sale del plan y se fija al empezar; se ve como una etiqueta en el mismo diálogo de "Nuevo videojuego".
+  - **Indie** (juego pequeño, fundador y como mucho una persona): barato y de poco riesgo; si la idea está **redonda** (enfoque adecuado al tema, al menos una funcionalidad que encante a los jugadores de ese tema y ninguna fuera de lugar) gana +0,25 de techo, explicado en "¿Por qué?". La primera versión lo daba a cualquier juego pequeño con buen enfoque y hacía dominante lo pequeño (1,59× frente a mediano en la prueba de viabilidad): ahora exige una elección.
+  - **Ambicioso** (juego mediano con ≥ 2 funcionalidades): +0,5 de interés inicial; se le juzga con expectativas altas: nota ≥ 8 → fenómeno (ventas ×1,35 seis semanas), nota < 7 → decepción (×0,75); cada funcionalidad extra cuesta un 3 % de coordinación por persona extra (máx. −15 %). Todo queda en la Historia.
+  - **Encargos:** el mismo sistema de contratos, con **relación por cliente** (confianza −10…10 y trabajos): a tiempo +3, antes +4, tarde −3 por cada 3 días, cancelar −6. Los clientes con confianza pagan hasta +15 %; tras 3 trabajos bien hechos se vuelven **habituales** (recuerdo) y vuelven a pedir con frecuencia; uno defraudado (≤ −3) deja de pedir y perdona poco a poco (+0,5 por semana).
+- **Medido (8 semillas, con 70 días de ventas):** indie en solitario sin funcionalidad 221 €/día (6,4), con la funcionalidad que encaja 364 €/día (7,7); mediano con equipo y 1 funcionalidad 520 €/día; ambicioso bien planeado 533 €/día (7,5), con plazo corto 571 €/día pero rozando la decepción (mín. 6,5); **ambicioso con funcionalidades que no encajan 460 €/día frente a 605 del mediano normal (−24 %)**. Año completo (12 semillas): solo juegos 235 000 € (190–298 k), solo encargos 163 000 € (157–170 k: menos, pero muy previsible), mixto 228 000 €.
+
+### D-061 — Decisiones conectadas (bloque 3)
+- **Fecha:** 2026-11-23 · **Estado:** Aplicada (provisional hasta pruebas de juego)
+- **Conexiones que ya existían (documentadas, sin doble castigo):** deuda técnica → más bugs → fama de calidad (la fama solo cambia la paciencia con los fallos, no vuelve a restar la nota); relaciones → coordinación (±5 %) y menos deuda (hasta −20 %); tester → menos deuda; ampliar el alcance retrasando la fecha → la fecha anunciada se mueve → fama de cumplimiento.
+- **Nuevas:** **experiencia ↔ riesgo:** el mejor programador del equipo reduce el riesgo oculto de las funcionalidades un 6 % por nivel por encima de 5 (−27 % con la habilidad máxima); la etiqueta de riesgo del plan lo refleja. **Prototipo ↔ confianza:** un prototipo validado aumenta el interés (+0,3), además de su bonificación de techo.
+
+> **Pendientes de confirmar por el propietario tras jugar:** D-053, D-054 y D-055 (provisionales). D-056 (relaciones), D-057 (deuda técnica), D-058 (alcance; corrige D-054), D-059 (reputación), D-060 (tipos de proyecto) y D-061 (conexiones) también son provisionales.
 
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
