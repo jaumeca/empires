@@ -4,6 +4,28 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-23 — Décima sesión (2.ª parte): D.4 tipos de proyecto y decisiones conectadas (0.15.0)
+
+### Revisión previa
+Ya existían: tamaños pequeño/mediano, funcionalidades y prototipo (D-053), contratos con tarifa, plazo y penalización (LS.8), eventos de clientes (D-055), deuda (D-057) y fama (D-059). No se crean modos: el tipo de proyecto sale del plan y los encargos reutilizan los contratos.
+
+### Resumen
+- **Indie / ambicioso / encargos** (D-060): etiqueta en el plan; chispa indie solo con una idea redonda; expectativas, fenómeno o decepción y coordinación para los ambiciosos; relación con cada cliente (habituales que pagan más, clientes defraudados que tardan en volver), visible en las ofertas.
+- **Conexiones** (D-061): la experiencia reduce el riesgo oculto (y la etiqueta de riesgo del plan); un prototipo validado aumenta el interés; documentadas las conexiones existentes sin dobles castigos.
+
+### Pruebas y validación
+- `npx vitest run`: **230 pruebas** (nuevas: `tests/sim/ambition.test.ts` 6, una de riesgo por experiencia en `features.test.ts`).
+- Simulaciones comparativas (en D-060): indie en solitario, con equipo, mediano, ambicioso bien y mal planeado, con plazo justo; año completo de juegos, encargos y mixto.
+- E2E en serie sobre el build publicado: **profiles 4/4** (nueva) y las otras 20 suites en verde.
+- Galería 49 (nueva g48 plan ambicioso). Actualización real 0.14.0 → 0.15.0 sin errores.
+
+### Problemas encontrados
+- La chispa indie se daba sola a cualquier juego pequeño bien enfocado: los juegos pequeños pasaban a dominar (1,59×). Ahora exige elegir una funcionalidad que encante a los jugadores del tema.
+- El proyecto ambicioso dominaba porque su riesgo nunca aparecía: subido el listón (decepción < 7, fenómeno ≥ 8) y medido un caso mal planeado (−24 %).
+- Pruebas e2e que daban por hecho el orden de las tarjetas: `play` (una decisión en vez del resultado), `story` (el resultado se abre 1,8 s después del lanzamiento) y la galería (la cuadrícula de funcionalidades se redibuja tras cada clic). Corregidas las pruebas; el juego se comportaba bien.
+
+---
+
 ## 2026-11-23 — Décima sesión: Reputation & Identity — pausa corregida de raíz y F3.8 reputación (0.14.0)
 
 ### Estado verificado al empezar

@@ -108,7 +108,9 @@ const check = (name, ok, detail = '') => { checks.push({ name, ok, detail }); co
   await page.waitForTimeout(800);
   s = await st();
   check('sales generate money over the following weeks', s.company.money > moneyBefore && s.projects[0].result.totalUnits > 0, `units=${s.projects[0].result.totalUnits}`);
-  if (await page.isVisible('.backdrop')) await page.click('.card .close');
+  // A decision (e.g. a critic) may be asking instead of the results card: answer it, then close what's left.
+  for (let i = 0; i < 4 && (await page.evaluate(() => !!window.__empires.game.state.pendingDecision)); i++) { await page.keyboard.press('1'); await page.waitForTimeout(300); }
+  if (await page.isVisible('.card .close')) await page.click('.card .close');
   await page.waitForTimeout(1500);
   await shot('08-shelf-box.png');
   const boxes = await page.evaluate(() => window.__empires.scene.productBoxes.size);

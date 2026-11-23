@@ -43,10 +43,12 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
 
   // Tap the bookshelf → story.
   // (Picking of the shelf mesh is covered by the scene since v0.1; here, what a tap on it does.)
-  for (let i = 0; i < 4 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await answerAll(); await page.waitForTimeout(200); }
+  // The results card opens ~1.8 s after a launch: give delayed cards time to appear, then close them.
+  for (let i = 0; i < 12; i++) { if (await page.isVisible('.backdrop')) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await answerAll(); } await page.waitForTimeout(250); }
   await page.evaluate(() => window.__empires.scene.onTap({ kind: 'shelf' }));
   await page.waitForTimeout(400);
   const viaShelf = await page.isVisible('.card.story');
+  if (!viaShelf) console.log('SHELFDBG', await page.evaluate(() => JSON.stringify({ modal: document.querySelector('.backdrop')?.className, card: document.querySelector('.card')?.className, text: document.querySelector('.card')?.textContent?.slice(0, 120), pend: window.__empires.game.state.pendingDecision?.kind })));
   if (viaShelf) await page.keyboard.press('Escape');
   check('the bookshelf opens the story', viaShelf);
 

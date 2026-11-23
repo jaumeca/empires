@@ -382,12 +382,16 @@ const VARIANTS = [
 
   // 49 Kinds of project (D.4): an ambitious plan (medium game, two features), told in the same dialog.
   for (let i = 0; i < 4 && (await page.isVisible('.card .close')); i++) { await page.click('.card .close'); await page.waitForTimeout(150); }
+  await ev(() => { const g = window.__empires.game; g.dispatch({ type: 'release' }); window.__empires.ui.setSpeed(0); });
+  await ev(() => { window.__empires.play(8 * 3); window.__empires.ui.setSpeed(0); });
+  for (let i = 0; i < 6 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(200); }
   await ev(() => window.__empires.ui.showNewProject());
   await page.waitForTimeout(300);
-  if (await page.isVisible('.seg button')) {
+  // Only when the new-game dialog is really open (with an active project the game offers other cards).
+  if ((await page.isVisible('#start-project')) && (await page.locator('.seg button', { hasText: /^(Mediano|Medium)/ }).count())) {
     await page.locator('.seg button', { hasText: /^(Mediano|Medium)/ }).first().click();
-    const feats = page.locator('button.feature:not([disabled])');
-    for (let i = 0, n = await feats.count(); i < n && (await page.locator('button.feature.on').count()) < 2; i++) await feats.nth(i).click();
+    // Two features that are always unlocked (the grid redraws after each click, so pick them by id).
+    for (const f of ['story', 'customization']) { await page.click(`[data-feature="${f}"]`); await page.waitForTimeout(150); }
     await shot('g48-ambitious-plan', 400);
   }
 
