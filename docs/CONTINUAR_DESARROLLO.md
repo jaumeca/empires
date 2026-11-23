@@ -1,10 +1,10 @@
 # Continuar el desarrollo de EMPIRES
 
-Actualizado: 2026-11-22 tras publicar 0.11.0 (relaciones). Todo el trabajo está confirmado y subido; no hay nada a medias.
+Actualizado: 2026-11-23 tras publicar 0.12.0 (deuda técnica). Todo el trabajo está confirmado y subido; no hay nada a medias.
 
 ## Estado
 - **Rama de desarrollo:** `claude/friendly-ptolemy-klybh8` (último commit `d77a304` o posterior).
-- **production-web:** 0.11.0 (`50568d2`), estable y verificada (ver `docs/WEB_RELEASES.md`). `main` sin tocar.
+- **production-web:** 0.12.0 (`8a69a2f`), estable y verificada (ver `docs/WEB_RELEASES.md`). `main` sin tocar.
 - **Guardado:** esquema v10 (carga v0–v10). Campos nuevos opcionales, sin migración: `Empirian.role`, `Project.storyEvents`, `ActiveContract.renegotiated`, `result.criticCovered`.
 - **Verificación al cerrar:** `npx vitest run` → 187 pruebas OK; `npm run build` OK. Las 16 suites e2e pasaron en la versión 0.10.0.
 
