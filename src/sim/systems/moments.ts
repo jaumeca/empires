@@ -5,6 +5,7 @@ import type { DecisionOption, Empirian, GameState, PendingDecision, Project, Tex
 import { pointsPerTick, productionProgress } from './project';
 import { addFeatureLate, cutTrouble, FEATURE_CFG, fixTrouble, hashUnit, ignoreTrouble, openTrouble, scopeCandidate } from './features';
 import { topicMood } from './world';
+import { unlocked } from './progress';
 import { debtLevel, refactorCost } from './debt';
 import { remember } from './story';
 
@@ -218,7 +219,7 @@ const MOMENTS: MomentDef[] = [
   {
     // The code has become fragile: refactor now or live with it (F3.4).
     kind: 'debt_review',
-    trigger: (_s, p) => (p.phase === 'production' || p.phase === 'polish') && (p.debt ?? 0) >= SIM_CONFIG.debt.reviewAt,
+    trigger: (s, p) => unlocked(s, 'studio') && (p.phase === 'production' || p.phase === 'polish') && (p.debt ?? 0) >= SIM_CONFIG.debt.reviewAt,
     build: (state, p) => {
       const c = bestCoder(state);
       const days = (share: number) => Math.max(1, Math.round(refactorCost(p, share) / Math.max(0.1, pointsPerTick(p, c) * SIM_CONFIG.ticksPerDay * state.empirians.length)));
@@ -248,7 +249,7 @@ const MOMENTS: MomentDef[] = [
   {
     // Someone wants to add a feature mid-production (F3.2 / D-058).
     kind: 'scope_idea',
-    trigger: (state, p) => proposalKind(state, p) === 'scope_idea' && p.phase === 'production' && productionShare(p) >= 0.15 && productionShare(p) <= 0.45
+    trigger: (state, p) => unlocked(state, 'planning') && proposalKind(state, p) === 'scope_idea' && p.phase === 'production' && productionShare(p) >= 0.15 && productionShare(p) <= 0.45
       && !!scopeCandidate(state, p, ['rising', 'hot'].includes(topicMood(state, p.topicId))),
     build: (state, p) => {
       const trending = ['rising', 'hot'].includes(topicMood(state, p.topicId));

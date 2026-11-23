@@ -1,4 +1,5 @@
 import { SIM_CONFIG } from '../config';
+import { unlocked } from './progress';
 import { remember } from './story';
 import { clientTerms, fameContract, noteFame } from './reputation';
 import type { EventSink } from '../core/events';
@@ -93,6 +94,8 @@ function makeOffer(state: GameState): ContractOffer {
 export function contractsDay(state: GameState): void {
   const c = state.contracts;
   c.offers = c.offers.filter((o) => o.expiresDay > state.day);
+  // Clients start calling once the studio has a first game on sale (D-062).
+  if (!unlocked(state, 'contracts')) return;
   if (state.day >= c.nextRefreshDay) {
     c.nextRefreshDay = state.day + 7;
     // Let-down clients slowly forgive (D.4).

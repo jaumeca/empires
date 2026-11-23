@@ -9,6 +9,7 @@ import { getTopic } from '../../content/topics';
 import { addNews } from './world';
 import { speakerOf, STORY_EVENTS } from './storyEvents';
 import { noteFame } from './reputation';
+import { unlocked } from './progress';
 
 /**
  * Dynamic events (LS.7). Unlike the project moments (systems/moments.ts),
@@ -213,7 +214,8 @@ export function forceEvent(state: GameState, kind: string, emit: EventSink): boo
 
 /** Daily check (after the project moments). At most one event at a time, with a global gap. */
 export function maybeTriggerEvent(state: GameState, emit: EventSink): void {
-  if (state.pendingDecision) return;
+  // The first game is calm (D-062): studio events start after the first launch.
+  if (state.pendingDecision || !unlocked(state, 'planning')) return;
   const ev = state.eventLog;
   if (ev.lastDay !== null && state.day - ev.lastDay < E().minGapDays) return;
   const active = getActiveProject(state);

@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { unlockAll } from '../../src/sim/systems/progress';
 import { Game } from '../../src/sim/game';
 import { createNewGame, DEFAULT_APPEARANCE } from '../../src/sim/state';
 import { autoplayCareer } from '../../src/sim/autoplay';
@@ -10,6 +11,7 @@ const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
 function newGame(seed = 1) {
   const g = new Game(createNewGame(seed));
   g.dispatch({ type: 'setup_founder', name: 'A', companyName: 'A', appearance: DEFAULT_APPEARANCE });
+  unlockAll(g.state); // these tests are about contracts, not about when they unlock (D-062)
   return g;
 }
 function tickUntil(g: Game, cond: () => boolean, max = 20000) {

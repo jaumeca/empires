@@ -6,6 +6,8 @@
  * money lived at the root (`money`) and there was no `topicTrends` / `setupComplete`.
  * It is kept as a real example of how migrations work.
  */
+import { reachedUnlocks } from '../systems/progress';
+import type { GameState } from '../model/state';
 import { createStartingOffice } from '../systems/office';
 import { createWorld } from '../systems/world';
 import { createRngState } from '../core/rng';
@@ -100,4 +102,7 @@ export const MIGRATIONS: Record<number, (s: AnyState) => AnyState> = {
     const veteran = !!s.setupComplete && projects > 0;
     return { ...s, schemaVersion: 10, tutorial: { active: !veteran, marks: [], base: { projects: 0, released: 0, decisions: 0, purchases: 0 } } };
   },
+  // v11 (D-062): progressive unlocks. Everything an older save already reached
+  // (or used) is unlocked silently — nothing is ever taken away.
+  10: (s) => ({ ...s, schemaVersion: 11, progress: { seen: reachedUnlocks(s as unknown as GameState), days: {} } }),
 };

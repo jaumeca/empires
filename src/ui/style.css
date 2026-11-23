@@ -392,3 +392,13 @@ label.check input { width: 20px; height: 20px; }
 .rel .hint { font-size: 12px; }
 .rel.friends, .rel.respect, .rel.good_team, .rel.mentor { border-left-color: #7fd1b9; }
 .rel.tension, .rel.rivals { border-left-color: #ff8a7a; }
+
+/* Progression (D-062): unlock notes and "new" dots. */
+.toast.unlock { align-items: flex-start; border: 3px solid #f2c14e; background: #fffaf0; max-width: 360px; }
+.toast.unlock .t { font-weight: 900; }
+.toast.unlock .d { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-top: 2px; }
+.fresh { position: relative; }
+.fresh::after { content: ''; position: absolute; top: 2px; right: 2px; width: 10px; height: 10px; border-radius: 50%; background: #f2c14e; box-shadow: 0 0 0 2px #fff; animation: fresh-pulse 1.4s ease-in-out infinite; }
+@keyframes fresh-pulse { 50% { transform: scale(1.35); } }
+@media (prefers-reduced-motion: reduce) { .fresh::after { animation: none; } }
+.next-unlock { display: flex; align-items: center; gap: 6px; }

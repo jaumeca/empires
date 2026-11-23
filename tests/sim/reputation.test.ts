@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { unlockAll } from '../../src/sim/systems/progress';
 import { Game } from '../../src/sim/game';
 import { createNewGame, DEFAULT_APPEARANCE, getProject } from '../../src/sim/state';
 import { bugTolerance, clientTerms, fame, fameOf, fameWeek, noteFame, startingHype } from '../../src/sim/systems/reputation';
@@ -14,6 +15,7 @@ function g0(seed = 1) {
   const g = new Game(createNewGame(seed));
   g.dispatch({ type: 'setup_founder', name: 'A', companyName: 'A', appearance: DEFAULT_APPEARANCE });
   g.dispatch({ type: 'tutorial', action: 'skip' });
+  unlockAll(g.state); // these tests are about the mechanic, not about when it unlocks (D-062)
   g.state.eventLog.lastDay = 1e9; g.state.company.money = 30000;
   return g;
 }

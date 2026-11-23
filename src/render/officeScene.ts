@@ -829,6 +829,12 @@ export class OfficeScene {
           if (e.kind === 'chat') actor.view.flash('happy', 2, now);
           break;
         }
+        case 'unlock': {
+          // Progression (D-062): a small celebration around the founder.
+          const f = this.lastState ? this.actors.get(this.lastState.founderId) : actor;
+          if (f) { this.burstConfetti(f); f.view.flash('joyful', 2.5, now); this.bubbles.spawn(f.view.head, off + 0.5, 'star', now, { cooldown: 0.2, life: 2.8 }); }
+          break;
+        }
         case 'fame': {
           // The studio's name changes (F3.8): everyone reacts — proud, or worried.
           const good = e.level !== 'poor';

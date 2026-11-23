@@ -1,4 +1,5 @@
 import { Game } from '../sim/game';
+import { unlockAll } from '../sim/systems/progress';
 import { createNewGame } from '../sim/state';
 import { SaveError, serialize } from '../sim/save/save';
 import { SaveManager } from '../platform/saveManager';
@@ -156,6 +157,8 @@ if (debug) {
         else game.tick();
       }
     },
+    /** Open every progression unlock (test helper for suites about the mechanics, D-062). */
+    unlockAll() { unlockAll(game.state); ui.renderHud(true); },
     /** Raise a dynamic/story event now (test helper). */
     forceEvent(kind: string) { return game.forceEvent(kind); },
   };

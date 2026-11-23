@@ -13,6 +13,7 @@ import { storyDay } from './systems/story';
 import { OFFICE_SIZES } from '../content/officeSizes';
 import { onBreak, routinesTick } from './systems/routines';
 import { harmony, relationsDay } from './systems/relations';
+import { progressTick } from './systems/progress';
 import { coordinationFactor, hiringDay, payroll, teamMoraleBonus, traitDrain, workstationEffects } from './systems/team';
 
 const C = SIM_CONFIG;
@@ -54,6 +55,8 @@ export function step(state: GameState, emit: EventSink): void {
   }
 
   state.tick += 1;
+  // Progression (D-062): announce what the studio has just unlocked.
+  progressTick(state, emit);
 
   if (state.tick % C.ticksPerDay === 0) dayBoundary(state, emit);
 }

@@ -93,6 +93,9 @@ export interface Relation {
   mentorDone?: boolean;
 }
 
+/** Progression unlocks (D-062, docs/PROGRESSION.md). */
+export type UnlockId = 'equipment' | 'planning' | 'newspaper' | 'contracts' | 'team' | 'studio' | 'expansion';
+
 /** D.4: indie (small, small team), ambitious (medium with features) or standard. */
 export type ProjectProfile = 'indie' | 'ambitious' | 'standard';
 
@@ -129,7 +132,7 @@ export interface Candidate {
 /** Studio memories (ML.2): meaningful moments, derived from real facts. */
 export type MemoryKind =
   | 'founded' | 'first_release' | 'first_hit' | 'first_flop' | 'hit' | 'record' | 'comeback'
-  | 'first_hire' | 'hire' | 'farewell' | 'first_contract' | 'skill_master' | 'money' | 'decision' | 'first_decor' | 'achievement' | 'office_moved' | 'relation' | 'reputation';
+  | 'first_hire' | 'hire' | 'farewell' | 'first_contract' | 'skill_master' | 'money' | 'decision' | 'first_decor' | 'achievement' | 'office_moved' | 'relation' | 'reputation' | 'unlock';
 
 export interface Memory {
   id: string;
@@ -437,6 +440,8 @@ export interface GameState {
   relations?: Relation[];
   /** Tutorial for new players (AW.A). */
   tutorial: Tutorial;
+  /** Progression (D-062): what has been unlocked (announced) and when. */
+  progress?: { seen: UnlockId[]; days?: Partial<Record<UnlockId, number>> };
   /** Deferred consequences (LS.7). */
   scheduled: ScheduledEffect[];
   /** Pacing of dynamic events. */

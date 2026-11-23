@@ -1,4 +1,5 @@
 import { ITEMS, type ItemCategory, type ItemDef } from '../content/officeItems';
+import { unlocked } from '../sim/systems/progress';
 import type { Command, CommandResult } from '../sim/commands';
 import type { GameState, PlacedItem, Rot } from '../sim/model/state';
 import { canPlace, founderDesk, getItemDef, officeEffects, rotatedSize, SELL_REFUND } from '../sim/systems/office';
@@ -275,7 +276,7 @@ export class DecorUI {
       h('div.decor-top', null,
         h('div.pill', null, icon('coin'), h('span', null, t('decor.money', { money: s.company.money }))),
         fx.upkeep > 0 ? h('div.pill.small', null, t('decor.upkeep_total', { upkeep: fx.upkeep })) : null,
-        NEXT_SIZE[s.office.size ?? 'room'] ? h('button.big-btn.ghost', { id: 'decor-expand', onclick: () => { this.close(); this.host.expand(); } }, t('expand.button')) : null,
+        NEXT_SIZE[s.office.size ?? 'room'] && unlocked(s, 'expansion') ? h('button.big-btn.ghost', { id: 'decor-expand', onclick: () => { this.close(); this.host.expand(); } }, t('expand.button')) : null,
         h('button.big-btn.mint', { id: 'decor-done', onclick: () => this.close() }, t('decor.done')),
       ),
     );
@@ -321,7 +322,11 @@ export class DecorUI {
       }
     }
     // Catalog
-    const cats = CATEGORY_ORDER.filter((c) => ITEMS.some((d) => d.category === c));
+    // Progression (D-062): equipment with the first game in production, desks with the team.
+    const st = this.host.state();
+    const shown = (c: ItemCategory) => (['computer', 'chair', 'creative'].includes(c) ? unlocked(st, 'equipment') : c === 'desk' ? unlocked(st, 'team') : c === 'awards' ? Object.keys(st.story.achievements).length > 0 : true);
+    const cats = CATEGORY_ORDER.filter((c) => ITEMS.some((d) => d.category === c) && shown(c));
+    if (this.category !== 'style' && !cats.includes(this.category)) this.category = 'style';
     const desk = founderDesk(s.office);
     const installed = new Set([desk?.mounts?.computer, desk?.mounts?.chair]);
     const tabs = h('div.decor-tabs', null,

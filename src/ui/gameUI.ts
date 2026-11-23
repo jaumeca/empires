@@ -11,6 +11,7 @@ import { notableRelations } from '../sim/systems/relations';
 import { debtLevel } from '../sim/systems/debt';
 import { FAME_ASPECTS, fameLevel, fameOf } from '../sim/systems/reputation';
 import { profileFor } from '../sim/systems/ambition';
+import { isFresh, unlocked } from '../sim/systems/progress';
 import { effectiveRisk, FEATURE_CFG, featureLock } from '../sim/systems/features';
 import { FEATURE_SLOTS, FEATURES, getFeature } from '../content/features';
 import type { Game } from '../sim/game';
@@ -155,10 +156,10 @@ export class GameUI {
     const speeds: Record<string, Speed> = { '1': 1, '2': 2, '3': 4, '4': 8 };
     if (k === ' ') { this.playerSpeed(this.game.clock.speed === 0 ? this.lastPlaySpeed : 0); used(); }
     else if (speeds[k]) { this.playerSpeed(speeds[k]); used(); }
-    else if (k === 'n' || k === 'N') { this.showDaily(); used(); }
+    else if ((k === 'n' || k === 'N') && unlocked(s, 'newspaper')) { this.showDaily(); used(); }
     else if (k === 'd' || k === 'D') { this.decor.open(); used(); }
     else if (k === 'm' || k === 'M' || k === 'Escape') { this.showMenu(); used(); }
-    else if (k === 'c' || k === 'C') { if (s.contracts.active) this.showContract(); else if (!getActiveProject(s)) this.showContracts(); used(); }
+    else if ((k === 'c' || k === 'C') && (unlocked(s, 'contracts') || s.contracts.active)) { if (s.contracts.active) this.showContract(); else if (!getActiveProject(s)) this.showContracts(); used(); }
     else if (k === 'p' || k === 'P') {
       if (getActiveProject(s)) this.showProjectPanel();
       else if (!s.contracts.active) this.showNewProject();
@@ -224,9 +225,10 @@ export class GameUI {
       ),
       h('div.hud-tr', null,
         h('div.pill.speeds', null, speedBtn(0, icon('pause', 18)), speedBtn(1, '1x'), speedBtn(2, '2x'), speedBtn(4, '4x'), speedBtn(8, '8x')),
-        h('button.icon-btn.badge-host', { 'aria-label': t('daily.button'), title: t('kbd.tip', { label: t('daily.button'), key: 'N' }), id: 'hud-news', onclick: () => this.showDaily() }, icon('news'), this.unreadNews() ? h('span.badge', null, String(Math.min(9, this.unreadNews()))) : null),
+        // Progression (D-062): the newspaper appears with the first launch.
+        unlocked(s, 'newspaper') ? h(`button.icon-btn.badge-host${isFresh(s, 'newspaper') ? '.fresh' : ''}`, { 'aria-label': t('daily.button'), title: t('kbd.tip', { label: t('daily.button'), key: 'N' }), id: 'hud-news', onclick: () => this.showDaily() }, icon('news'), this.unreadNews() ? h('span.badge', null, String(Math.min(9, this.unreadNews()))) : null) : null,
         h('button.icon-btn', { 'aria-label': t('decor.button'), title: t('kbd.tip', { label: t('decor.button'), key: 'D' }), id: 'hud-decor', onclick: () => this.decor.open() }, icon('decor')),
-        hiringUnlocked(s) || s.empirians.length > 1 ? h('button.icon-btn.badge-host', { 'aria-label': t('team.button'), title: t('kbd.tip', { label: t('team.button'), key: 'T' }), id: 'hud-team', onclick: () => this.showTeam() }, icon('team'), s.hiring.candidates.length && s.empirians.length - 1 < maxEmployees(s) ? h('span.badge', null, String(s.hiring.candidates.length)) : null) : null,
+        hiringUnlocked(s) || s.empirians.length > 1 ? h(`button.icon-btn.badge-host${isFresh(s, 'team') ? '.fresh' : ''}`, { 'aria-label': t('team.button'), title: t('kbd.tip', { label: t('team.button'), key: 'T' }), id: 'hud-team', onclick: () => this.showTeam() }, icon('team'), s.hiring.candidates.length && s.empirians.length - 1 < maxEmployees(s) ? h('span.badge', null, String(s.hiring.candidates.length)) : null) : null,
         h('button.icon-btn', { 'aria-label': t('hud.menu'), title: t('kbd.tip', { label: t('hud.menu'), key: 'M' }), id: 'hud-menu', onclick: () => this.showMenu() }, icon('menu')),
       ),
     );
@@ -256,10 +258,10 @@ export class GameUI {
         ),
       );
     } else if (!this.modal) {
-      bottom.append(
+      bottom.append(...[
         h('button.big-btn.mint', { id: 'hud-new-project', onclick: () => this.showNewProject() }, s.projects.length ? t('hud.new_project') : t('hud.first_project')),
-        h('button.big-btn.ghost.badge-host', { id: 'hud-contracts', onclick: () => this.showContracts() }, t('work.contracts'), s.contracts.offers.length ? h('span.badge', null, String(s.contracts.offers.length)) : null),
-      );
+        unlocked(s, 'contracts') ? h(`button.big-btn.ghost.badge-host${isFresh(s, 'contracts') ? '.fresh' : ''}`, { id: 'hud-contracts', onclick: () => this.showContracts() }, t('work.contracts'), s.contracts.offers.length ? h('span.badge', null, String(s.contracts.offers.length)) : null) : null,
+      ].filter((x): x is HTMLButtonElement => !!x));
     }
     this.hud.append(bottom);
   }
@@ -313,6 +315,12 @@ export class GameUI {
       switch (e.type) {
         case 'decision_requested':
           if (this.state.pendingDecision) setTimeout(() => this.state.pendingDecision && this.showDecision(this.state.pendingDecision), 650);
+          break;
+        case 'unlock':
+          // Progression (D-062): a friendly "New!" note, one at a time, and the new button appears.
+          this.unlockQueue.push(e.unlockId);
+          if (this.unlockQueue.length === 1) this.nextUnlockNote();
+          this.renderHud(true);
           break;
         case 'project_released':
           this.services.save();
@@ -377,6 +385,17 @@ export class GameUI {
       }
     }
     this.renderHud();
+  }
+
+  private unlockQueue: string[] = [];
+  private nextUnlockNote(): void {
+    const id = this.unlockQueue[0];
+    if (!id) return;
+    const note = h('div.toast.unlock', { dataset: { unlock: id } }, icon('star', 22),
+      h('div', null, h('div.t', null, t('unlock.new', { what: t(`unlock.${id}.name`) })), h('div.d', null, t(`unlock.${id}.text`))));
+    this.toastBox.append(note);
+    setTimeout(() => note.remove(), 6500);
+    setTimeout(() => { this.unlockQueue.shift(); this.nextUnlockNote(); }, 1600);
   }
 
   toast(text: string, ic: IconName = 'alert'): void {
@@ -571,6 +590,9 @@ export class GameUI {
     if (getActiveProject(s)) return this.showProjectPanel();
     const founder = getFounder(s);
     const maxBudget = Math.max(0, Math.floor(Math.min(s.company.money - 500, 8000) / 100) * 100);
+    // Progression (D-062): the first game is simple; planning tools come with experience.
+    const planning = unlocked(s, 'planning');
+    const studio = unlocked(s, 'studio');
     const plan = {
       name: ((ideas) => ideas[s.projects.length % ideas.length]!)(t('name_ideas').split('|')),
       topicId: TOPICS[0]!.id,
@@ -598,14 +620,14 @@ export class GameUI {
       );
       // D.4: what kind of project this plan makes (same system, different strategy).
       const profile = profileFor(s, plan.size, plan.features.length);
-      if (profile !== 'standard') est.append(h(`span.chip.profile.${profile}`, { id: 'np-profile', title: t(`profile.${profile}.desc`) }, icon(profile === 'indie' ? 'heart' : 'rocket', 16), t(`profile.${profile}`)));
+      if (planning && profile !== 'standard') est.append(h(`span.chip.profile.${profile}`, { id: 'np-profile', title: t(`profile.${profile}.desc`) }, icon(profile === 'indie' ? 'heart' : 'rocket', 16), t(`profile.${profile}`)));
       // F3.8: what players expect from this studio.
-      const trust = fameLevel(fameOf(s).quality);
+      const trust = planning ? fameLevel(fameOf(s).quality) : 'neutral';
       if (trust === 'great' || trust === 'good') est.append(h('span.chip.good', { id: 'np-fame' }, icon('heart', 16), t('np.fame.trust')));
       else if (trust === 'shaky' || trust === 'poor') est.append(h('span.chip.warn', { id: 'np-fame' }, icon('sweat', 16), t('np.fame.doubt')));
       // F3.4: what the studio's code brings into this game.
       const inherited = s.company.techDebt ?? 0;
-      if (debtLevel(inherited) !== 'solid') est.append(h('span.chip.warn', { id: 'np-debt', title: t('newproject.inherited_debt', { level: debtLevel(inherited) }) }, icon('code', 16), `${t('project.code')}: ${t(`debt.${debtLevel(inherited)}`)}`));
+      if (studio && debtLevel(inherited) !== 'solid') est.append(h('span.chip.warn', { id: 'np-debt', title: t('newproject.inherited_debt', { level: debtLevel(inherited) }) }, icon('code', 16), `${t('project.code')}: ${t(`debt.${debtLevel(inherited)}`)}`));
       if (s.company.solidBase) est.append(h('span.chip.good', { id: 'np-solid', title: t('newproject.solid_base') }, icon('star', 16), t('newproject.solid_base')));
       budgetLbl.textContent = t('np.budget_value', { budget: plan.budget, marketing: plan.budget * 0.3 });
       daysLbl.textContent = t('np.deadline_value', { days: plan.days, day: s.day + plan.days });
@@ -630,8 +652,11 @@ export class GameUI {
       plan.features = plan.features.filter((id) => { const f = getFeature(id); return f && !featureLock(s, f, plan.size); }).slice(0, slots);
       featureBox.append(h('label', null, t('np.features', { n: slots })));
       const grid = h('div.feature-grid');
+      // Only what can be chosen now (no wall of padlocks); one line says what comes next.
+      const nextLocked = FEATURES.find((f) => featureLock(s, f, plan.size) && featureLock(s, f, plan.size) !== 'too_small');
       for (const f of FEATURES) {
         const lock = featureLock(s, f, plan.size);
+        if (lock) continue;
         const on = plan.features.includes(f.id);
         const fit = f.fit[plan.topicId] ?? 0;
         const chips = [
@@ -649,11 +674,12 @@ export class GameUI {
           lock ? h('div.d', null, t(`flock.${lock}`)) : h('div.chips', null, ...chips.map((c) => h(`span.chip${c === t('fchip.fit_bad') || c === t('fchip.risk_high') ? '.bad' : c === t('fchip.fit_good') || c === t('fchip.reach') ? '.good' : ''}`, null, c))),
         ));
       }
-      featureBox.append(grid, h('div.hint', null, t('np.features_hint')),
-        h('label.check', null,
+      featureBox.append(...[grid, h('div.hint', null, t('np.features_hint')),
+        nextLocked ? h('div.hint.next-unlock', { id: 'np-next-feature' }, icon('star', 14), ` ${t('np.next_feature', { feature: nextLocked.id, how: t(`flock.${featureLock(s, nextLocked, plan.size)}`) })}`) : null,
+        studio ? h('label.check', null,
           h('input', { type: 'checkbox', id: 'np-prototype', checked: plan.prototype, onchange: (e: Event) => { plan.prototype = (e.target as HTMLInputElement).checked; refresh(); } }),
-          ` ${t('np.prototype', { cost: FEATURE_CFG.prototypeCost })}`),
-        h('div.hint', null, t('np.prototype_hint')));
+          ` ${t('np.prototype', { cost: FEATURE_CFG.prototypeCost })}`) : null,
+        studio ? h('div.hint', null, t('np.prototype_hint')) : null].filter((x): x is HTMLDivElement | HTMLLabelElement => !!x));
     };
     drawFeatures();
     const seg = (options: [string, string][], get: () => string, set: (v: string) => void) => {
@@ -674,23 +700,24 @@ export class GameUI {
         h('div.col', null,
           h('div.section', null, h('label', null, t('np.name')), nameInput),
           h('div.section', null, h('label', null, t('np.topic')), topicTiles),
-          h('div.grid2', null,
-            h('div.section', null, h('label', null, t('np.size')), seg([['small', t('np.size.small')], ['medium', t('np.size.medium')]], () => plan.size, (v) => { plan.size = v as ProjectSize; drawFeatures(); })),
-            h('div.section', null, h('label', null, t('np.price')), seg(PROJECT_LIMITS.prices.map((p) => [String(p), fmtPrice(p)]), () => String(plan.price), (v) => (plan.price = Number(v)))),
-          ),
+          // Progression (D-062): size with the "studio" unlock, price with "planning".
+          planning || studio ? h('div.grid2', null,
+            studio ? h('div.section', null, h('label', null, t('np.size')), seg([['small', t('np.size.small')], ['medium', t('np.size.medium')]], () => plan.size, (v) => { plan.size = v as ProjectSize; drawFeatures(); })) : null,
+            planning ? h('div.section', null, h('label', null, t('np.price')), seg(PROJECT_LIMITS.prices.map((p) => [String(p), fmtPrice(p)]), () => String(plan.price), (v) => (plan.price = Number(v)))) : null,
+          ) : null,
         ),
         h('div.col', null,
           h('div.section', null, h('label', null, t('np.focus')),
             h('input', { type: 'range', min: 0, max: 100, value: plan.focus * 100, 'aria-label': t('np.focus'), oninput: (e: Event) => { plan.focus = Number((e.target as HTMLInputElement).value) / 100; refresh(); } }),
             h('div.hint', null, focusLbl, ` · ${t('np.focus_hint')}`)),
-          h('div.section', null, h('label', null, t('np.budget')),
+          planning ? h('div.section', null, h('label', null, t('np.budget')),
             h('input', { type: 'range', min: 0, max: maxBudget, step: 100, value: plan.budget, 'aria-label': t('np.budget'), oninput: (e: Event) => { plan.budget = Number((e.target as HTMLInputElement).value); refresh(); } }),
-            h('div.hint', null, budgetLbl, ` · ${t('np.budget_hint')}`)),
+            h('div.hint', null, budgetLbl, ` · ${t('np.budget_hint')}`)) : null,
           h('div.section', null, h('label', null, t('np.deadline')),
             h('input', { type: 'range', min: PROJECT_LIMITS.minDays, max: PROJECT_LIMITS.maxDays, step: 7, value: plan.days, 'aria-label': t('np.deadline'), oninput: (e: Event) => { plan.days = Number((e.target as HTMLInputElement).value); refresh(); } }),
             h('div.hint', null, daysLbl)),
           est,
-          h('div.section', null, featureBox),
+          planning ? h('div.section', null, featureBox) : h('p.hint.next-unlock', { id: 'np-next' }, icon('star', 16), ` ${t('np.next_planning')}`),
         ),
       ),
       h('div.actions.sticky', null,
@@ -731,16 +758,17 @@ export class GameUI {
         h('span.chip', null, icon('star', 16), t('pp.quality', { min: est.quality[0], max: est.quality[1] })),
         h('span.chip', null, icon('bug', 16), t('pp.bugs', { known: p.bugs.known, min: est.hiddenBugs[0], max: est.hiddenBugs[1] })),
         // F3.4: the state of the code in words, not a number.
-        ((lvl) => h(`span.chip.code.${lvl === 'solid' ? 'good' : lvl === 'patched' ? 'warn' : 'bad'}`, { id: 'pp-code', title: t('help.debt.text') }, icon('code', 16), `${t('project.code')}: ${t(`debt.${lvl}`)}`))(debtLevel(p.debt ?? 0)),
+        // Code (F3.4) appears with the "studio" unlock (D-062).
+        !unlocked(s, 'studio') ? null : ((lvl) => h(`span.chip.code.${lvl === 'solid' ? 'good' : lvl === 'patched' ? 'warn' : 'bad'}`, { id: 'pp-code', title: t('help.debt.text') }, icon('code', 16), `${t('project.code')}: ${t(`debt.${lvl}`)}`))(debtLevel(p.debt ?? 0)),
         h(`span.chip.${founder.energy < 30 ? 'bad' : 'good'}`, null, icon('sweat', 16), t('pp.energy', { n: founder.energy })),
-        h('span.chip', null, icon('heart', 16), t('pp.hype', { n: p.hype })),
-        h('span.chip', null, icon('coin', 16), t('pp.spent', { spent: p.spent, budget: p.budget })),
+        unlocked(s, 'planning') ? h('span.chip', null, icon('heart', 16), t('pp.hype', { n: p.hype })) : null,
+        unlocked(s, 'planning') ? h('span.chip', null, icon('coin', 16), t('pp.spent', { spent: p.spent, budget: p.budget })) : null,
       ),
       h('div.cols', null, h('div.col', null,
       h('div.section', null, h('label', null, t('pp.pace')),
         seg([['relaxed', t('pp.pace.relaxed')], ['normal', t('pp.pace.normal')], ['crunch', t('pp.pace.crunch')]], p.pace, (v) => send({ type: 'adjust_project', pace: v as Project['pace'] })),
         h('div.hint', null, t('pp.pace_hint'))),
-      h('div.section', null, h('label', null, t('pp.testing')),
+      !unlocked(s, 'planning') ? null : h('div.section', null, h('label', null, t('pp.testing')),
         seg([['0.2', t('pp.testing.low')], ['0.6', t('pp.testing.mid')], ['0.9', t('pp.testing.high')]], String(p.testFocus), (v) => send({ type: 'adjust_project', testFocus: Number(v) }))),
       ), h('div.col', null,
       h('div.grid2', null,
@@ -750,7 +778,7 @@ export class GameUI {
             h('span', null, t('common.day', { day: p.deadlineDay })),
             h('button', { onclick: () => send({ type: 'adjust_project', deadlineDay: p.deadlineDay + 7 }) }, '+7')),
           h('div.hint', null, t(p.deadlineDay > p.originalDeadlineDay ? 'pp.deadline_late' : 'pp.deadline_announced'))),
-        h('div.section', null, h('label', null, t('pp.budget')),
+        !unlocked(s, 'planning') ? null : h('div.section', null, h('label', null, t('pp.budget')),
           h('div.stepper', null,
             h('button', { onclick: () => send({ type: 'adjust_project', budget: Math.max(Math.ceil(p.spent), p.budget - 500) }) }, '−'),
             h('span', null, fmtMoney(p.budget)),
@@ -908,6 +936,7 @@ export class GameUI {
       case 'first_hire': case 'hire': return 'team';
       case 'relation': return 'heart';
       case 'reputation': return 'star';
+      case 'unlock': return 'star';
       case 'first_contract': case 'money': return 'coin';
       case 'skill_master': return 'idea';
       case 'first_decor': case 'office_moved': return 'decor';
@@ -934,7 +963,7 @@ export class GameUI {
     const card = h('div.card.wide.story', null, this.closeBtn(),
       h('h2', null, t('story.title', { company: s.company.name })),
       h('p.sub', null, t('story.sub', { count: s.story.memories.length })),
-      this.fameSection(),
+      unlocked(s, 'studio') ? this.fameSection() : null,
       h('div.section', null, h('label', null, t('story.achievements')),
         h('div.achievements', null, ...ACHIEVEMENTS.map((a) => {
           const day = s.story.achievements[a.id];
@@ -1082,7 +1111,7 @@ export class GameUI {
         }))),
       !full && free === 0 ? h('div.row.between.desk-hint', null, h('span.hint', null, t('team.need_desk')),
         h('button.big-btn.ghost.small', { id: 'team-buy-desk', onclick: () => { this.closeModal(); this.decor.open(); } }, icon('decor', 16), ` ${t('team.go_decor')}`)) : null,
-      NEXT_SIZE[s.office.size ?? 'room'] && (full || free === 0) ? h('div.row.between.desk-hint', null, h('span.hint', null, t('team.expand_hint')),
+      NEXT_SIZE[s.office.size ?? 'room'] && unlocked(s, 'expansion') && (full || free === 0) ? h('div.row.between.desk-hint', null, h('span.hint', null, t('team.expand_hint')),
         h('button.big-btn.ghost.small', { id: 'team-expand', onclick: () => this.showExpand() }, t('expand.button'))) : null,
     );
     this.openModal('team', card, { cls: 'desk-side' });
@@ -1091,6 +1120,8 @@ export class GameUI {
   // ---------------------------------------------------------------- work
   showWorkChooser(): void {
     const s = this.state;
+    // Before clients know the studio (D-062), there's only one kind of work: your own game.
+    if (!unlocked(s, 'contracts')) return this.showNewProject();
     const card = h('div.card.narrow', null, this.closeBtn(),
       h('h2', null, t('work.title')),
       h('p.sub', null, t('work.sub')),

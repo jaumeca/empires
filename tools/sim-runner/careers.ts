@@ -33,7 +33,8 @@ const trendTopic = (s: GameState) => s.world.trends.find((x) => s.day - x.startD
 export const STRATEGIES: Strategy[] = [
   { name: 'A games only (small)', next: () => kart() },
   { name: 'B growth (medium when rich)', next: (s, c) => (c.games >= 2 && s.company.money > 14000 ? game('kart', 'medium', 3000, 98) : kart()) },
-  { name: 'C contracts only', next: () => ({ kind: 'contract' }) },
+  // Since D-062 clients call once the first game is on sale: one game, then contracts only.
+  { name: 'C contracts only (after a first game)', next: (_s, c) => (c.games === 0 ? kart() : { kind: 'contract' }) },
   { name: 'D mixed (contract after a flop/low cash)', next: (s, c) => (c.games > 0 && (c.lastScore < 6.5 || s.company.money < 7000) && s.contracts.offers.length && !c.justContracted ? { kind: 'contract' } : kart()) },
   { name: 'E games + office investment', next: () => kart(), shopping: [{ defId: 'pc_dev', mount: true }, { defId: 'chair_ergo', mount: true }, { defId: 'coffee_machine' }, { defId: 'whiteboard' }] },
   { name: 'F games + big spend office', next: () => kart(), shopping: [{ defId: 'pc_workstation', mount: true }, { defId: 'chair_ergo', mount: true }, { defId: 'coffee_machine' }, { defId: 'sofa' }, { defId: 'whiteboard' }, { defId: 'arcade' }, { defId: 'plant_tall' }, { defId: 'lamp_floor' }] },
@@ -88,7 +89,8 @@ export function career(seed: number, st: Strategy, horizon = 365) {
       idleUntil = s.day + 5;
     }
     // Hiring between jobs (GT.1): buy a desk if needed, then the best skill per euro.
-    if (st.hire && s.day >= hireRetryDay && !s.activeProjectId && !s.contracts.active && employees(s).length < st.hire && s.hiring.candidates.length && s.company.money > 15000) {
+    // A player can hire at any time (also mid-project); since D-062 the team unlocks with the 2nd launch.
+    if (st.hire && s.day >= hireRetryDay && !s.pendingDecision && employees(s).length < st.hire && s.hiring.candidates.length && s.company.money > 15000) {
       hireRetryDay = s.day + 7; // one attempt per week at most (never loops without time passing)
       if (!freeWorkstations(s).length) {
         const before = s.company.money;
@@ -134,6 +136,7 @@ export function career(seed: number, st: Strategy, horizon = 365) {
   return {
     money: g.state.company.money, minMoney, games: scores.length, score: mean(scores), contracts, late,
     spentOffice, hires, salaries: g.state.hiring.salariesPaid, team: g.state.empirians.length, rep: g.state.company.reputation, skill: `${f.skills.tech.toFixed(1)}/${f.skills.design.toFixed(1)}/${f.skills.creativity.toFixed(1)}/${f.skills.management.toFixed(1)}`, decisions,
+    unlockDays: g.state.progress?.days ?? {},
     relations: (g.state.relations ?? []).map((r) => ({ bond: Math.round(r.bond), shared: r.shared, hits: r.hits, days: r.days, mentor: !!r.mentor, mentorDone: !!r.mentorDone })),
     memories: g.state.story.memories.filter((m) => m.kind === 'relation').map((m) => `${m.day}:${m.text.key.split('.').pop()}`),
   };

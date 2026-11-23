@@ -8,6 +8,7 @@ import { founderDesk, getItemDef, officeEffects, type OfficeEffects } from './of
 import { rememberFarewell, rememberHire } from './story';
 import { forgetRelations } from './relations';
 import { OFFICE_SIZES } from '../../content/officeSizes';
+import { unlocked } from './progress';
 
 /**
  * Team growth (GT.1–GT.3): applicants, hiring and firing, weekly salaries,
@@ -32,8 +33,9 @@ export function employees(state: GameState): Empirian[] {
 }
 
 /** Hiring opens once the studio has shipped something (a game or a contract). */
+/** Hiring opens with the "team" unlock (D-062): a contract delivered, two launches, or one launch and money to pay salaries. */
 export function hiringUnlocked(state: GameState): boolean {
-  return state.projects.some((p) => p.phase === 'released') || state.contracts.completed > 0;
+  return unlocked(state, 'team');
 }
 
 /** Desks with computer and chair that nobody uses (the founder takes the best unassigned one). */

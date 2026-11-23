@@ -70,16 +70,22 @@ function projectWith(trait: TraitId | null, seed = 7, pace: 'normal' | 'crunch' 
 }
 
 describe('team (GT.1)', () => {
-  it('applicants only arrive once the studio has shipped something, deterministically', () => {
+  it('applicants only arrive once the studio can afford a team (D-062), deterministically', () => {
     const a = newGame(3);
     runUntil(a, () => a.state.day >= 40);
     expect(hiringUnlocked(a.state)).toBe(false);
     expect(a.state.hiring.candidates).toHaveLength(0);
     shipOne(a);
+    // One launch is not enough on its own (unless there's money for salaries)…
+    expect(hiringUnlocked(a.state)).toBe(a.state.company.money >= 15000);
+    shipOne(a);
+    // …two launches are.
+    expect(hiringUnlocked(a.state)).toBe(true);
     runUntil(a, () => a.state.hiring.candidates.length > 0, 8 * 20);
     expect(a.state.hiring.candidates.length).toBe(SIM_CONFIG.team.candidatesPerRefresh);
     const b = newGame(3);
     runUntil(b, () => b.state.day >= 40);
+    shipOne(b);
     shipOne(b);
     runUntil(b, () => b.state.hiring.candidates.length > 0, 8 * 20);
     expect(JSON.stringify(b.state.hiring)).toBe(JSON.stringify(a.state.hiring));

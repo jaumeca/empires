@@ -9,7 +9,7 @@ import { createStory } from './systems/story';
 import { createTutorial } from './systems/tutorial';
 import { createContracts } from './systems/contracts';
 
-export const SCHEMA_VERSION = 10;
+export const SCHEMA_VERSION = 11;
 
 export const DEFAULT_APPEARANCE: Appearance = {
   skin: 2,
@@ -60,6 +60,7 @@ export function createNewGame(seed: number): GameState {
     hiring: createHiring(),
     story: createStory(),
     tutorial: createTutorial(),
+    progress: { seen: [], days: {} },
     scheduled: [],
     eventLog: { lastDay: null, lastByKind: {} },
   };

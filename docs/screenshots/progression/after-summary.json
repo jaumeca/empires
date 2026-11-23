@@ -1,0 +1,68 @@
+{
+  "errors": [],
+  "summary": [
+    {
+      "step": "founder-creation",
+      "hudButtons": 0,
+      "buttons": 45,
+      "chips": 0,
+      "inputs": 2,
+      "cardWords": 40,
+      "locked": 0
+    },
+    {
+      "step": "office-first-look",
+      "hudButtons": 0,
+      "buttons": 9,
+      "chips": 0,
+      "inputs": 0,
+      "cardWords": 0,
+      "locked": 0
+    },
+    {
+      "step": "first-game-dialog",
+      "hudButtons": 0,
+      "buttons": 15,
+      "chips": 2,
+      "inputs": 3,
+      "cardWords": 96,
+      "locked": 0
+    },
+    {
+      "step": "working-on-first-game",
+      "hudButtons": 0,
+      "buttons": 8,
+      "chips": 0,
+      "inputs": 0,
+      "cardWords": 0,
+      "locked": 0
+    },
+    {
+      "step": "project-panel",
+      "hudButtons": 0,
+      "buttons": 15,
+      "chips": 4,
+      "inputs": 0,
+      "cardWords": 40,
+      "locked": 1
+    },
+    {
+      "step": "menu",
+      "hudButtons": 0,
+      "buttons": 16,
+      "chips": 0,
+      "inputs": 0,
+      "cardWords": 81,
+      "locked": 0
+    },
+    {
+      "step": "decorate",
+      "hudButtons": 0,
+      "buttons": 18,
+      "chips": 0,
+      "inputs": 0,
+      "cardWords": 38,
+      "locked": 1
+    }
+  ]
+}
