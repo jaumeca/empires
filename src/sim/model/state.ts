@@ -93,6 +93,12 @@ export interface Relation {
   mentorDone?: boolean;
 }
 
+/** D.4: indie (small, small team), ambitious (medium with features) or standard. */
+export type ProjectProfile = 'indie' | 'ambitious' | 'standard';
+
+/** A client of contract work (D.4): trust −10…10 and jobs done. */
+export interface ClientRelation { jobs: number; trust: number }
+
 /** Track record (F3.8 / D-059): what players and clients remember, −10…10 each. */
 export type FameAspect = 'quality' | 'reliability' | 'innovation';
 export interface Fame {
@@ -264,6 +270,8 @@ export interface Project {
   /** Dynamic events already seen in this project (LS.7). */
   previewGiven?: string;
   eventsSeen?: number;
+  /** What kind of project it is (D.4): fixed at the start from the plan. */
+  profile?: ProjectProfile;
   /** Technical debt of this project's code, 0…100 (F3.4), and what caused it. */
   debt?: number;
   debtCauses?: string[];
@@ -359,6 +367,8 @@ export interface Contracts {
   active: ActiveContract | null;
   nextRefreshDay: number;
   completed: number;
+  /** Relationships with each client (D.4). Optional: older saves start with none. */
+  clients?: Record<string, ClientRelation>;
 }
 
 export type Rot = 0 | 1 | 2 | 3;

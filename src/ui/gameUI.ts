@@ -10,7 +10,8 @@ import { biography } from '../sim/systems/biography';
 import { notableRelations } from '../sim/systems/relations';
 import { debtLevel } from '../sim/systems/debt';
 import { FAME_ASPECTS, fameLevel, fameOf } from '../sim/systems/reputation';
-import { FEATURE_CFG, featureLock } from '../sim/systems/features';
+import { profileFor } from '../sim/systems/ambition';
+import { effectiveRisk, FEATURE_CFG, featureLock } from '../sim/systems/features';
 import { FEATURE_SLOTS, FEATURES, getFeature } from '../content/features';
 import type { Game } from '../sim/game';
 import type { Appearance, GameState, Memory, MemoryKind, PendingDecision, Project, ProjectSize, RelationKind, Role, SkillId } from '../sim/model/state';
@@ -30,7 +31,7 @@ import {
 import { clear, h } from './dom';
 import { DecorUI } from './decorUI';
 import { topicMood } from '../sim/systems/world';
-import { estimateDays } from '../sim/systems/contracts';
+import { clientOf, estimateDays } from '../sim/systems/contracts';
 import { fmtMoney, fmtNum1, fmtPrice, getLocale, LOCALE_NAMES, setLocale, t, tr, type Locale } from '../i18n/i18n';
 
 export interface UIServices {
@@ -595,6 +596,9 @@ export class GameUI {
         h('span.chip', null, icon('clock', 16), t('np.production_est', { min: e.productionDays[0], max: e.productionDays[1] })),
         h(`span.chip.${verdict}`, null, t(`np.verdict.${e.verdict}`)),
       );
+      // D.4: what kind of project this plan makes (same system, different strategy).
+      const profile = profileFor(s, plan.size, plan.features.length);
+      if (profile !== 'standard') est.append(h(`span.chip.profile.${profile}`, { id: 'np-profile', title: t(`profile.${profile}.desc`) }, icon(profile === 'indie' ? 'heart' : 'rocket', 16), t(`profile.${profile}`)));
       // F3.8: what players expect from this studio.
       const trust = fameLevel(fameOf(s).quality);
       if (trust === 'great' || trust === 'good') est.append(h('span.chip.good', { id: 'np-fame' }, icon('heart', 16), t('np.fame.trust')));
@@ -632,7 +636,7 @@ export class GameUI {
         const fit = f.fit[plan.topicId] ?? 0;
         const chips = [
           t(f.work <= 0.2 ? 'fchip.work_low' : f.work <= 0.3 ? 'fchip.work_mid' : 'fchip.work_high'),
-          f.risk >= 0.3 ? t('fchip.risk_high') : f.risk >= 0.2 ? t('fchip.risk') : null,
+          ((r) => (r >= 0.3 ? t('fchip.risk_high') : r >= 0.2 ? t('fchip.risk') : null))(effectiveRisk(s, f)),
           f.appeal > 0 && fit >= 0.5 ? t('fchip.fit_good') : f.appeal > 0 && fit <= -0.3 ? t('fchip.fit_bad') : null,
           f.reach >= 0.1 ? t('fchip.reach') : null,
         ].filter(Boolean) as string[];
@@ -1110,6 +1114,8 @@ export class GameUI {
             const risky = est > o.days * 0.9;
             return h('div.offer', { dataset: { offer: o.id } },
               h('div.t', null, t('contracts.offer', { client: o.clientId, kind: o.kind })),
+              // D.4: the client's history with the studio, in words.
+              ((r) => r.jobs > 0 ? h(`span.chip.small.${r.trust >= 0 ? 'good' : 'warn'}`, { dataset: { clientRel: o.clientId } }, icon(r.trust >= 0 ? 'heart' : 'sweat', 14), t(r.jobs >= SIM_CONFIG.ambition.loyalJobs && r.trust > 0 ? 'client.loyal' : r.trust >= 0 ? 'client.known' : 'client.wary')) : null)(clientOf(s, o.clientId)),
               h('div.row', null,
                 h('span.chip.good', null, icon('coin', 16), t('contracts.pay', { pay: o.payment })),
                 h('span.chip', null, icon('calendar', 16), t('contracts.days', { days: o.days })),
@@ -1242,7 +1248,7 @@ export class GameUI {
       h('p.sub', null, t('help.sub')),
       h('div.help-grid', null,
         topic('games', 'rocket'), topic('time', 'clock'), topic('energy', 'sweat'), topic('decisions', 'idea'),
-        topic('sales', 'coin'), topic('office', 'decor'), topic('team', 'team'), topic('relations', 'heart'), topic('debt', 'code'), topic('fame', 'star'), topic('story', 'star'),
+        topic('sales', 'coin'), topic('office', 'decor'), topic('team', 'team'), topic('relations', 'heart'), topic('debt', 'code'), topic('fame', 'star'), topic('profiles', 'rocket'), topic('story', 'star'),
       ),
       desk ? h('p.hint', null, t('menu.shortcuts')) : null,
       h('div.actions', null,

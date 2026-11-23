@@ -1,6 +1,7 @@
 import { activeFeatures, featureCeiling, featureReach } from './features';
 import { relationsRelease } from './relations';
 import { bugTolerance, fameRelease, fameWeek } from './reputation';
+import { ambitionVerdict, indieSpark } from './ambition';
 import { carryDebt, debtCeiling, debtLevel, debtOf } from './debt';
 import { SIM_CONFIG } from '../config';
 import type { EventSink } from '../core/events';
@@ -98,6 +99,9 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
     const fc = featureCeiling(p);
     factors.push({ amount: fc * 0.85, text: { key: (p.featureIgnored ?? []).length ? 'factor.features_trouble' : fc >= 0.2 ? 'factor.features_good' : 'factor.features_meh', params: { count: activeFeatures(p).length } }, causes: started });
   }
+  // D.4: a small, round indie game stands out.
+  const spark = indieSpark(p);
+  if (spark > 0) factors.push({ amount: spark * 0.85, text: { key: 'factor.indie_spark' }, causes: started });
   // Track record (F3.8): the reviewers' patience with bugs, explained when it mattered.
   const rawBugPenalty = 2.4 * (1 - Math.exp(-shippedBugs / 12));
   if (shippedBugs > 0 && Math.abs(rawBugPenalty - bugPenalty) >= 0.05) {
@@ -125,6 +129,7 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
   relationsRelease(state, p, emit);
   carryDebt(state, p);
   fameRelease(state, p, emit);
+  ambitionVerdict(state, p, emit);
   state.activeProjectId = null;
   record(state, { kind: 'released', text: { key: 'ledger.released', params: { project: p.name, score: averageScore } }, causes: explanation, tone: averageScore >= 6 ? 1 : -1, projectId: p.id });
   compactHistory(state);

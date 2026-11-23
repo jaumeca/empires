@@ -12,6 +12,11 @@ import { SIM_CONFIG } from '../config';
  * Risks are decided deterministically from the seed (no stream is consumed).
  */
 export const FEATURE_CFG = {
+  /** Experience lowers hidden risk (block 3): −6 % per level of the best programmer above 5 (−27 % at the top skill). */
+  riskPerSkill: 0.06,
+  maxRiskCut: 0.3,
+  /** A validated prototype convinces: extra interest. */
+  validatedHype: 0.3,
   /** A feature added mid-production costs this much more work than if planned (D-058). */
   lateWork: 1.3,
   /** Extra days when adding it with more time, and the interest lost by moving the date. */
@@ -92,7 +97,7 @@ export function setupFeatures(state: GameState, p: Project, ids: string[], proto
   }
   if (prototype && state.company.money < FEATURE_CFG.prototypeCost) return 'not_enough_money';
   p.features = unique;
-  p.featureTrouble = defs.filter((f) => hashUnit(state.seed, p.id, f.id) < f.risk).map((f) => f.id);
+  p.featureTrouble = defs.filter((f) => hashUnit(state.seed, p.id, f.id) < effectiveRisk(state, f)).map((f) => f.id);
   p.requiredPoints = Math.round(p.requiredPoints + base(p) * defs.reduce((a, f) => a + f.work, 0) + (prototype ? base(p) * FEATURE_CFG.prototypeWork : 0));
   const complexity = defs.reduce((a, f) => a + f.complexity, 0);
   if (complexity > 0) p.bugRateMods.push({ factor: 1 + complexity, causeId });
@@ -111,6 +116,8 @@ export function featuresTick(state: GameState, p: Project, emit: EventSink): voi
   if (open.length) return; // the prototype_result moment handles it
   p.prototypeDone = true;
   p.prototypeValidated = true;
+  // The demo convinces (block 3: prototype ↔ confidence): a little more interest.
+  p.hype += FEATURE_CFG.validatedHype;
   record(state, { kind: 'decision', text: { key: 'ledger.prototype.validated', params: { project: p.name } }, causes: [], tone: 1, projectId: p.id });
   emit({ type: 'prototype_validated', projectId: p.id, severity: 'info' });
 }
@@ -161,5 +168,11 @@ export function addFeatureLate(state: GameState, p: Project, f: FeatureDef, caus
   p.requiredPoints = Math.round(p.requiredPoints + base(p) * f.work * FEATURE_CFG.lateWork);
   if (f.complexity > 0) p.bugRateMods.push({ factor: 1 + f.complexity, causeId });
   // Its hidden risk is the same as if it had been planned (deterministic).
-  if (hashUnit(state.seed, p.id, f.id) < f.risk) p.featureTrouble = [...(p.featureTrouble ?? []), f.id];
+  if (hashUnit(state.seed, p.id, f.id) < effectiveRisk(state, f)) p.featureTrouble = [...(p.featureTrouble ?? []), f.id];
+}
+
+/** Hidden risk as this team faces it: an experienced programmer sees problems coming (block 3, D-061). */
+export function effectiveRisk(state: GameState, f: FeatureDef): number {
+  const best = Math.max(...state.empirians.map((e) => e.skills.tech));
+  return f.risk * (1 - Math.min(FEATURE_CFG.maxRiskCut, Math.max(0, best - 5) * FEATURE_CFG.riskPerSkill));
 }

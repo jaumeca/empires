@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Game } from '../../src/sim/game';
 import { createNewGame, DEFAULT_APPEARANCE, getProject } from '../../src/sim/state';
-import { featureCeiling, featureLock, featureReach, FEATURE_CFG, hashUnit, openTrouble } from '../../src/sim/systems/features';
+import { effectiveRisk, featureCeiling, featureLock, featureReach, FEATURE_CFG, hashUnit, openTrouble } from '../../src/sim/systems/features';
 import { FEATURES, getFeature } from '../../src/content/features';
 import { SIM_CONFIG } from '../../src/sim/config';
 import { deserialize, serialize } from '../../src/sim/save/save';
@@ -48,7 +48,7 @@ function seedWhere(feature: string, troubled: boolean): number {
   for (let seed = 1; seed < 5000; seed++) {
     const g = game(seed, 3);
     const nextId = `P-${g.state.nextId}`;
-    if ((hashUnit(seed, nextId, feature) < f.risk) === troubled) return seed;
+    if ((hashUnit(seed, nextId, feature) < effectiveRisk(g.state, f)) === troubled) return seed;
   }
   throw new Error('no seed');
 }
@@ -141,8 +141,20 @@ describe('features and prototypes (AW.D)', () => {
     const { p, seen } = finish(g);
     expect(seen).not.toContain('prototype_result');
     expect(p.prototypeValidated).toBe(true);
+    expect(g.state.ledger.some((l) => l.text.key === 'ledger.prototype.validated')).toBe(true);
     expect(g.state.ledger.some((l) => l.text.key === 'ledger.prototype.validated') || p.prototypeValidated).toBe(true);
     expect(p.requiredPoints).toBeGreaterThan(Math.round(SIM_CONFIG.work.requiredPoints.small! * (1 + getFeature('story')!.work))); // the prototype costs work
+  });
+
+  it('experience lowers hidden risk (block 3), capped', () => {
+    const g = game(1);
+    const f = getFeature('multiplayer')!;
+    g.state.empirians[0]!.skills.tech = 5;
+    expect(effectiveRisk(g.state, f)).toBeCloseTo(f.risk, 5);
+    g.state.empirians[0]!.skills.tech = 7;
+    expect(effectiveRisk(g.state, f)).toBeCloseTo(f.risk * (1 - 2 * FEATURE_CFG.riskPerSkill), 5);
+    g.state.empirians[0]!.skills.tech = 9.5;
+    expect(effectiveRisk(g.state, f)).toBeCloseTo(f.risk * (1 - Math.min(FEATURE_CFG.maxRiskCut, 4.5 * FEATURE_CFG.riskPerSkill)), 5); // top skill 9.5 → −27 %
   });
 
   it('features are deterministic, saved, and every feature is described', () => {

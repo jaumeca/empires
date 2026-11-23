@@ -1,4 +1,5 @@
 import { SIM_CONFIG } from '../config';
+import { remember } from './story';
 import { clientTerms, fameContract, noteFame } from './reputation';
 import type { EventSink } from '../core/events';
 import { newId, record } from '../core/ledger';
@@ -38,6 +39,32 @@ export function estimateDays(state: GameState, work: number, focus: number): num
   return Math.ceil(work / Math.max(0.1, perDay));
 }
 
+const A = () => SIM_CONFIG.ambition;
+
+/** A client's relationship with the studio (D.4). */
+export function clientOf(state: GameState, id: string) {
+  return state.contracts.clients?.[id] ?? { jobs: 0, trust: 0 };
+}
+
+/** Who asks for work: loyal clients come back; a client the studio let down stays away for a while. */
+function chooseClient(state: GameState): string {
+  const rng = state.rng.people;
+  const loyal = CLIENTS.filter((c) => { const r = clientOf(state, c); return r.jobs >= A().loyalJobs && r.trust > 0; });
+  if (loyal.length && nextFloat(rng) < A().loyalChance) return pick(rng, loyal);
+  const open = CLIENTS.filter((c) => clientOf(state, c).trust > A().clientAwayBelow);
+  return pick(rng, open.length ? open : CLIENTS);
+}
+
+/** Changes a client's trust and counts the job; becoming a regular client is remembered. */
+function noteClient(state: GameState, id: string, delta: number, job: boolean, emit: EventSink): void {
+  const before = clientOf(state, id);
+  const now = { jobs: before.jobs + (job ? 1 : 0), trust: Math.max(-10, Math.min(10, before.trust + delta)) };
+  state.contracts.clients = { ...(state.contracts.clients ?? {}), [id]: now };
+  if (job && now.jobs === A().loyalJobs && now.trust > 0) {
+    remember(state, `client:${id}:loyal`, 'decision', { key: 'memory.client.loyal', params: { client: id } }, { tone: 1 }, emit);
+  }
+}
+
 function makeOffer(state: GameState): ContractOffer {
   const rng = state.rng.people;
   const kind = pick(rng, CONTRACT_KINDS);
@@ -45,12 +72,14 @@ function makeOffer(state: GameState): ContractOffer {
   const days = estimateDays(state, work, kind.focus);
   const slack = 1 + nextRange(rng, K().slack[0], K().slack[1]);
   const rep = state.company.reputation;
-  // Clients remember whether the studio delivers on time (F3.8).
+  // Clients remember whether the studio delivers on time (F3.8), and their own history with it (D.4).
+  const clientId = chooseClient(state);
   const terms = clientTerms(state);
-  const payment = Math.round((work * K().ratePerPoint * (0.85 + rep / 200) * terms.pay * nextRange(rng, 0.9, 1.1)) / 50) * 50;
+  const own = 1 + Math.max(-A().clientMaxPay, Math.min(A().clientMaxPay, clientOf(state, clientId).trust * A().clientPayPerTrust));
+  const payment = Math.round((work * K().ratePerPoint * (0.85 + rep / 200) * terms.pay * own * nextRange(rng, 0.9, 1.1)) / 50) * 50;
   return {
     id: newId(state, 'C'),
-    clientId: pick(rng, CLIENTS),
+    clientId,
     kind: kind.id,
     focus: kind.focus,
     work,
@@ -66,6 +95,8 @@ export function contractsDay(state: GameState): void {
   c.offers = c.offers.filter((o) => o.expiresDay > state.day);
   if (state.day >= c.nextRefreshDay) {
     c.nextRefreshDay = state.day + 7;
+    // Let-down clients slowly forgive (D.4).
+    for (const [id, r] of Object.entries(c.clients ?? {})) if (r.trust < 0) c.clients![id] = { ...r, trust: Math.min(0, r.trust + A().clientWeeklyHeal) };
     // At least one new offer each week (when there is room), sometimes more.
     if (c.offers.length < K().maxOffers) c.offers.push(makeOffer(state));
     while (c.offers.length < K().maxOffers && nextFloat(state.rng.people) < 0.6) c.offers.push(makeOffer(state));
@@ -89,6 +120,7 @@ export function cancelContract(state: GameState): string | null {
   state.contracts.active = null;
   state.company.reputation = Math.max(0, state.company.reputation - K().cancelReputation);
   noteFame(state, 'reliability', -SIM_CONFIG.fame.cancel, () => {});
+  noteClient(state, a.clientId, -A().clientCancel, false, () => {});
   record(state, { kind: 'contract', text: { key: 'ledger.contract.cancelled', params: { client: a.clientId } }, causes: [a.causeId], tone: -1 });
   return null;
 }
@@ -125,6 +157,7 @@ function deliver(state: GameState, founder: Empirian, emit: EventSink): void {
   const repDelta = lateDays > 0 ? -Math.min(3, Math.ceil(lateDays / 3)) : early ? 2 : 1;
   state.company.reputation = Math.max(0, Math.min(100, state.company.reputation + repDelta));
   fameContract(state, lateDays, early, emit);
+  noteClient(state, a.clientId, lateDays > 0 ? -Math.ceil(lateDays / 3) * A().clientLatePer3Days : early ? A().clientEarly : A().clientOnTime, true, emit);
   gainXp(state, founder, 'management', K().managementXp, emit);
   record(state, {
     kind: 'contract',

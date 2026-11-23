@@ -196,6 +196,34 @@ export const SIM_CONFIG = {
     previewBugThreshold: 5,
   },
 
+  /** Kinds of project (D.4 / D-060). */
+  ambition: {
+    ambitiousFeatures: 2,
+    indieFocusTolerance: 0.1,
+    indieFit: 0.5,
+    indieSignatureFit: 0.8,
+    indieSpark: 0.25,
+    ambitiousHype: 0.5,
+    coordinationPerFeature: 0.03,
+    maxCoordination: 0.15,
+    phenomenonAt: 8,
+    phenomenonSales: 1.35,
+    letdownBelow: 7,
+    letdownSales: 0.75,
+    verdictDays: 42,
+    /** Clients: trust −10…10. */
+    clientOnTime: 3,
+    clientEarly: 4,
+    clientLatePer3Days: 3,
+    clientCancel: 6,
+    clientPayPerTrust: 0.015,
+    clientMaxPay: 0.15,
+    clientAwayBelow: -3,
+    clientWeeklyHeal: 0.5,
+    loyalJobs: 3,
+    loyalChance: 0.5,
+  },
+
   /** Track record (F3.8 / D-059): −10…10 per aspect, recent facts weigh more, slow drift to neutral. */
   fame: {
     weight: 0.35,
