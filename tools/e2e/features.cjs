@@ -20,10 +20,11 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.goto(`${base}/?fresh&debug&seed=95`);
   await page.waitForTimeout(1500);
   await page.click('#start-game');
-  await page.evaluate(() => window.__empires.game.dispatch({ type: 'tutorial', action: 'skip' }));
+  await page.evaluate(() => { window.__empires.game.dispatch({ type: 'tutorial', action: 'skip' }); window.__empires.unlockAll(); /* tests the mechanic, not when it unlocks (D-062) */ });
   await page.keyboard.press('p');
   await page.waitForTimeout(300);
-  check('seven features with words, some locked with a reason', (await page.locator('[data-feature]').count()) === 7 && (await page.locator('.feature.locked').count()) >= 3);
+  // D-062: only what can be chosen now is shown (no wall of padlocks); one line names the next one and how.
+  check('available features with words, locked ones hidden behind one "coming up" line', (await page.locator('[data-feature]').count()) >= 2 && (await page.locator('.feature.locked').count()) === 0 && /Próximamente|Coming up/.test(await page.textContent('#np-next-feature')));
   const est0 = await page.textContent('.card .chip');
   await page.click('[data-topic="pirates"]');
   await page.click('[data-feature="story"]');

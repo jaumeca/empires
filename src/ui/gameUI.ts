@@ -352,7 +352,7 @@ export class GameUI {
           break;
         case 'memory': {
           const m = this.state.story.memories.find((x) => x.id === e.memoryId);
-          if (m && !['decision', 'achievement', 'founded', 'hire', 'first_hire', 'farewell'].includes(m.kind)) this.toast(t('toast.memory'), 'heart');
+          if (m && !['decision', 'achievement', 'founded', 'hire', 'first_hire', 'farewell', 'unlock'].includes(m.kind)) this.toast(t('toast.memory'), 'heart');
           break;
         }
         case 'candidates_arrived':

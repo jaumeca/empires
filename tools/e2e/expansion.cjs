@@ -19,7 +19,7 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.goto(`${base}/?fresh&debug&seed=90`);
   await page.waitForTimeout(1500);
   await page.click('#start-game');
-  await page.evaluate(() => { const g = window.__empires.game; g.dispatch({ type: 'tutorial', action: 'skip' }); g.state.company.money = 80000; });
+  await page.evaluate(() => { const g = window.__empires.game; g.dispatch({ type: 'tutorial', action: 'skip' }); window.__empires.unlockAll(); /* tests the mechanic, not when it unlocks (D-062) */ g.state.company.money = 80000; });
   const before = await st();
   await page.keyboard.press('d');
   await page.waitForTimeout(300);

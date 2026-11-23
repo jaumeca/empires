@@ -94,7 +94,8 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.waitForTimeout(300);
   await page.click('.card .close');
   await page.waitForTimeout(300);
-  check('11 hiring: explained without forcing a hire', (await step()) === 'hiring' && (await page.isVisible('#tutorial-ok')));
+  const dbg11 = await page.evaluate(() => ({ step: document.getElementById('tutorial-coach')?.dataset.step, ok: !!document.getElementById('tutorial-ok'), modal: document.querySelector('.backdrop')?.className, tut: window.__empires.game.state.tutorial }));
+  check('11 hiring: explained without forcing a hire', (await step()) === 'hiring' && (await page.isVisible('#tutorial-ok')), JSON.stringify(dbg11));
   await page.click('#tutorial-ok');
   await page.waitForTimeout(500);
   const t = await page.evaluate(() => window.__empires.game.state.tutorial);

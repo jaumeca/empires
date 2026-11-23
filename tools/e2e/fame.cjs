@@ -20,7 +20,7 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.goto(`${base}/?fresh&debug&seed=96`);
   await page.waitForTimeout(1500);
   await page.click('#start-game');
-  await page.evaluate(() => window.__empires.game.dispatch({ type: 'tutorial', action: 'skip' }));
+  await page.evaluate(() => { window.__empires.game.dispatch({ type: 'tutorial', action: 'skip' }); window.__empires.unlockAll(); /* this suite tests the mechanic, not when it unlocks (D-062) */ });
   await page.keyboard.press('h'); await page.waitForTimeout(300);
   check('a new studio has no reputation yet (and says how it is earned)', /Todavía sin fama|No reputation yet/.test(await page.textContent('#story-fame')));
   await closeCards();

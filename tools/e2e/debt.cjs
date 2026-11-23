@@ -24,7 +24,7 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.click('#start-game');
   const coder = await page.evaluate(() => {
     const g = window.__empires.game; const s = g.state;
-    g.dispatch({ type: 'tutorial', action: 'skip' });
+    g.dispatch({ type: 'tutorial', action: 'skip' }); window.__empires.unlockAll() /* this suite tests the mechanic, not when it unlocks (D-062) */;
     s.company.money = 60000; s.contracts.completed = 1; s.eventLog.lastDay = 1e9;
     let ok = false;
     for (let z = 0; z < s.office.d && !ok; z++) for (let x = 0; x < s.office.w && !ok; x++) for (const rot of [0, 1, 2, 3]) if (!ok) ok = g.dispatch({ type: 'buy_item', defId: 'desk_basic', x, z, rot }).ok;

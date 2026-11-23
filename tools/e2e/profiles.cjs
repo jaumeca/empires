@@ -20,7 +20,7 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.goto(`${base}/?fresh&debug&seed=97`);
   await page.waitForTimeout(1500);
   await page.click('#start-game');
-  await page.evaluate(() => { const g = window.__empires.game; g.dispatch({ type: 'tutorial', action: 'skip' }); g.state.company.money = 50000; });
+  await page.evaluate(() => { const g = window.__empires.game; g.dispatch({ type: 'tutorial', action: 'skip' }); window.__empires.unlockAll() /* this suite tests the mechanic, not when it unlocks (D-062) */; g.state.company.money = 50000; });
   await page.keyboard.press('p'); await page.waitForTimeout(400);
   check('a small game by a solo founder is shown as indie', /Indie/.test(await page.textContent('#np-profile')));
   await page.screenshot({ path: path.join(out, 'plan-indie.png') });

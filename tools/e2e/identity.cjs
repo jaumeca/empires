@@ -22,7 +22,7 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.click('#start-game');
   await page.evaluate(() => {
     const g = window.__empires.game;
-    g.dispatch({ type: 'tutorial', action: 'skip' });
+    g.dispatch({ type: 'tutorial', action: 'skip' }); window.__empires.unlockAll(); /* tests the mechanic, not when it unlocks (D-062) */
     const s = g.state;
     s.company.money = 50000;
     for (let z = 0; z < 8; z++) for (let x = 0; x < 10; x++) for (const rot of [0, 1, 2, 3]) if (s.office.items.filter((i) => i.defId.startsWith('desk')).length < 2) g.dispatch({ type: 'buy_item', defId: 'desk_basic', x, z, rot });

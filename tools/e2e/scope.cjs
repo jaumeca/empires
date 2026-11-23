@@ -22,7 +22,7 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.click('#start-game');
   const found = await page.evaluate(() => {
     const g = window.__empires.game; const s = g.state;
-    g.dispatch({ type: 'tutorial', action: 'skip' }); s.eventLog.lastDay = 1e9;
+    g.dispatch({ type: 'tutorial', action: 'skip' }); window.__empires.unlockAll() /* this suite tests the mechanic, not when it unlocks (D-062) */; s.eventLog.lastDay = 1e9;
     g.dispatch({ type: 'start_project', name: 'Isla', topicId: 'pirates', size: 'small', focus: 0.45, budget: 1000, days: 42, price: 9.99 });
     for (let i = 0; i < 20000 && s.activeProjectId; i++) {
       const d = s.pendingDecision;

@@ -20,6 +20,7 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.goto(`${base}/?fresh&debug&seed=4`);
   await page.waitForTimeout(1500);
   await page.click('#start-game');
+  await page.evaluate(() => window.__empires.unlockAll()); // tests decorating, not when categories unlock (D-062)
   await page.evaluate(() => { window.__empires.game.state.company.money = 20000; });
   await page.waitForTimeout(500);
 
