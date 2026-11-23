@@ -607,6 +607,7 @@ Más decisiones durante el desarrollo (funcionalidades, prototipo, alcance, deud
   - **Base sólida:** un poco más de trabajo ahora y un 10 % menos en el siguiente juego.
   - **Revisión del código** cuando hay mucha deuda: reescribir, arreglar lo urgente o seguir así (que pasa la deuda al siguiente juego).
 - **Idea de alcance `[IMPLEMENTADO]` (F3.2, D-058):** si quedan huecos de funcionalidad, a mitad de producción la persona más creativa propone añadir la que mejor encaja (o la que llega a más gente si el tema está de moda): añadirla, añadirla con una semana más o seguir con lo planeado. Una sola propuesta de equipo por proyecto (esta o el atajo de código).
+- **Fama del estudio `[IMPLEMENTADO]` (F3.8, D-059):** además del prestigio, jugadores y clientes recuerdan la **calidad**, el **cumplimiento** y la **innovación** del estudio, contados con palabras en la Historia. Pesa lo reciente, se olvida poco a poco y siempre se puede recuperar. Cambia un poco la paciencia de la crítica con los fallos, el interés inicial de un juego nuevo y las condiciones de los clientes.
 - `[FUTURO]` Un juego antiguo vuelve a estar de moda (con productos persistentes, GT.6); comentarios de usuarios y recortar funcionalidades por decisión propia (D.3).
 
 ### 26.6 Pequeñas satisfacciones `[CONFIRMADO]`

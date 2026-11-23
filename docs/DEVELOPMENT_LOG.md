@@ -4,6 +4,28 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-23 — Décima sesión: Reputation & Identity — pausa corregida de raíz y F3.8 reputación (0.14.0)
+
+### Estado verificado al empezar
+Coincide con lo comunicado: `production-web` = 0.13.0 (`877f6ff`), desarrollo `db81e25`, 210 pruebas, sin trabajo a medias.
+
+### Prioridad 0 — la pausa
+- **Reproducido** el fallo intermitente (1 de 6 en la e2e) y **capturado** con instrumentación opcional (`EMPIRES_DIAG=1`): el fundador caminaba de vuelta a su silla con un tramo pendiente; en el último fotograma antes de pausar alcanzó un punto intermedio, y en el primer fotograma pausado (tiempo del mundo 0) su orientación objetivo saltó de −1,287 a −2,521 hacia el siguiente tramo. La rotación visible no cambió (−1,2735), porque se interpola con el tiempo; la prueba detectaba el cambio interno.
+- **Corrección de raíz:** sin tiempo del mundo, `step()` no toca ruta ni orientación; al alcanzar un punto ya se orienta hacia el siguiente tramo en ese mismo fotograma; la postura tampoco cambia en pausa (salvo la vista previa del editor). La foto de la prueba registra ahora también la rotación visible y la postura.
+- **Prueba de regresión** `tests/render/pause.test.ts`: falla con el código anterior (comprobado) y pasa con la corrección. E2E de pausa ampliada a 1x/2x/4x/8x: 16 ejecuciones seguidas a 19/19.
+- **Dos falsos fallos de la prueba**, demostrados con datos y no con la corrección del juego: (1) el renderizador por software a veces no dibuja ningún fotograma en 400 ms (el tiempo del mundo y la simulación no avanzan), y (2) a 8x una decisión aparece a veces entre contestar y pulsar pausa (el modal intercepta el clic, comportamiento correcto). La prueba espera a que avance el tiempo del mundo y reintenta tras contestar.
+
+### Bloque 1 — F3.8 reputación con memoria (D-059)
+- Trayectoria del estudio en tres aspectos (calidad, cumplimiento, innovación) a partir de hechos reales; recuperable, con tope y olvido semanal; contada con palabras en la Historia y en el plan del siguiente juego; efectos moderados en la paciencia de la crítica con los fallos, el interés inicial y los clientes.
+- Fallo de diseño detectado por las pruebas: con una media móvil simple, un pequeño hecho malo "mejoraba" una fama muy mala. Ahora cada hecho solo mueve la fama en su dirección.
+
+### Pruebas ejecutadas
+- `npx vitest run`: **223 pruebas** (nuevas: `tests/render/pause.test.ts` 3, `tests/sim/reputation.test.ts` 10).
+- E2E en serie sobre el build publicado: **fame 7/7** (nueva), **pause 19/19** (ampliada), scope 5/5, debt 9/9, relations 7/7, tutorial 20/20, roles 10/10, events 9/9, features 7/7, expansion 8/8, style 7/7, identity 13/13, decor 10/10, routines 8/8, play 21/21, persistence 10/10, desktop 15/15, team 13/13, story 10/10, contracts 10/10.
+- Galería 48 (nueva g47 fama). Actualización real 0.13.0 → 0.14.0 sin errores.
+
+---
+
 ## 2026-11-23 — Novena sesión (3.ª parte): idea de alcance y tester revisado (0.13.0)
 
 ### Resumen

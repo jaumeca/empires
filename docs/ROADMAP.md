@@ -4,7 +4,7 @@
 >
 > Estados: ⬜ Pendiente · 🟦 En curso · ✅ Hecho · ⏸ Bloqueado (esperando aprobación)
 
-> **Estado (2026-11-23):** E.3 relaciones (D-056, 0.11.0), F3.4 deuda técnica (D-057, 0.12.0) e idea de alcance (D-058) hechas. Ver `docs/CONTINUAR_DESARROLLO.md`.
+> **Estado (2026-11-23):** E.3 relaciones (0.11.0), F3.4 deuda técnica (0.12.0), idea de alcance (0.13.0), pausa corregida de raíz y F3.8 reputación con memoria (D-059) hechas. Ver `docs/CONTINUAR_DESARROLLO.md`.
 
 ## Resumen
 
@@ -210,7 +210,7 @@ Objetivo: el fundador deja de estar solo. Contratar, convivir y trabajar en equi
 | F3.5 | **Estrategias de calidad y pruebas**: prototipo en la fase de concepto, beta cerrada, pruebas externas de pago; dimensiones de calidad (estabilidad, diseño, rendimiento) que pesan distinto según el tema | Varias formas válidas de hacer un buen juego | Al menos 3 estrategias con beneficio por día dentro de un ±20 % y perfiles de riesgo distintos (prueba de no-dominancia) | F3.3 | ⬜ |
 | F3.6 | **Presupuesto por partidas y reserva**: repartir entre herramientas, marketing, pruebas externas y reserva para imprevistos; el dinero se queda corto | El presupuesto pasa a ser una decisión | Con la escala económica revisada (decisión del propietario tras F2.12), ningún reparto gana en todos los planes; quedarse sin reserva ante un imprevisto tiene consecuencias | F2.12, F3.3 | ⬜ (bloqueada parcialmente) |
 | F3.7 | **Cronograma con hitos**: demo y beta opcionales con fecha; anunciar fecha pronto o tarde | El calendario se planifica, no solo se elige una duración | Una demo temprana sube el interés y expone los bugs; incumplir un hito anunciado cuesta interés; todo queda en el registro | F3.2 | ⬜ |
-| F3.8 | **Consecuencias persistentes entre proyectos**: promesas incumplidas, reputación por tipo de fallo (bugs, retrasos), lecciones aprendidas del estudio (encaje tema↔enfoque descubierto) | Lo que haces en un juego afecta al siguiente; sensación de progreso | La promesa de "una actualización" tiene efecto en el siguiente lanzamiento; lo aprendido se muestra al crear el proyecto siguiente; pruebas de carrera de 5 proyectos | F3.2 | ⬜ (la experiencia del fundador pasa a LS.1, aprobada: D-035) |
+| F3.8 | **Consecuencias persistentes entre proyectos**: promesas incumplidas, reputación por tipo de fallo (bugs, retrasos), lecciones aprendidas del estudio (encaje tema↔enfoque descubierto) | Lo que haces en un juego afecta al siguiente; sensación de progreso | La promesa de "una actualización" tiene efecto en el siguiente lanzamiento; lo aprendido se muestra al crear el proyecto siguiente; pruebas de carrera de 5 proyectos | F3.2 | 🟦 Reputación con memoria hecha (D-059: calidad, cumplimiento, innovación; `systems/reputation.ts`, `tests/sim/reputation.test.ts` 10, e2e `fame.cjs` 7/7); promesas explícitas y lecciones aprendidas pendientes |
 | F3.9 | **Historia del proyecto y avisos**: línea de tiempo ilustrada del proyecto desde la caja de la estantería; aviso de previsión dicho por el Empirian; preferencias de avisos (informativo/importante/decisivo) | Entender el porqué en cualquier momento | Cualquier resultado enlaza con su cadena de causas; el jugador puede silenciar avisos informativos | F3.1 | ⬜ |
 | F3.10 | **Revisión de balance de F3** con `review.report.ts` y pruebas de juego | Que F3 no introduzca estrategias dominantes | Informe antes/después; pruebas de no-dominancia ampliadas; prueba de juego del propietario | todas | ⬜ |
 

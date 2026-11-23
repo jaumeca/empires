@@ -22,7 +22,7 @@ Actualizado: 2026-11-23 tras publicar 0.13.0 (alcance y tester). Todo el trabajo
 5. F1.11: validación en móviles reales (pendiente de dispositivos del propietario).
 
 ## Problemas conocidos
-- `tools/e2e/pause.cjs` falló 1 de 3 veces en 0.13.0 (un giro del fundador durante la pausa a 4x); causa no encontrada.
+- (Resuelto en 0.14.0) El giro en pausa tenía causa real en `EmpirianActor.step()`; ver D-059.
 - La captura `docs/screenshots/g13-reviews.jpg` sale semitransparente (ya en 0.9.0).
 - La prueba de economía es sensible a la suerte: usa 12 semillas y umbral 0,92× (D-055).
 - Las suites e2e deben ejecutarse en serie y solas (la de pausa falla con CPU compartida); los e2e que avanzan el tiempo deben contestar decisiones (`__empires.play`).

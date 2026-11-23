@@ -374,6 +374,12 @@ const VARIANTS = [
   });
   if (asked) await shot('g46-team-proposal', 1800);
 
+  // 48 Reputation with memory (F3.8): what people say about the studio, in words.
+  if (asked) await page.keyboard.press('1');
+  for (let i = 0; i < 4 && (await page.isVisible('.card .close')); i++) { await page.click('.card .close'); await page.waitForTimeout(150); }
+  await ev(() => { window.__empires.ui.setSpeed(0); window.__empires.game.state.company.fame = { quality: 6, reliability: 2.5, innovation: -2 }; window.__empires.ui.showStory(); });
+  await shot('g47-studio-fame', 600);
+
 
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });
