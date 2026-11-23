@@ -97,7 +97,7 @@ function tapKindFor(category: string): string {
   }
 }
 
-class EmpirianActor {
+export class EmpirianActor {
   pos: [number, number];
   path: [number, number][] = [];
   target: Poi;
@@ -138,8 +138,13 @@ class EmpirianActor {
     this.path = path;
   }
 
-  /** Returns true while walking. */
+  /**
+   * Returns true while walking. With world time stopped (dt = 0, paused) nothing
+   * changes — not even where they face: a waypoint reached in the last frame
+   * before the pause used to turn the heading in the first paused frame (ML.1).
+   */
   step(dt: number, speedFactor: number): boolean {
+    if (dt <= 0) return this.path.length > 0;
     const next = this.path[0];
     if (!next) {
       this.view.heading = this.target.heading;
@@ -152,6 +157,9 @@ class EmpirianActor {
     if (dist <= v) {
       this.pos = [next[0], next[1]];
       this.path.shift();
+      // Face the next leg now (not in a later frame).
+      const after = this.path[0];
+      if (after && (after[0] !== this.pos[0] || after[1] !== this.pos[1])) this.view.heading = Math.atan2(after[0] - this.pos[0], after[1] - this.pos[1]);
     } else {
       this.pos = [this.pos[0] + (dx / dist) * v, this.pos[1] + (dz / dist) * v];
       this.view.heading = Math.atan2(dx, dz);
@@ -1041,7 +1049,8 @@ export class OfficeScene {
         }
       }
       const moving = actor.step(dt, speedFactor);
-      actor.view.pose = actor.target.pose;
+      // Paused: the pose waits for the world to move again (except the editor's instant preview).
+      if (dt > 0 || actor.view.snap) actor.view.pose = actor.target.pose;
       // Small, recognisable habits (AW.B) — world time only, so pause freezes them too.
       const seatedWork = !moving && actor.targetName.startsWith('seat') && ['coding', 'designing', 'testing'].includes(activity);
       actor.view.stretching = seatedWork && energy < 45 && (t + (hashId(id) % 20)) % 20 < 1.4;
@@ -1158,7 +1167,8 @@ export class OfficeScene {
     const r = (n: number) => Math.round(n * 1e4) / 1e4;
     const actors = [...this.actors.entries()].map(([id, a]) => {
       const v = a.view;
-      return [id, r(a.pos[0]), r(a.pos[1]), r(v.heading), r(v.body.position.y), r(v.legL.rotation.x), r(v.armR.rotation.x), r(v.armR.rotation.z)];
+      // Target heading AND the visible rotation, plus the target pose: nothing may change while paused.
+      return [id, r(a.pos[0]), r(a.pos[1]), r(v.heading), r(v.root.rotation.y), v.pose, r(v.body.position.y), r(v.legL.rotation.x), r(v.armR.rotation.x), r(v.armR.rotation.z)];
     });
     return JSON.stringify({ actors, screen: this.screenLine, bubbles: this.bubbles.snapshot(), confetti: this.confetti.count });
   }

@@ -20,7 +20,15 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   const tick = () => page.evaluate(() => window.__empires.game.state.tick);
   const answerAll = async () => { for (let i = 0; i < 10 && (await page.evaluate(() => !!window.__empires.game.state.pendingDecision)); i++) { await page.keyboard.press('1'); await page.waitForTimeout(250); } };
   // Decisions (moments, ideas) may pop up at any time and pause the game: answer before clicking a speed.
-  const speed = async (v) => { await answerAll(); await page.click(`[data-speed="${v}"]`); };
+  // A decision can pop up (and pause the game) between answering and clicking, above all at 8x:
+  // answer and retry, as a player would.
+  const speed = async (v) => {
+    for (let attempt = 0; attempt < 6; attempt++) {
+      await answerAll();
+      try { await page.click(`[data-speed="${v}"]`, { timeout: 3000 }); return; } catch { /* a decision is asking: answer it first */ }
+    }
+    throw new Error(`could not set speed ${v}`);
+  };
   await page.goto(`${base}/?fresh&debug&seed=21`);
   await page.waitForTimeout(1500);
   await page.click('#start-game');
@@ -28,22 +36,44 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.click('#start-project');
   await answerAll();
 
-  for (const sp of ['1', '4', '8']) {
+  // Optional diagnostics (EMPIRES_DIAG=1): log every change to an actor while world time is stopped.
+  if (process.env.EMPIRES_DIAG) await page.evaluate(() => {
+    const { game, scene } = window.__empires;
+    window.__log = [];
+    game.onUpdate((evs) => window.__log.push({ speed: game.clock.speed, tick: game.state.tick, types: evs.map((e) => e.type + (e.kind ? ':' + e.kind : '')), act: game.state.empirians[0].activity, pend: game.state.pendingDecision?.kind }));
+    const orig = scene.update.bind(scene);
+    window.__frames = [];
+    scene.update = (dt, t, sf, r) => {
+      const a = [...scene.actors.values()][0];
+      const before = { tn: a.targetName, h: a.view.heading, rot: a.view.root.rotation.y, pose: a.view.pose, path: a.path.length };
+      orig(dt, t, sf, r);
+      if (dt === 0 && (before.tn !== a.targetName || before.h !== a.view.heading || before.rot !== a.view.root.rotation.y))
+        window.__frames.push({ act: scene.lastState.empirians[0].activity, speed: game.clock.speed, from: before, to: { tn: a.targetName, h: a.view.heading, rot: a.view.root.rotation.y, pose: a.view.pose, path: a.path.length }, log: window.__log.slice(-3) });
+    };
+  });
+  for (const sp of ['1', '2', '4', '8']) {
     await speed(sp);
     await page.waitForTimeout(1500);
     await answerAll();
     await speed(sp);
     await page.waitForTimeout(300);
+    const wt = () => page.evaluate(() => ({ t: window.__empires.world.time, tick: window.__empires.game.state.tick, frames: window.__empires.scene.frames ?? null }));
+    const w1 = await wt();
     const moving1 = await snap();
-    await page.waitForTimeout(400);
+    // Compare once world time has really advanced: the headless software renderer
+    // sometimes draws no frame at all for a few hundred ms (sim and world both stop).
+    let w2 = w1;
+    for (let i = 0; i < 30 && w2.t < w1.t + 0.3; i++) { await page.waitForTimeout(100); w2 = await wt(); }
     const moving2 = await snap();
-    check(`world animates at ${sp}x`, moving2 !== moving1, moving2 !== moving1 ? '' : await page.evaluate(() => JSON.stringify({ speed: window.__empires.game.clock.speed, pend: window.__empires.game.state.pendingDecision?.kind, modal: document.querySelector('.backdrop')?.className, tut: document.getElementById('tutorial-coach')?.dataset.step })));
+    if (process.env.EMPIRES_DIAG) console.log('WT', sp, JSON.stringify(w1), JSON.stringify(w2), moving1 === moving2 ? 'SAME' : 'diff');
+    check(`world animates at ${sp}x`, moving2 !== moving1, moving2 !== moving1 ? '' : moving1 + ' ' + await page.evaluate(() => JSON.stringify({ wt: window.__empires.world.time, act: window.__empires.game.state.empirians[0].activity, tick: window.__empires.game.state.tick, speed: window.__empires.game.clock.speed, pend: window.__empires.game.state.pendingDecision?.kind, modal: document.querySelector('.backdrop')?.className, tut: document.getElementById('tutorial-coach')?.dataset.step })));
     await speed('0');
     await page.waitForTimeout(100);
     const a = await snap(); const ta = await tick();
     await page.waitForTimeout(1500);
     const b = await snap(); const tb = await tick();
     check(`pause at ${sp}x freezes poses, bubbles and screen`, a === b, a === b ? '' : `${a.slice(0, 120)} vs ${b.slice(0, 120)}`);
+    if (process.env.EMPIRES_DIAG && a !== b) console.log('DIAG', JSON.stringify(await page.evaluate(() => window.__frames.slice(-6))));
     check(`pause at ${sp}x stops simulation time`, ta === tb, `${ta} → ${tb}`);
   }
   await page.screenshot({ path: path.join(out, 'paused.png') });
