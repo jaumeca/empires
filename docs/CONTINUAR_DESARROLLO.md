@@ -15,7 +15,7 @@ Actualizado: 2026-11-22 tras publicar 0.11.0 (relaciones). Todo el trabajo está
 - Pruebas: `tests/sim/roles.test.ts`, `tests/sim/storyEvents.test.ts`; e2e `tools/e2e/roles.cjs`, `tools/e2e/events.cjs`. Ayudas de depuración (`?debug`): `__empires.play(n)` y `__empires.forceEvent(kind)`.
 
 ## Tareas pendientes (orden recomendado)
-1. ~~E.3 Relaciones~~ hecho en 0.11.0 (D-056, `src/sim/systems/relations.ts`). Siguiente paso exacto: **Fase 2 — proyectos (D.3)**: deuda técnica y ajustes de alcance como decisiones durante el desarrollo, sobre el motor de momentos (`src/sim/systems/moments.ts`) y funcionalidades (`features.ts`), con prueba de no-dominancia.
+1. ~~E.3 Relaciones~~ hecho en 0.11.0 (D-056, `src/sim/systems/relations.ts`). F3.4 deuda técnica hecha (D-057, `src/sim/systems/debt.ts`). Siguiente paso exacto: **F3.3/F3.2 alcance durante el desarrollo**: añadir o recortar una funcionalidad a mitad de proyecto (momento "¿y si añadimos…?" ligado a tendencias del mercado) sobre `features.ts` y `moments.ts`, con prueba de no-dominancia.
 2. **D.3/D.4:** decisiones de alcance, deuda técnica y comentarios de usuarios; diferenciar juego indie, ambicioso y por encargo (F3).
 3. **GT.6 productos persistentes** (y el evento aplazado "un juego antiguo vuelve a estar de moda"); **GT.7** reequilibrio económico; **AW.F** pequeñas satisfacciones.
 4. Que la estimación de plazo al crear un juego tenga en cuenta los papeles.

@@ -74,6 +74,9 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   const e2 = s.empirians.find((e) => e.id === emp.id);
   check('employee works at their own desk', target === `seat:${emp.id}` && ['coding', 'designing', 'thinking', 'testing'].includes(e2.activity), `${target} · ${e2.activity}`);
   check('employee gains experience', e2.xp.tech + e2.xp.design > 0);
+  // With a team, a code question (F3.4) or another decision may be asking: answer it first.
+  for (let i = 0; i < 4 && (await page.evaluate(() => !!window.__empires.game.state.pendingDecision)); i++) { await page.keyboard.press('2'); await page.waitForTimeout(300); }
+  for (let i = 0; i < 4 && (await page.isVisible('.card .close')); i++) { await page.click('.card .close'); await page.waitForTimeout(150); }
   await page.click('[data-speed="0"]');
   await page.screenshot({ path: path.join(out, 'team-working.png') });
 

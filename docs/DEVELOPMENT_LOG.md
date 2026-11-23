@@ -4,6 +4,30 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-23 — Novena sesión (2.ª parte): F3.4 deuda técnica (0.12.0)
+
+### Revisión previa (para no duplicar)
+Ya existían: momentos contextuales (F3.1: agotamiento, retraso, plan de pulido), funcionalidades y prototipo con problemas ocultos (D-053), eventos de historia con portavoz (D-055), ritmo de trabajo y plan de pruebas, herencia de ideas entre proyectos y relaciones (D-056). Faltaba F3.4 (consecuencias diferidas en el código), que es lo implementado, reutilizando el motor de momentos, el registro causal y la Historia.
+
+### Resumen
+- **Deuda técnica** (D-057, `src/sim/systems/debt.ts`): se acumula al programar (crunch ×2, tranquilo ×0,5; experiencia, perfeccionistas y buenas relaciones la reducen), frena la programación, añade bugs y baja un poco la nota (todo con tope); el 40 % pasa al siguiente juego.
+- **Decisiones nuevas** (momentos con portavoz: quien mejor programa): *atajo / hacerlo bien / base sólida* (solo con equipo) y *revisión del código* (reescribir / arreglar lo urgente / seguir así) cuando hay mucha deuda. Quedan en la Historia con quien lo propuso; la deuda aparece en el "¿Por qué?".
+- **Interfaz:** "Código: sólido / con parches / frágil" en la tarjeta del proyecto; aviso de código heredado o base sólida al planear el siguiente juego; tema de Ayuda.
+- Corregido de paso: la experiencia de gestión de un momento planteado por un empleado iba al empleado (ahora al fundador).
+
+### Pruebas ejecutadas
+- `npx vitest run`: **206 pruebas** (nuevas: `tests/sim/debt.test.ts` 9, con no-dominancia del atajo y de la base sólida).
+- E2E en serie sobre el build publicado: **debt 9/9** (nueva), relations 7/7, tutorial 20/20, roles 10/10, events 9/9, features 7/7, expansion 8/8, style 7/7, identity 13/13, decor 10/10, routines 8/8, pause 16/16, play 21/21, persistence 10/10, desktop 15/15, team 13/13, story 10/10, contracts 10/10.
+- Simulaciones comparativas (6–8 semillas, en D-057). Galería: 47 capturas (nueva g46). Actualización real 0.11.0 → 0.12.0 sin errores.
+
+### Problemas encontrados
+- Los momentos nuevos, al ir primeros, desplazaban a "vas con retraso" (máx. 3 por proyecto): ahora van al final y el atajo solo se plantea con equipo.
+- Primer equilibrio: el atajo y la base sólida nunca compensaban, y el crunch quedaba un 24 % peor. Ajustado y medido (D-057).
+- Una comparación salía engañosa porque el simulador contestaba "plan de pulido" con todo pulido y nada de pruebas; se usa el plan equilibrado.
+- La prueba e2e de equipo se quedaba esperando la nueva pregunta del atajo (comportamiento correcto del juego): ahora la contesta.
+
+---
+
 ## 2026-11-22 — Novena sesión: People & Possibilities — E.3 relaciones en el equipo (0.11.0)
 
 ### Estado verificado al empezar

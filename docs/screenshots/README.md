@@ -52,6 +52,7 @@ Capturas generadas automáticamente con `npm run gallery` (Chromium sin pantalla
 | 44 | [g43-team-idea.jpg](g43-team-idea.jpg) | **Evento de historia** (D-055): una empleada propone una idea; tres opciones con consecuencias distintas. |
 | 45 | [g44-friends.jpg](g44-friends.jpg) | **Relaciones** (E.3): tras una charla se hacen amigos; corazones sobre los dos. |
 | 46 | [g45-relations-sheet.jpg](g45-relations-sheet.jpg) | **Con el equipo** en la ficha: la relación en una línea y su recuerdo en la historia. |
+| 47 | [g46-tech-shortcut.jpg](g46-tech-shortcut.jpg) | **Deuda técnica** (F3.4): quien mejor programa propone un atajo; hacerlo bien o montar una base sólida. |
 
 ## Qué decidir en la revisión (F1.12)
 

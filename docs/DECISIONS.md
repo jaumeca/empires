@@ -407,7 +407,17 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Medido (carreras de un año con un empleado):** según la semilla aparece respeto (2 éxitos compartidos), amistad (con un compañero sociable) o mentoría; sin crunch ni discusiones no aparecen tensiones. Una primera versión hacía amigos a todos (trabajar juntos sumaba sin límite): corregido con el tope.
 - **Pendiente:** más reacciones visibles (p. ej. el mentor en el puesto del aprendiz en vez de cara a cara) y relaciones como causa de eventos (oferta de otra empresa, cambio de especialización).
 
-> **Pendientes de confirmar por el propietario tras jugar:** D-053, D-054 y D-055 (provisionales). D-056 (relaciones) también es provisional.
+### D-057 — Deuda técnica (F3.4)
+- **Fecha:** 2026-11-23 · **Estado:** Aplicada (provisional hasta pruebas de juego)
+- **Sistemas reutilizados:** el motor de momentos de F3.1 (con portavoz, como los eventos de D-055), el registro causal y el "¿Por qué?", la Historia, la herencia entre proyectos (como las ideas guardadas), el ritmo de trabajo y las relaciones (D-056). No se ha creado ningún panel nuevo: solo una etiqueta en la tarjeta del proyecto y otra en la del juego nuevo.
+- **Modelo:** `Project.debt` 0…100 y `company.techDebt` (opcionales; sin migración). Programar en producción suma 0,1 por punto técnico × ritmo (tranquilo 0,5, normal 1, crunch 2) × persona (habilidad ±8 % por nivel, perfeccionista ×0,7) × equipo (relaciones: hasta ∓20 %).
+- **Costes (con tope):** programación −0,4 % por punto (máx. −20 %), bugs +1 % por punto, techo −0,015 por punto por encima de 10 (máx. −0,6). Palabras: sólido < 12 ≤ con parches < 35 ≤ frágil.
+- **Herencia:** al publicar, el 40 % pasa al estudio (lo anterior se reduce a la mitad; máx. 40) y el siguiente juego empieza con ello (registrado y explicado).
+- **Momentos:** *atajo* (solo con equipo, 20–50 % de la producción): −12 % del trabajo restante y +12 de deuda; *hacerlo bien*; *base sólida*: +4 % de trabajo, −8 de deuda y −10 % de trabajo en el siguiente juego. *Revisión del código* (deuda ≥ 20): reescribir el 75 % (0,8 puntos de trabajo por punto de deuda), arreglar el 40 % o seguir así.
+- **Medido (6–8 semillas):** juego normal −2 % €/día y tranquilo +1 % respecto a 0.11.0; crunch todo el proyecto −11 % (primera versión −24 %: se redujo el multiplicador de 3 a 2). Atajo: +2 % a +17 % en un juego que no llega a tiempo (14–18 días), −3 % a −7 % en dos juegos seguidos. Base sólida: −6 % en un solo juego ajustado, +1 % en dos holgados. Reescribir, arreglar o seguir así quedan a ±3 % en dos juegos con crunch; la diferencia está en lo que hereda el tercero. Juegos pequeños en solitario: deuda 8–12, sin revisión.
+- **Detectado al probar:** la primera versión del atajo nunca compensaba y la base sólida tampoco; además, los momentos nuevos iban primero y desplazaban a "vas con retraso" (máx. 3 por proyecto). Se corrigió el equilibrio, se pusieron al final de la lista y el atajo solo se ofrece con equipo.
+
+> **Pendientes de confirmar por el propietario tras jugar:** D-053, D-054 y D-055 (provisionales). D-056 (relaciones) y D-057 (deuda técnica) también son provisionales.
 
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 

@@ -359,6 +359,21 @@ const VARIANTS = [
   await ev((id) => window.__empires.ui.showEmpirian(id), pair);
   await shot('g45-relations-sheet', 600);
 
+  // 47 Technical debt (F3.4): the best coder proposes a shortcut.
+  for (let i = 0; i < 4 && (await page.isVisible('.card .close')); i++) { await page.click('.card .close'); await page.waitForTimeout(150); }
+  const asked = await ev(() => {
+    const g = window.__empires.game; const s = g.state;
+    if (!s.activeProjectId) g.dispatch({ type: 'start_project', name: 'Isla', topicId: 'pirates', size: 'small', focus: 0.45, budget: 1500, days: 42, price: 9.99 });
+    for (let i = 0; i < 20000 && s.activeProjectId; i++) {
+      const d = s.pendingDecision;
+      if (d && d.kind === 'tech_shortcut') return true;
+      if (d) g.dispatch({ type: 'choose_option', decisionId: d.id, optionId: d.kind === 'polish_plan' ? 'balanced' : d.kind === 'deadline' ? 'release' : d.options[0].id });
+      else g.tick();
+    }
+    return false;
+  });
+  if (asked) await shot('g46-tech-shortcut', 1800);
+
 
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });
