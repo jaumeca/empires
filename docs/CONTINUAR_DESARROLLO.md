@@ -1,10 +1,10 @@
 # Continuar el desarrollo de EMPIRES
 
-Actualizado: 2026-11-23 tras publicar 0.13.0 (alcance y tester). Todo el trabajo está confirmado y subido; no hay nada a medias.
+Actualizado: 2026-11-23 tras publicar 0.14.0 (pausa y reputación). Todo el trabajo está confirmado y subido; no hay nada a medias.
 
 ## Estado
 - **Rama de desarrollo:** `claude/friendly-ptolemy-klybh8` (último commit `d77a304` o posterior).
-- **production-web:** 0.13.0 (`877f6ff`), estable y verificada (ver `docs/WEB_RELEASES.md`). `main` sin tocar.
+- **production-web:** 0.14.0 (`45b047f`), estable y verificada (ver `docs/WEB_RELEASES.md`). `main` sin tocar.
 - **Guardado:** esquema v10 (carga v0–v10). Campos nuevos opcionales, sin migración: `Empirian.role`, `Project.storyEvents`, `ActiveContract.renegotiated`, `result.criticCovered`.
 - **Verificación al cerrar:** `npx vitest run` → 187 pruebas OK; `npm run build` OK. Las 16 suites e2e pasaron en la versión 0.10.0.
 
@@ -15,7 +15,7 @@ Actualizado: 2026-11-23 tras publicar 0.13.0 (alcance y tester). Todo el trabajo
 - Pruebas: `tests/sim/roles.test.ts`, `tests/sim/storyEvents.test.ts`; e2e `tools/e2e/roles.cjs`, `tools/e2e/events.cjs`. Ayudas de depuración (`?debug`): `__empires.play(n)` y `__empires.forceEvent(kind)`.
 
 ## Tareas pendientes (orden recomendado)
-1. ~~E.3 Relaciones~~ hecho en 0.11.0 (D-056, `src/sim/systems/relations.ts`). F3.4 deuda técnica hecha (D-057, `src/sim/systems/debt.ts`). Idea de alcance hecha (D-058). Siguiente paso exacto: **F3.8 consecuencias persistentes entre proyectos** (promesas incumplidas, reputación por tipo de fallo: bugs o retrasos) o **D.4 tipos de proyecto** (indie pequeño / ambicioso / por encargo), reutilizando `market.ts`, `story.ts` y el registro causal.
+1. ~~E.3 Relaciones~~ hecho en 0.11.0 (D-056, `src/sim/systems/relations.ts`). F3.4 deuda técnica hecha (D-057, `src/sim/systems/debt.ts`). Idea de alcance (D-058) y reputación con memoria (D-059) hechas. Siguiente paso exacto: **D.4 tipos de proyecto** (indie pequeño / ambicioso / por encargo) sobre el mismo sistema de proyectos y contratos, y después las conexiones del bloque 3 (experiencia ↔ riesgo, prototipo ↔ confianza).
 2. **D.3/D.4:** decisiones de alcance, deuda técnica y comentarios de usuarios; diferenciar juego indie, ambicioso y por encargo (F3).
 3. **GT.6 productos persistentes** (y el evento aplazado "un juego antiguo vuelve a estar de moda"); **GT.7** reequilibrio económico; **AW.F** pequeñas satisfacciones.
 4. Que la estimación de plazo al crear un juego tenga en cuenta los papeles.
