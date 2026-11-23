@@ -1,5 +1,6 @@
 import { activeFeatures, featureCeiling, featureReach } from './features';
 import { relationsRelease } from './relations';
+import { bugTolerance, fameRelease, fameWeek } from './reputation';
 import { carryDebt, debtCeiling, debtLevel, debtOf } from './debt';
 import { SIM_CONFIG } from '../config';
 import type { EventSink } from '../core/events';
@@ -37,7 +38,8 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
   const quality = trueQuality(p, founder);
   const prog = productionProgress(p);
   const shippedBugs = p.bugs.hidden + p.bugs.known;
-  const bugPenalty = 2.4 * (1 - Math.exp(-shippedBugs / 12));
+  // Reviewers remember the studio's track record (F3.8): known for quality → a little more patience with bugs.
+  const bugPenalty = 2.4 * (1 - Math.exp(-shippedBugs / 12)) * bugTolerance(state);
   const incompletePenalty = (1 - prog) * 6;
   const repMod = (state.company.reputation - 50) / 100;
   const previewPenalty = p.previewGiven === 'give_build' && shippedBugs >= C.events.previewBugThreshold ? C.events.previewBugPenalty : 0;
@@ -96,6 +98,11 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
     const fc = featureCeiling(p);
     factors.push({ amount: fc * 0.85, text: { key: (p.featureIgnored ?? []).length ? 'factor.features_trouble' : fc >= 0.2 ? 'factor.features_good' : 'factor.features_meh', params: { count: activeFeatures(p).length } }, causes: started });
   }
+  // Track record (F3.8): the reviewers' patience with bugs, explained when it mattered.
+  const rawBugPenalty = 2.4 * (1 - Math.exp(-shippedBugs / 12));
+  if (shippedBugs > 0 && Math.abs(rawBugPenalty - bugPenalty) >= 0.05) {
+    factors.push({ amount: rawBugPenalty - bugPenalty, text: { key: rawBugPenalty > bugPenalty ? 'factor.fame_patience' : 'factor.fame_doubt' }, causes: [] });
+  }
   // Technical debt (F3.4): a fragile codebase, with what caused it.
   const dc = debtCeiling(p);
   if (dc > 0.05) {
@@ -117,6 +124,7 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
   gainXp(state, founder, 'management', C.progression.managementPerRelease, emit);
   relationsRelease(state, p, emit);
   carryDebt(state, p);
+  fameRelease(state, p, emit);
   state.activeProjectId = null;
   record(state, { kind: 'released', text: { key: 'ledger.released', params: { project: p.name, score: averageScore } }, causes: explanation, tone: averageScore >= 6 ? 1 : -1, projectId: p.id });
   compactHistory(state);
@@ -126,6 +134,7 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
 /** Called at the start of each new week. */
 export function marketWeek(state: GameState, emit: EventSink): void {
   worldWeek(state, emit);
+  fameWeek(state);
   // Topic trends drift a little each week (contemporary market, D-021).
   for (const t of TOPICS) {
     const cur = state.topicTrends[t.id] ?? 1;

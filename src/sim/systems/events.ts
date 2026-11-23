@@ -8,6 +8,7 @@ import { productionProgress } from './project';
 import { getTopic } from '../../content/topics';
 import { addNews } from './world';
 import { speakerOf, STORY_EVENTS } from './storyEvents';
+import { noteFame } from './reputation';
 
 /**
  * Dynamic events (LS.7). Unlike the project moments (systems/moments.ts),
@@ -135,7 +136,7 @@ const CORE_EVENTS: EventDef[] = [
         ],
       };
     },
-    resolve: (s, c, o) => {
+    resolve: (s, c, o, emit) => {
       const p = proj(s, c.projectId)!;
       p.bugReported = true;
       const id = record(s, { kind: 'decision', text: k(`ledger.event.critical_bug.${o}`, { project: p.name }), causes: [], tone: o === 'patch_now' ? 1 : -1, projectId: p.id });
@@ -143,14 +144,17 @@ const CORE_EVENTS: EventDef[] = [
         p.bugs.fixed += p.bugs.hidden;
         p.bugs.hidden = 0;
         s.company.reputation = Math.min(100, s.company.reputation + 2);
+        noteFame(s, 'quality', SIM_CONFIG.fame.patchNow, emit);
         p.result!.salesBoost = { factor: 1.15, untilDay: s.day + 42 };
         const active = getActiveProject(s);
         if (active) active.requiredPoints += 3 * SIM_CONFIG.ticksPerDay;
       } else if (o === 'patch_later') {
         schedule(s, s.day + 21, { kind: 'reputation', delta: -4 }, id);
+        noteFame(s, 'reliability', -SIM_CONFIG.fame.patchLater, emit);
         schedule(s, s.day + 21, { kind: 'fix_bugs', projectId: p.id }, id);
       } else {
         s.company.reputation = Math.max(0, s.company.reputation - 6);
+        noteFame(s, 'quality', -SIM_CONFIG.fame.ignoreBug, emit);
         p.result!.salesBoost = { factor: 0.7, untilDay: s.day + 56 };
       }
     },

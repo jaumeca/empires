@@ -1,4 +1,5 @@
 import { SIM_CONFIG } from '../config';
+import { clientTerms, fameContract, noteFame } from './reputation';
 import type { EventSink } from '../core/events';
 import { newId, record } from '../core/ledger';
 import { nextFloat, nextInt, nextRange, pick } from '../core/rng';
@@ -44,14 +45,16 @@ function makeOffer(state: GameState): ContractOffer {
   const days = estimateDays(state, work, kind.focus);
   const slack = 1 + nextRange(rng, K().slack[0], K().slack[1]);
   const rep = state.company.reputation;
-  const payment = Math.round((work * K().ratePerPoint * (0.85 + rep / 200) * nextRange(rng, 0.9, 1.1)) / 50) * 50;
+  // Clients remember whether the studio delivers on time (F3.8).
+  const terms = clientTerms(state);
+  const payment = Math.round((work * K().ratePerPoint * (0.85 + rep / 200) * terms.pay * nextRange(rng, 0.9, 1.1)) / 50) * 50;
   return {
     id: newId(state, 'C'),
     clientId: pick(rng, CLIENTS),
     kind: kind.id,
     focus: kind.focus,
     work,
-    days: Math.max(5, Math.round(days * slack)),
+    days: Math.max(5, Math.round(days * slack * terms.slack)),
     payment,
     expiresDay: state.day + nextInt(rng, 7, 14),
   };
@@ -85,6 +88,7 @@ export function cancelContract(state: GameState): string | null {
   if (!a) return 'no_contract';
   state.contracts.active = null;
   state.company.reputation = Math.max(0, state.company.reputation - K().cancelReputation);
+  noteFame(state, 'reliability', -SIM_CONFIG.fame.cancel, () => {});
   record(state, { kind: 'contract', text: { key: 'ledger.contract.cancelled', params: { client: a.clientId } }, causes: [a.causeId], tone: -1 });
   return null;
 }
@@ -120,6 +124,7 @@ function deliver(state: GameState, founder: Empirian, emit: EventSink): void {
   state.contracts.completed += 1;
   const repDelta = lateDays > 0 ? -Math.min(3, Math.ceil(lateDays / 3)) : early ? 2 : 1;
   state.company.reputation = Math.max(0, Math.min(100, state.company.reputation + repDelta));
+  fameContract(state, lateDays, early, emit);
   gainXp(state, founder, 'management', K().managementXp, emit);
   record(state, {
     kind: 'contract',

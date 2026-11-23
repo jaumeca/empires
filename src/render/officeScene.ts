@@ -829,6 +829,12 @@ export class OfficeScene {
           if (e.kind === 'chat') actor.view.flash('happy', 2, now);
           break;
         }
+        case 'fame': {
+          // The studio's name changes (F3.8): everyone reacts — proud, or worried.
+          const good = e.level !== 'poor';
+          for (const a of this.actors.values()) { a.view.flash(good ? 'joyful' : 'frustrated', 2.5, now); this.bubbles.spawn(a.view.head, off + 0.5, good ? 'star' : 'sweat', now, { cooldown: 0.2, life: 2.6 }); }
+          break;
+        }
         case 'relation': {
           // A relationship changes (E.3): hearts, a little storm cloud, or a book — over both of them.
           const bad = e.kind === 'tension' || e.kind === 'rivals';

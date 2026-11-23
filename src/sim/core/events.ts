@@ -34,6 +34,7 @@ export type SimEvent =
   | { type: 'office_expanded'; size: string; severity: 'important' }
   | { type: 'prototype_validated'; projectId: string; severity: 'info' }
   | { type: 'routine'; empirianId: string; kind: 'drink' | 'rest' | 'chat'; partnerId?: string; mentoring?: boolean; severity: 'info' }
+  | { type: 'fame'; aspect: import('../model/state').FameAspect; level: 'great' | 'poor' | 'recovered'; severity: 'important' }
   | { type: 'relation'; a: string; b: string; kind: import('../model/state').RelationKind; severity: 'info' }
   | { type: 'achievement'; achievementId: string; itemId: string; severity: 'important' };
 

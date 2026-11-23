@@ -196,6 +196,38 @@ export const SIM_CONFIG = {
     previewBugThreshold: 5,
   },
 
+  /** Track record (F3.8 / D-059): −10…10 per aspect, recent facts weigh more, slow drift to neutral. */
+  fame: {
+    weight: 0.35,
+    weeklyKeep: 0.985,
+    greatAt: 5,
+    goodAt: 1.5,
+    qualityPivot: 6,
+    qualityPerPoint: 3,
+    qualityPerBug: 0.4,
+    onTime: 4,
+    perLateWeek: 2,
+    maxLate: 8,
+    newTopic: 4,
+    perFeature: 2,
+    maxFeatures: 6,
+    prototype: 2,
+    sameAgain: 1.5,
+    contractOnTime: 3,
+    contractEarly: 5,
+    contractLate: 2,
+    cancel: 6,
+    patchNow: 3,
+    patchLater: 3,
+    ignoreBug: 6,
+    bugTolerance: 0.15,
+    trustHype: 0.4,
+    innovationHype: 0.3,
+    minHype: 0.4,
+    clientPay: 0.08,
+    clientSlack: 0.1,
+  },
+
   /** Technical debt (F3.4 / D-057): 0…100 per project; part is inherited by the next game. */
   debt: {
     max: 100,

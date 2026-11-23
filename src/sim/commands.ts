@@ -5,6 +5,7 @@ import type { Appearance, GameState, Project, ProjectSize, Role, Rot } from './m
 import { canPlace, getItemDef, SELL_REFUND } from './systems/office';
 import { useSavedIdeas } from './systems/events';
 import { inheritDebt } from './systems/debt';
+import { startingHype } from './systems/reputation';
 import { fire, hire } from './systems/team';
 import { tutorialCommand } from './systems/tutorial';
 import { setupFeatures } from './systems/features';
@@ -112,7 +113,7 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
         ceilingMods: [],
         bugRateMods: [],
         bugs: { hidden: 0, known: 0, fixed: 0 },
-        hype: 1,
+        hype: startingHype(state, (cmd.features ?? []).length),
         testFocus: 0.6,
         decisionsTaken: [],
         bigIdeaOffered: false,

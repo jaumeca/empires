@@ -93,6 +93,16 @@ export interface Relation {
   mentorDone?: boolean;
 }
 
+/** Track record (F3.8 / D-059): what players and clients remember, −10…10 each. */
+export type FameAspect = 'quality' | 'reliability' | 'innovation';
+export interface Fame {
+  quality: number;
+  reliability: number;
+  innovation: number;
+  /** How many times each milestone (e.g. "quality.great") was reached: memories can repeat after a recovery. */
+  marks?: Record<string, number>;
+}
+
 export type RelationKind = 'friends' | 'good_team' | 'respect' | 'mentor' | 'tension' | 'rivals';
 
 /** Personality traits (GT.1/GT.2). Each one helps in something and costs in something else. */
@@ -113,7 +123,7 @@ export interface Candidate {
 /** Studio memories (ML.2): meaningful moments, derived from real facts. */
 export type MemoryKind =
   | 'founded' | 'first_release' | 'first_hit' | 'first_flop' | 'hit' | 'record' | 'comeback'
-  | 'first_hire' | 'hire' | 'farewell' | 'first_contract' | 'skill_master' | 'money' | 'decision' | 'first_decor' | 'achievement' | 'office_moved' | 'relation';
+  | 'first_hire' | 'hire' | 'farewell' | 'first_contract' | 'skill_master' | 'money' | 'decision' | 'first_decor' | 'achievement' | 'office_moved' | 'relation' | 'reputation';
 
 export interface Memory {
   id: string;
@@ -393,6 +403,8 @@ export interface GameState {
     techDebt?: number;
     /** A solid base built in a past project (ledger id): the next game needs less work. */
     solidBase?: string;
+    /** Track record with players and clients (F3.8). Optional: older saves start neutral. */
+    fame?: Fame;
   };
   founderId: string;
   empirians: Empirian[];

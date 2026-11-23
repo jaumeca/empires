@@ -9,6 +9,7 @@ import { ACHIEVEMENTS, memoriesOf } from '../sim/systems/story';
 import { biography } from '../sim/systems/biography';
 import { notableRelations } from '../sim/systems/relations';
 import { debtLevel } from '../sim/systems/debt';
+import { FAME_ASPECTS, fameLevel, fameOf } from '../sim/systems/reputation';
 import { FEATURE_CFG, featureLock } from '../sim/systems/features';
 import { FEATURE_SLOTS, FEATURES, getFeature } from '../content/features';
 import type { Game } from '../sim/game';
@@ -594,6 +595,10 @@ export class GameUI {
         h('span.chip', null, icon('clock', 16), t('np.production_est', { min: e.productionDays[0], max: e.productionDays[1] })),
         h(`span.chip.${verdict}`, null, t(`np.verdict.${e.verdict}`)),
       );
+      // F3.8: what players expect from this studio.
+      const trust = fameLevel(fameOf(s).quality);
+      if (trust === 'great' || trust === 'good') est.append(h('span.chip.good', { id: 'np-fame' }, icon('heart', 16), t('np.fame.trust')));
+      else if (trust === 'shaky' || trust === 'poor') est.append(h('span.chip.warn', { id: 'np-fame' }, icon('sweat', 16), t('np.fame.doubt')));
       // F3.4: what the studio's code brings into this game.
       const inherited = s.company.techDebt ?? 0;
       if (debtLevel(inherited) !== 'solid') est.append(h('span.chip.warn', { id: 'np-debt', title: t('newproject.inherited_debt', { level: debtLevel(inherited) }) }, icon('code', 16), `${t('project.code')}: ${t(`debt.${debtLevel(inherited)}`)}`));
@@ -861,6 +866,18 @@ export class GameUI {
       h('ul.memories', null, ...mems.map((m) => this.memoryRow(m))));
   }
 
+  /** F3.8: what players and clients say about the studio, in words (only what stands out). */
+  private fameSection(): HTMLElement {
+    const f = fameOf(this.state);
+    const shown = FAME_ASPECTS.map((a) => ({ a, lvl: fameLevel(f[a]) })).filter((x) => x.lvl !== 'neutral');
+    const icons = { quality: 'star', reliability: 'clock', innovation: 'idea' } as const;
+    return h('div.section.fame', { id: 'story-fame' }, h('label', null, t('fame.title')),
+      shown.length
+        ? h('div.row', null, ...shown.map(({ a, lvl }) => h(`span.chip.${lvl === 'great' || lvl === 'good' ? 'good' : 'bad'}`, { dataset: { fame: a, level: lvl }, title: t(`fame.${a}.desc`) }, icon(icons[a], 16), t(`fame.${a}.${lvl}`))))
+        : h('div.hint', null, t('fame.none')),
+      shown.length ? h('div.hint', null, t('fame.recover_hint')) : null);
+  }
+
   /** E.3: a few lines on who they get on with (not a table). */
   private relationsSection(id: string): HTMLElement {
     const s = this.state;
@@ -886,6 +903,7 @@ export class GameUI {
       case 'comeback': return 'heart';
       case 'first_hire': case 'hire': return 'team';
       case 'relation': return 'heart';
+      case 'reputation': return 'star';
       case 'first_contract': case 'money': return 'coin';
       case 'skill_master': return 'idea';
       case 'first_decor': case 'office_moved': return 'decor';
@@ -912,6 +930,7 @@ export class GameUI {
     const card = h('div.card.wide.story', null, this.closeBtn(),
       h('h2', null, t('story.title', { company: s.company.name })),
       h('p.sub', null, t('story.sub', { count: s.story.memories.length })),
+      this.fameSection(),
       h('div.section', null, h('label', null, t('story.achievements')),
         h('div.achievements', null, ...ACHIEVEMENTS.map((a) => {
           const day = s.story.achievements[a.id];
@@ -1223,7 +1242,7 @@ export class GameUI {
       h('p.sub', null, t('help.sub')),
       h('div.help-grid', null,
         topic('games', 'rocket'), topic('time', 'clock'), topic('energy', 'sweat'), topic('decisions', 'idea'),
-        topic('sales', 'coin'), topic('office', 'decor'), topic('team', 'team'), topic('relations', 'heart'), topic('debt', 'code'), topic('story', 'star'),
+        topic('sales', 'coin'), topic('office', 'decor'), topic('team', 'team'), topic('relations', 'heart'), topic('debt', 'code'), topic('fame', 'star'), topic('story', 'star'),
       ),
       desk ? h('p.hint', null, t('menu.shortcuts')) : null,
       h('div.actions', null,
