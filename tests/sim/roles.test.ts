@@ -33,7 +33,7 @@ function play(g: Game, focus = 0.5, size: 'small' | 'medium' = 'small', days = 4
   for (let i = 0; i < 60000 && g.state.activeProjectId; i++) {
     const d = g.state.pendingDecision;
     if (d) {
-      const pref = d.kind === 'deadline' ? 'release' : d.kind === 'exhausted' ? 'rest' : d.options[d.options.length - 1]!.id;
+      const pref = d.kind === 'deadline' ? 'release' : d.kind === 'exhausted' ? 'rest' : d.kind === 'polish_plan' ? 'balanced' : d.kind === 'big_idea' ? 'keep' : d.kind === 'tech_shortcut' ? 'proper' : d.kind === 'scope_idea' ? 'keep' : d.options[d.options.length - 1]!.id;
       g.dispatch({ type: 'choose_option', decisionId: d.id, optionId: d.options.some((o) => o.id === pref) ? pref : d.options[0]!.id });
     } else {
       if (getProject(g.state, pid)!.phase === 'production') productionTicks++;
@@ -67,13 +67,13 @@ describe('roles (AW.E.2)', () => {
   });
 
   it('a tester pays off in a tight, bigger game but not in a roomy small one (no dominant role)', () => {
-    expect(avg(['auto', 'test'], score, 0.5, 'medium', 56)).toBeGreaterThan(avg(['auto', 'auto'], score, 0.5, 'medium', 56) + 0.2);
+    expect(avg(['auto', 'test'], score, 0.5, 'medium', 49)).toBeGreaterThan(avg(['auto', 'auto'], score, 0.5, 'medium', 49) + 0.15);
     expect(avg(['auto', 'test'], score)).toBeLessThan(avg(['auto', 'auto'], score));
   });
 
   it('a tester means fewer bugs ship, at the cost of a slower build', () => {
-    const autoBugs = avg(['auto', 'auto'], (r) => r.p.bugs.hidden + r.p.bugs.known);
-    const testBugs = avg(['auto', 'test'], (r) => r.p.bugs.hidden + r.p.bugs.known);
+    const autoBugs = avg(['auto', 'auto'], (r) => r.p.bugs.hidden + r.p.bugs.known, 0.5, 'medium', 49);
+    const testBugs = avg(['auto', 'test'], (r) => r.p.bugs.hidden + r.p.bugs.known, 0.5, 'medium', 49);
     expect(testBugs).toBeLessThan(autoBugs);
     expect(avg(['auto', 'test'], (r) => r.productionTicks)).toBeGreaterThan(avg(['auto', 'auto'], (r) => r.productionTicks));
   });

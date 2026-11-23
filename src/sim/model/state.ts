@@ -167,7 +167,7 @@ export interface DecisionOption {
 export interface PendingDecision {
   id: string;
   kind: 'big_idea' | 'deadline' | 'exhausted' | 'running_late' | 'polish_plan' | 'feature_trouble' | 'prototype_result' | 'streamer_preview' | 'rival_similar' | 'critical_bug' | 'unexpected_idea'
-    | 'tech_shortcut' | 'debt_review'
+    | 'tech_shortcut' | 'debt_review' | 'scope_idea'
     | 'team_idea' | 'contract_change' | 'game_fair' | 'influential_review' | 'team_debate' | 'training_request';
   speakerId: string;
   text: TextRef;

@@ -3,6 +3,7 @@ import type { EventSink } from '../core/events';
 import { record } from '../core/ledger';
 import type { Empirian, GameState, Project } from '../model/state';
 import { harmony } from './relations';
+import { hasActiveTester } from './project';
 
 /**
  * Technical debt (F3.4 / D-057). Shortcuts and haste leave "patches" in the
@@ -31,7 +32,9 @@ export function accrueDebt(state: GameState, p: Project, e: Empirian, techPts: n
   const pace = K().pace[p.pace] ?? 1;
   // A team that gets on well cuts fewer corners (E.3): harmony ±5 % → debt ∓20 %.
   const team = 1 - (harmony(state) - 1) * K().harmonyEffect;
-  p.debt = Math.min(K().max, debtOf(p) + techPts * K().perTechPoint * pace * personDebtFactor(e) * team);
+  // A tester reviewing the code (E.2) catches shortcuts early.
+  const review = hasActiveTester(state) ? SIM_CONFIG.roles.reviewDebt : 1;
+  p.debt = Math.min(K().max, debtOf(p) + techPts * K().perTechPoint * pace * personDebtFactor(e) * team * review);
 }
 
 /** Programming slows down with debt (capped). */

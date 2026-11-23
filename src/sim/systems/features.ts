@@ -1,7 +1,7 @@
 import type { EventSink } from '../core/events';
 import { record } from '../core/ledger';
 import type { GameState, Project } from '../model/state';
-import { FEATURE_SLOTS, getFeature, type FeatureDef } from '../../content/features';
+import { FEATURE_SLOTS, FEATURES, getFeature, type FeatureDef } from '../../content/features';
 import { SIM_CONFIG } from '../config';
 
 /**
@@ -12,6 +12,11 @@ import { SIM_CONFIG } from '../config';
  * Risks are decided deterministically from the seed (no stream is consumed).
  */
 export const FEATURE_CFG = {
+  /** A feature added mid-production costs this much more work than if planned (D-058). */
+  lateWork: 1.3,
+  /** Extra days when adding it with more time, and the interest lost by moving the date. */
+  lateDelayDays: 7,
+  lateDelayHype: 0.9,
   prototypeWork: 0.04,
   prototypeCost: 200,
   /** Extra work to fix a troubled feature: found early (prototype) vs late. */
@@ -135,4 +140,26 @@ export function cutTrouble(p: Project, early: boolean): void {
 export function ignoreTrouble(p: Project, causeId: string): void {
   for (const id of openTrouble(p)) p.featureIgnored = [...(p.featureIgnored ?? []), id];
   p.bugRateMods.push({ factor: FEATURE_CFG.troubleBugs, causeId });
+}
+
+/**
+ * Mid-production scope idea (F3.2 / D-058): the feature someone would add now,
+ * if any. A free slot, unlocked, not already in the plan; the best fit for the
+ * topic — or, when the topic is trending, one that reaches more players.
+ */
+export function scopeCandidate(state: GameState, p: Project, trending: boolean): FeatureDef | null {
+  if (activeFeatures(p).length + (p.featureDropped ?? []).length >= (FEATURE_SLOTS[p.size] ?? 2)) return null;
+  const taken = new Set([...(p.features ?? []), ...(p.featureDropped ?? [])]);
+  const value = (f: FeatureDef) => f.appeal * (0.5 + 0.5 * (f.fit[p.topicId] ?? 0)) + (trending ? f.reach * 2 : 0);
+  const options = FEATURES.filter((f) => !taken.has(f.id) && !featureLock(state, f, p.size) && ((f.fit[p.topicId] ?? 0) >= 0.5 || (trending && f.reach >= 0.15)));
+  return options.sort((a, b) => value(b) - value(a) || (a.id < b.id ? -1 : 1))[0] ?? null;
+}
+
+/** Adds a feature during production: late changes cost more work than planned ones. */
+export function addFeatureLate(state: GameState, p: Project, f: FeatureDef, causeId: string): void {
+  p.features = [...(p.features ?? []), f.id];
+  p.requiredPoints = Math.round(p.requiredPoints + base(p) * f.work * FEATURE_CFG.lateWork);
+  if (f.complexity > 0) p.bugRateMods.push({ factor: 1 + f.complexity, causeId });
+  // Its hidden risk is the same as if it had been planned (deterministic).
+  if (hashUnit(state.seed, p.id, f.id) < f.risk) p.featureTrouble = [...(p.featureTrouble ?? []), f.id];
 }

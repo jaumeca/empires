@@ -3,7 +3,8 @@ import type { EventSink } from '../core/events';
 import { newId, record } from '../core/ledger';
 import type { DecisionOption, Empirian, GameState, PendingDecision, Project, TextRef } from '../model/state';
 import { pointsPerTick, productionProgress } from './project';
-import { cutTrouble, FEATURE_CFG, fixTrouble, ignoreTrouble, openTrouble } from './features';
+import { addFeatureLate, cutTrouble, FEATURE_CFG, fixTrouble, hashUnit, ignoreTrouble, openTrouble, scopeCandidate } from './features';
+import { topicMood } from './world';
 import { debtLevel, refactorCost } from './debt';
 import { remember } from './story';
 
@@ -40,6 +41,19 @@ export function projectedProductionDays(p: Project, f: Empirian): number {
 }
 
 /** Who on the team knows the code best (they raise code-quality questions). */
+/**
+ * At most one team proposal per project (pacing): a code shortcut or a scope
+ * idea, decided per project from the seed. Solo founders only get scope ideas.
+ */
+function proposalKind(state: GameState, p: Project): 'tech_shortcut' | 'scope_idea' {
+  if (state.empirians.length < 2) return 'scope_idea';
+  return hashUnit(state.seed, p.id, 'proposal') < 0.5 ? 'tech_shortcut' : 'scope_idea';
+}
+
+function mostCreative(state: GameState): Empirian {
+  return [...state.empirians].sort((a, b) => b.skills.creativity - a.skills.creativity || (a.id < b.id ? -1 : 1))[0]!;
+}
+
 function bestCoder(state: GameState): Empirian {
   return [...state.empirians].sort((a, b) => b.skills.tech - a.skills.tech || (a.id < b.id ? -1 : 1))[0]!;
 }
@@ -171,7 +185,7 @@ const MOMENTS: MomentDef[] = [
     // The best coder proposes a shortcut early in production (F3.4).
     kind: 'tech_shortcut',
     // Raised by an employee (a solo founder doesn't argue with themself).
-    trigger: (s, p) => s.empirians.length >= 2 && p.phase === 'production' && productionShare(p) >= 0.2 && productionShare(p) <= 0.5,
+    trigger: (s, p) => s.empirians.length >= 2 && proposalKind(s, p) === 'tech_shortcut' && p.phase === 'production' && productionShare(p) >= 0.2 && productionShare(p) <= 0.5,
     build: (state, p) => {
       const c = bestCoder(state);
       return {
@@ -229,6 +243,39 @@ const MOMENTS: MomentDef[] = [
         p.debtCauses = [...(p.debtCauses ?? []), id];
       }
       rememberCode(state, id, `ledger.moment.debt_review.${o}`, { project: p.name }, o === 'live_with' ? -1 : 1, p, who);
+    },
+  },
+  {
+    // Someone wants to add a feature mid-production (F3.2 / D-058).
+    kind: 'scope_idea',
+    trigger: (state, p) => proposalKind(state, p) === 'scope_idea' && p.phase === 'production' && productionShare(p) >= 0.15 && productionShare(p) <= 0.45
+      && !!scopeCandidate(state, p, ['rising', 'hot'].includes(topicMood(state, p.topicId))),
+    build: (state, p) => {
+      const trending = ['rising', 'hot'].includes(topicMood(state, p.topicId));
+      const f = scopeCandidate(state, p, trending)!;
+      const who = mostCreative(state);
+      return {
+        speakerId: who.id,
+        text: k(trending ? 'moment.scope_idea.text_trend' : 'moment.scope_idea.text', { project: p.name, feature: f.id, topic: p.topicId }),
+        options: [
+          opt('add', 'scope_idea', ['hint.quality_up_some', 'hint.more_work', f.risk >= 0.25 ? 'hint.risky' : 'hint.little_risk']),
+          { ...opt('add_time', 'scope_idea', ['hint.quality_up_some', 'hint.plus_week', 'hint.interest_down']), label: k('moment.scope_idea.add_time', { days: FEATURE_CFG.lateDelayDays }) },
+          opt('keep', 'scope_idea', ['hint.no_changes']),
+        ],
+      };
+    },
+    resolve: (state, p, _f, o) => {
+      const f = scopeCandidate(state, p, ['rising', 'hot'].includes(topicMood(state, p.topicId)));
+      const who = mostCreative(state);
+      const id = record(state, { kind: 'decision', text: k(`ledger.moment.scope_idea.${o}`, { project: p.name, feature: f?.id ?? '', name: who.name }), causes: [], tone: o === 'keep' ? 0 : 1, projectId: p.id });
+      if (!f || o === 'keep') { if (who.id !== state.founderId) who.morale = Math.max(0, who.morale - 2); return; }
+      addFeatureLate(state, p, f, id);
+      if (o === 'add_time') {
+        p.deadlineDay += FEATURE_CFG.lateDelayDays;
+        p.hype *= FEATURE_CFG.lateDelayHype;
+      }
+      if (who.id !== state.founderId) who.morale = Math.min(100, who.morale + 5);
+      rememberCode(state, id, `ledger.moment.scope_idea.${o}`, { project: p.name, feature: f.id, name: who.name }, 1, p, who.id);
     },
   },
 ];

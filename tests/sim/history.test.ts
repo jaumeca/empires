@@ -33,7 +33,7 @@ describe('long games: history and saves', () => {
   });
   it('save size stays small and a long game round-trips exactly', () => {
     const text = serialize(s, { gameVersion: 't', savedAt: 't' });
-    expect(text.length / s.projects.length).toBeLessThan(4096); // < 4 KB per product
+    expect(text.length / s.projects.length).toBeLessThan(5120); // < 5 KB per product (more decisions per game since F3.4/D-058)
     expect(deserialize(text)).toEqual(s);
   });
   it('a long game is still deterministic (compaction included)', () => {

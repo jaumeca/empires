@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { Game } from '../../src/sim/game';
 import { createNewGame, DEFAULT_APPEARANCE, getProject } from '../../src/sim/state';
 import { canPlace } from '../../src/sim/systems/office';
+import { hashUnit } from '../../src/sim/systems/features';
 import { debtBugs, debtCeiling, debtLevel, debtSpeed, personDebtFactor } from '../../src/sim/systems/debt';
 import { deserialize, serialize } from '../../src/sim/save/save';
 import { SIM_CONFIG } from '../../src/sim/config';
@@ -42,6 +43,13 @@ function game(g: Game, opts: { days?: number; pace?: 'crunch' | 'relaxed'; ans?:
 }
 const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
 const SEEDS = [21, 22, 23, 24, 25, 26];
+/** Seeds whose first game gets the code-shortcut proposal (there is one proposal kind per project). */
+function shortcutSeeds(n: number): number[] {
+  const out: number[] = [];
+  for (let seed = 1; out.length < n && seed < 500; seed++) if (hashUnit(seed, `P-${studio(seed, 'curious').state.nextId}`, 'proposal') < 0.5) out.push(seed);
+  return out;
+}
+const SC = shortcutSeeds(6);
 
 describe('technical debt (F3.4 / D-057)', () => {
   it('builds up while programming: more in crunch, less relaxed; it has costs', () => {
@@ -92,16 +100,16 @@ describe('technical debt (F3.4 / D-057)', () => {
   });
 
   it('a shortcut wins when the game cannot be finished in time, and loses over a series (no dominant answer)', () => {
-    const single = (o: string, days: number) => avg(SEEDS.map((s) => game(studio(s, 'curious'), { days, ans: { tech_shortcut: o } }).result!.averageScore));
+    const single = (o: string, days: number) => avg(SC.map((s) => game(studio(s, 'curious'), { days, ans: { tech_shortcut: o } }).result!.averageScore));
     expect(single('shortcut', 16)).toBeGreaterThan(single('proper', 16));
-    const series = (o: string) => avg(SEEDS.map((s) => { const g = studio(s, 'curious'); const a = game(g, { ans: { tech_shortcut: o } }); const b = game(g, { ans: { tech_shortcut: o } }); return a.result!.averageScore + b.result!.averageScore; }));
+    const series = (o: string) => avg(SC.map((s) => { const g = studio(s, 'curious'); const a = game(g, { ans: { tech_shortcut: o } }); const b = game(g, { ans: { tech_shortcut: o } }); return a.result!.averageScore + b.result!.averageScore; }));
     expect(series('shortcut')).toBeLessThan(series('proper'));
   });
 
   it('a solid base costs work now and saves work in the next game', () => {
-    const g = studio(5, 'curious');
+    const g = studio(SC[0]!, 'curious');
     const a = game(g, { ans: { tech_shortcut: 'solid_base' } });
-    const h = studio(5, 'curious');
+    const h = studio(SC[0]!, 'curious');
     const a2 = game(h, { ans: { tech_shortcut: 'proper' } });
     expect(a.requiredPoints).toBeGreaterThan(a2.requiredPoints);
     expect(g.state.company.solidBase).toBeTruthy();
@@ -130,7 +138,7 @@ describe('technical debt (F3.4 / D-057)', () => {
   });
 
   it('code questions are raised by the best coder; the founder learns from deciding', () => {
-    const g = studio(7, 'curious');
+    const g = studio(SC[1]!, 'curious');
     g.state.empirians[1]!.skills.tech = 9;
     const m0 = g.state.empirians[0]!.xp.management;
     g.dispatch({ type: 'start_project', name: 'Q', topicId: 'pirates', size: 'small', focus: 0.45, budget: 1500, days: 42, price: 9.99 });

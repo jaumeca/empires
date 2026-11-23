@@ -55,7 +55,7 @@ function placeAnywhere(s: GameState, defId: string): Command | null {
 /** A sensible player's answers to the story events (no gambling). */
 const STORY_POLICY: Record<string, string> = {
   team_idea: 'adopt', contract_change: 'paid', game_fair: 'table', influential_review: 'interview', team_debate: 'both', training_request: 'books',
-  tech_shortcut: 'proper', debt_review: 'patch',
+  tech_shortcut: 'proper', debt_review: 'patch', scope_idea: 'keep',
 };
 
 export function career(seed: number, st: Strategy, horizon = 365) {

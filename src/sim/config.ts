@@ -156,9 +156,11 @@ export const SIM_CONFIG = {
   roles: {
     specialistSpeed: 1.12,
     /** A tester during production still builds this share of their hours; the rest finds and fixes bugs. */
-    testerBuild: 0.35,
+    testerBuild: 0.5,
     /** While a tester reviews, the builders' new bugs are multiplied by this. */
-    reviewBugs: 0.6,
+    reviewBugs: 0.5,
+    /** While a tester reviews code, the team leaves less technical debt (F3.4). */
+    reviewDebt: 0.5,
     /** Quality penalty per unit of imbalance between the work mix and the project focus (beyond the tolerance). */
     mixTolerance: 0.15,
     mixPenalty: 2.5,
