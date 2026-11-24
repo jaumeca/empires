@@ -18,6 +18,8 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   const step = async () => (await page.isVisible('#tutorial-coach')) ? page.getAttribute('#tutorial-coach', 'data-step') : null;
   const glow = (sel) => page.evaluate((s) => !!document.querySelector(s)?.classList.contains('tut-target'), sel);
   const shot = (n) => page.screenshot({ path: path.join(out, `${n}.png`) });
+  // Diagnostics for intermittent failures (0.17.0): what the screen and the game look like right now.
+  const diag = () => page.evaluate(async () => ({ raf: await new Promise((r) => { const t0 = performance.now(); requestAnimationFrame(() => r(Math.round(performance.now() - t0))); setTimeout(() => r('none in 2s'), 2000); }), fps: window.__empires.ui.fpsNow ?? null, coach: document.getElementById('tutorial-coach')?.dataset.step ?? null, modal: document.querySelector('.backdrop')?.className ?? null, pend: window.__empires.game.state.pendingDecision?.kind ?? null, speed: window.__empires.game.clock.speed, decor: !!document.querySelector('.decor-sheet'), notes: [...document.querySelectorAll('.toast')].map((t) => t.textContent.slice(0, 40)), tut: window.__empires.game.state.tutorial.marks.join(','), active: window.__empires.game.state.tutorial.active, log: window.__empires.ui.modalLog.slice(-12), hudDecor: !!document.getElementById('hud-decor'), decorCls: document.getElementById('hud-decor')?.className ?? null, nDecor: document.querySelectorAll('#hud-decor').length, view: window.__empires.ui.tutorial.view?.target ?? null, glow: window.__empires.ui.tutorial.glowing?.id ?? null, glowConn: window.__empires.ui.tutorial.glowing?.isConnected ?? null, glowSame: window.__empires.ui.tutorial.glowing === document.getElementById('hud-decor'), tgt: [...document.querySelectorAll('.tut-target')].map((e) => e.id || e.className) })).then((d) => JSON.stringify(d) + ' errors=' + JSON.stringify(errors));
   const waitStep = async (id, ms = 2500) => { for (let i = 0; i < ms / 100; i++) { if ((await step()) === id) return true; await page.waitForTimeout(100); } return false; };
   const closeCards = async () => { for (let i = 0; i < 4 && (await page.isVisible('.card .close')); i++) { await page.click('.card .close'); await page.waitForTimeout(200); } };
 
@@ -71,10 +73,13 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
     }
   }
   await page.waitForTimeout(2600); // results open by themselves after the launch
-  check('8 reviews: explained next to the results', (await waitStep('reviews', 4000)) && (await page.isVisible('.score-big')));
+  { const ok = (await waitStep('reviews', 4000)) && (await page.isVisible('.score-big')); check('8 reviews: explained next to the results', ok, ok ? '' : await diag() + ' modalKind=' + (await page.evaluate(() => window.__empires.ui.modalKind))); }
   await shot('t8-reviews');
   await closeCards();
-  check('9 decorate: highlights Decorate', (await waitStep('decorate')) && (await glow('#hud-decor')));
+  // Closing the results resumes the game: weekly sales and studio events (decisions) would keep
+  // happening while we check the next steps. Pause, as a player reading the guide would (0.17.0).
+  await page.evaluate(() => window.__empires.ui.setSpeed(0));
+  { const ok = (await waitStep('decorate')) && (await glow('#hud-decor')); check('9 decorate: highlights Decorate', ok, ok ? '' : await diag()); }
   await page.keyboard.press('d');
   await page.waitForTimeout(300);
   check('…and keeps guiding inside decoration mode', (await step()) === 'decorate');
@@ -88,13 +93,14 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.waitForTimeout(300);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
-  check('10 story: points at the shelf', (await step()) === 'story' && (await page.isVisible('.tut-arrow')));
+  { const ok = (await step()) === 'story' && (await page.isVisible('.tut-arrow')); check('10 story: points at the shelf', ok, ok ? '' : await diag()); }
   await shot('t10-story');
   await page.keyboard.press('h');
   await page.waitForTimeout(300);
   await page.click('.card .close');
   await page.waitForTimeout(300);
-  const dbg11 = await page.evaluate(() => ({ step: document.getElementById('tutorial-coach')?.dataset.step, ok: !!document.getElementById('tutorial-ok'), modal: document.querySelector('.backdrop')?.className, tut: window.__empires.game.state.tutorial }));
+  const dbg11 = await page.evaluate(() => ({ step: document.getElementById('tutorial-coach')?.dataset.step, ok: !!document.getElementById('tutorial-ok'), modal: document.querySelector('.backdrop')?.className, pend: window.__empires.game.state.pendingDecision?.kind, speed: window.__empires.game.clock.speed }));
+  if (!(await page.isVisible('#tutorial-ok'))) { await page.waitForTimeout(1200); dbg11.after = await page.evaluate(() => ({ modal: document.querySelector('.backdrop')?.className, pend: window.__empires.game.state.pendingDecision?.kind })); }
   check('11 hiring: explained without forcing a hire', (await step()) === 'hiring' && (await page.isVisible('#tutorial-ok')), JSON.stringify(dbg11));
   await page.click('#tutorial-ok');
   await page.waitForTimeout(500);
@@ -105,13 +111,14 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.waitForTimeout(1500);
   check('not shown again in the next session', !(await page.isVisible('#tutorial-coach')));
   // Help can restart it without touching the game.
+  await page.evaluate(() => window.__empires.ui.setSpeed(0));
   const before = await page.evaluate(() => JSON.stringify(window.__empires.game.state.projects));
   await page.keyboard.press('?');
   await page.waitForTimeout(300);
   await shot('t-help');
   await page.click('#help-restart-tutorial');
   await page.waitForTimeout(400);
-  check('Help restarts the tutorial; the game is untouched', (await step()) === 'meet' && (await page.evaluate(() => JSON.stringify(window.__empires.game.state.projects))) === before);
+  { const same = (await page.evaluate(() => JSON.stringify(window.__empires.game.state.projects))) === before; const ok = (await step()) === 'meet' && same; check('Help restarts the tutorial; the game is untouched', ok, ok ? '' : `same=${same} ` + await diag()); }
 
   // Skip from the very first screen.
   await page.goto(`${base}/?fresh&debug&seed=41`);
@@ -127,7 +134,9 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await phone.goto(`${base}/?fresh&debug&seed=42`);
   await phone.waitForTimeout(1500);
   await phone.tap('#start-game');
-  await phone.waitForTimeout(600);
+  // Wait for the guide (a fixed 600 ms was shorter than two frames under software GL).
+  await phone.waitForSelector('#tutorial-coach', { timeout: 5000 }).catch(() => {});
+  await phone.waitForTimeout(300);
   const coach = await phone.evaluate(() => { const r = document.getElementById('tutorial-coach')?.getBoundingClientRect(); const sp = document.querySelector('.speeds')?.getBoundingClientRect(); return r && sp ? { coach: [r.left, r.top, r.right, r.bottom], speeds: [sp.left, sp.top, sp.right, sp.bottom] } : null; });
   const overlap = coach && !(coach.coach[2] < coach.speeds[0] || coach.coach[0] > coach.speeds[2] || coach.coach[3] < coach.speeds[1] || coach.coach[1] > coach.speeds[3]);
   const text = await phone.textContent('#tutorial-coach');

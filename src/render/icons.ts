@@ -58,7 +58,10 @@ export function iconUrl(name: IconName, size = 32): string {
   if (hit) return hit;
   const c = document.createElement('canvas');
   c.width = c.height = size;
-  const ctx = c.getContext('2d')!;
+  // CPU-backed canvas: with a GPU-backed one, toDataURL waits for the GPU to finish everything it has
+  // queued (the whole office). Measured 4 s per new icon size under software GL — it froze the UI
+  // right at each launch and made the tutorial e2e flaky (0.17.0, block 0.2).
+  const ctx = c.getContext('2d', { willReadFrequently: true })!;
   ctx.imageSmoothingEnabled = false;
   drawIcon(ctx, name, 0, 0, size);
   const url = c.toDataURL();

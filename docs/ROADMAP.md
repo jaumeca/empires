@@ -127,6 +127,20 @@ Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, of
 
 ---
 
+## CA — "Make the Game Come Alive" (12.ª sesión, D-063)
+
+| ID | Tarea | Estado |
+|---|---|---|
+| CA.0.1 | La cabeza atravesaba el respaldo de las sillas | ✅ causa: respaldos de 9–10 vóxeles de alto en la profundidad de la cabeza; respaldos más bajos y asiento 0,5 más adelante; `tests/render/seating.test.ts` (falla con el código anterior) |
+| CA.0.2 | Fallo intermitente del tutorial (pasos 8–11) | ✅ tres causas medidas: `toDataURL` de iconos con lienzo de GPU (4 s de bloqueo por tamaño nuevo, justo al lanzar), resultados que tapaban una decisión (bloqueo sin salida) y resaltado perdido durante un frame al reconstruir el HUD; ver DEVELOPMENT_LOG |
+| CA.1.3 | Objetivo cercano discreto en el HUD | ✅ `systems/goals.ts`, `tests/sim/goals.test.ts`, e2e `launch.cjs` |
+| CA.3.1 | Pantallas expresivas por actividad | ✅ `render/screens.ts` |
+| CA.5 | Lanzamientos memorables (niveles, banner, lección) | ✅ `systems/launch.ts`, e2e `launch.cjs` 10/10 |
+| CA.GT6 | Productos persistentes: catálogo, parches, actualizaciones, vida posterior | 🟦 diseño e implementación en curso (0.18.0) |
+| CA.2/3.2/7 | Más animaciones y personalidad, objetos nuevos y recuerdos físicos, sonido | ⬜ |
+
+---
+
 ## PR — Progresión: de pequeño a imperio (D-062)
 
 | ID | Tarea | Estado |

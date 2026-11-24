@@ -1,3 +1,4 @@
+import { ScreenDeck, type ScreenMode } from './screens';
 import {
   Box3,
   BoxGeometry, BufferGeometry, CanvasTexture, Color, DirectionalLight, DynamicDrawUsage, Float32BufferAttribute, Group, HemisphereLight,
@@ -186,10 +187,12 @@ export class OfficeScene {
   lastPointerType = 'mouse';
   private actors = new Map<string, EmpirianActor>();
   private pickables: Object3D[] = [];
-  private screenCanvas: HTMLCanvasElement;
-  private screenCtx: CanvasRenderingContext2D;
-  private screenTex: CanvasTexture;
-  private screenMode: 'off' | 'code' | 'design' | 'test' | 'party' = 'off';
+  /** Block 3.1: one texture per activity, shared by every monitor. */
+  private screens = new ScreenDeck();
+  private screenGeo = new PlaneGeometry(1, 1);
+  /** Desk uid → its monitor's screen. */
+  private deskScreens = new Map<string, Mesh>();
+  private screenMode: ScreenMode = 'off';
   private screenTimer = 0;
   private screenLine = 0;
   private productBoxes = new Map<string, Mesh>();
@@ -249,20 +252,10 @@ export class OfficeScene {
 
     this.buildRoom();
 
-    // Monitor screen (animated canvas texture).
-    this.screenCanvas = document.createElement('canvas');
-    this.screenCanvas.width = 40;
-    this.screenCanvas.height = 24;
-    this.screenCtx = this.screenCanvas.getContext('2d')!;
-    this.screenTex = new CanvasTexture(this.screenCanvas);
-    this.screenTex.magFilter = NearestFilter;
-    this.screenTex.minFilter = NearestFilter;
-    this.screenTex.colorSpace = SRGBColorSpace;
-    // The screen is attached to the founder's computer when the office syncs.
-    this.screenMesh = new Mesh(new PlaneGeometry(1, 1), new MeshBasicMaterial({ map: this.screenTex }));
+    // The founder's monitor screen (tappable). Other monitors get their own screen in syncOffice.
+    this.screenMesh = new Mesh(this.screenGeo, this.screens.material('off'));
     this.screenMesh.userData.kind = 'computer';
     this.pickables.push(this.screenMesh);
-    this.drawScreen();
 
     // Confetti pool
     this.confetti = new InstancedMesh(new BoxGeometry(VOXEL * 0.9, VOXEL * 0.9, VOXEL * 0.2), new MeshLambertMaterial(), 80);
@@ -427,6 +420,12 @@ export class OfficeScene {
       if (desk?.uid === item.uid && built.screenAnchor) {
         this.screenAnchor = built.screenAnchor;
         built.screenAnchor.add(this.screenMesh);
+        this.deskScreens.set(item.uid, this.screenMesh);
+      } else if (built.screenAnchor) {
+        // Every other monitor shows what its owner is doing too (block 3.1).
+        const m = new Mesh(this.screenGeo, this.screens.material('off'));
+        built.screenAnchor.add(m);
+        this.deskScreens.set(item.uid, m);
       }
     }
     for (const uid of [...this.itemGroups.keys()]) if (!seen.has(uid)) this.removeItemGroup(uid);
@@ -454,8 +453,9 @@ export class OfficeScene {
       this.screenMesh.removeFromParent();
       this.screenAnchor = null;
     }
+    this.deskScreens.delete(uid);
     g.group.removeFromParent();
-    g.group.traverse((o) => { if (o instanceof Mesh && o !== this.screenMesh) o.geometry.dispose(); });
+    g.group.traverse((o) => { if (o instanceof Mesh && o !== this.screenMesh && o.geometry !== this.screenGeo) o.geometry.dispose(); });
     this.pickables = this.pickables.filter((p) => !g.pick.includes(p));
     this.itemGroups.delete(uid);
   }
@@ -947,60 +947,39 @@ export class OfficeScene {
   }
 
   // ----------------------------------------------------------------- screen
-  private drawScreen(): void {
-    const ctx = this.screenCtx;
-    const W = 40, H = 24;
-    const mode = this.screenMode;
-    if (mode === 'off') {
-      ctx.fillStyle = '#2b2f3a';
-      ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#4fae95';
-      ctx.fillRect(17, 9, 6, 6);
-      ctx.fillStyle = '#b8ffe6';
-      ctx.fillRect(18, 10, 4, 4);
-    } else if (mode === 'code') {
-      ctx.fillStyle = '#1f2633';
-      ctx.fillRect(0, 0, W, H);
-      const colors = ['#7fd1b9', '#ffd27a', '#8ec5ff', '#ff8a7a', '#b9a6e8', '#e8e3da'];
-      for (let row = 0; row < 7; row++) {
-        const seed = (row + this.screenLine) * 7919;
-        const indent = (seed >> 3) % 4;
-        const len = 6 + ((seed >> 5) % 22);
-        ctx.fillStyle = colors[(seed >> 2) % colors.length]!;
-        ctx.fillRect(2 + indent * 2, 2 + row * 3, Math.min(len, W - 4 - indent * 2), 2);
-      }
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(2 + ((this.screenLine * 3) % 30), 2 + 6 * 3, 1, 2);
-    } else if (mode === 'design') {
-      ctx.fillStyle = '#f3e6d3';
-      ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#b9a6e8';
-      ctx.fillRect(0, 0, 6, H);
-      const t = this.screenLine;
-      ctx.fillStyle = '#ff8a7a';
-      ctx.fillRect(10 + (t % 6), 4, 8, 8);
-      ctx.fillStyle = '#7fd1b9';
-      ctx.fillRect(22, 6 + (t % 4), 10, 6);
-      ctx.fillStyle = '#f2c14e';
-      ctx.fillRect(14, 15, 18 - (t % 5), 4);
-    } else if (mode === 'test') {
-      ctx.fillStyle = '#1f2633';
-      ctx.fillRect(0, 0, W, H);
-      for (let row = 0; row < 6; row++) {
-        const ok = ((row + this.screenLine) * 13) % 5 !== 0;
-        ctx.fillStyle = ok ? '#4fae95' : '#e2675a';
-        ctx.fillRect(2, 2 + row * 3.5, 2, 2);
-        ctx.fillStyle = '#e8e3da';
-        ctx.fillRect(6, 2 + row * 3.5, 10 + ((row * 7) % 18), 2);
-      }
-    } else {
-      const t = this.screenLine;
-      ctx.fillStyle = ['#ff8a7a', '#7fd1b9', '#f2c14e', '#8ec5ff'][t % 4]!;
-      ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#fffdf8';
-      ctx.fillRect(14, 6, 12, 12);
+  /** Each monitor shows its owner's activity; only the patterns in use are redrawn. */
+  private updateScreens(): void {
+    const state = this.lastState;
+    if (!state) return;
+    const desk = founderDesk(state.office);
+    const used = new Set<ScreenMode>();
+    for (const [uid, mesh] of this.deskScreens) {
+      const item = state.office.items.find((it) => it.uid === uid);
+      const owner = desk?.uid === uid ? state.founderId : item?.assignedTo;
+      const mode = owner ? this.modeFor(owner) : 'off';
+      used.add(mode);
+      const mat = this.screens.material(mode);
+      if (mesh.material !== mat) mesh.material = mat;
     }
-    this.screenTex.needsUpdate = true;
+    for (const m of used) this.screens.draw(m, this.screenLine);
+  }
+
+  private modeFor(id: string): ScreenMode {
+    const state = this.lastState!;
+    const e = state.empirians.find((x) => x.id === id);
+    const a = this.actors.get(id);
+    if (!e || !a) return 'off';
+    if (e.activity === 'celebrating') return 'party';
+    const seated = a.path.length === 0 && a.targetName.startsWith('seat');
+    if (!seated) return 'off';
+    const p = state.projects.find((q) => q.id === state.activeProjectId);
+    switch (e.activity) {
+      case 'coding': return 'code';
+      case 'designing': return 'design';
+      case 'testing': return p && p.bugs.known > 0 ? 'fix' : 'test';
+      case 'thinking': return 'think';
+      default: return 'off';
+    }
   }
 
   // ------------------------------------------------------------------ update
@@ -1082,7 +1061,7 @@ export class OfficeScene {
       if (id === state?.founderId) {
         const seated = !moving && actor.targetName === 'seat';
         if (actor.targetName === 'whiteboard' && !moving) actor.view.pose = 'think';
-        this.screenMode = activity === 'celebrating' ? 'party' : seated && activity === 'coding' ? 'code' : seated && activity === 'designing' ? 'design' : seated && activity === 'testing' ? 'test' : seated && activity === 'thinking' ? 'design' : 'off';
+        this.screenMode = this.modeFor(id);
       }
     }
 
@@ -1090,7 +1069,7 @@ export class OfficeScene {
     if (this.screenTimer > 0.18) {
       this.screenTimer = 0;
       this.screenLine++;
-      this.drawScreen();
+      this.updateScreens();
     }
 
     // Confetti physics

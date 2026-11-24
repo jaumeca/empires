@@ -137,6 +137,11 @@ export class TutorialUI {
     } else if (!v.world) { this.arrow?.remove(); this.arrow = null; }
   }
 
+  /** The HUD was rebuilt: highlight the new button right away. */
+  reglow(): void {
+    this.place();
+  }
+
   private place(): void {
     const v = this.view;
     if (!v) return;

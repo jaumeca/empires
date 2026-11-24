@@ -4,6 +4,26 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-24 — Duodécima sesión: Make the Game Come Alive — 1.ª parte (0.17.0)
+
+### Estado verificado al empezar
+Coincide: `production-web` = 0.16.0 (`9506242`), desarrollo `43b14ea`, 243 pruebas.
+
+### Resumen
+- **0.1 Cabeza dentro de la silla:** causa medida — los respaldos medían 9–10 vóxeles por encima del asiento justo donde queda la cabeza sentada (cabeza desde 10,2; respaldo hasta 14–18). Respaldos más bajos (silla básica y ergonómica sin reposacabezas) y asiento medio vóxel más adelante. `tests/render/seating.test.ts` monta un Empirian real sentado y comprueba cráneo, torso y pelo contra los vóxeles de cada silla; falla con el código anterior.
+- **0.2 Tutorial intermitente:** ver «Problemas encontrados». Tres causas reales, medidas y corregidas; no se da por resuelto por repetir la prueba.
+- **1.3 Objetivo siguiente:** una línea en el HUD (`systems/goals.ts`) con la próxima ambición cercana; al tocarla abre lo que corresponde.
+- **3.1 Pantallas expresivas:** cada monitor muestra la actividad de su dueño (`render/screens.ts`, una textura por actividad, compartida).
+- **5 Lanzamientos:** banner «¡A la venta!», nivel del lanzamiento (fracaso/correcto/sorpresa/éxito, `systems/launch.ts`), nota que sube contando, lección en los fracasos, avisos de progreso 25/50/75 %.
+
+### Problemas encontrados (bloque 0.2, con medidas)
+1. **Congelación de 4 s al lanzar.** Instrumentando la UI (registro de modales en `?debug`) se vio que la tarjeta de resultados, programada a 1,8 s, se abría a los 9 s. Un perfil de CPU (CDP) atribuyó el bloqueo a `iconUrl → toDataURL`: cada icono pedido con un tamaño nuevo (40 px en el banner, 22 px en la tarjeta) leía un lienzo 2D acelerado por GPU, lo que obliga a esperar a que la GPU termine todo lo encolado (la oficina). 4,0–4,5 s por tamaño con GL por software; en un móvil real sería mucho menos, pero también una espera síncrona. Corrección: lienzo de CPU (`willReadFrequently`). Después: resultados a +1,8 s exactos, ninguna tarea larga > 1,5 s alrededor del lanzamiento (comprobado en `launch.cjs`).
+2. **Bloqueo sin salida (error real de juego).** `openModal` cerraba en silencio el modal anterior: si una decisión llegaba justo al lanzar, los resultados la tapaban; la decisión quedaba pendiente e invisible y el juego en pausa sin forma de seguir hasta recargar. Reproducido de forma determinista (lanzar + `forceEvent('critical_bug')`). Corrección: la decisión va primero y los resultados esperan en cola; una decisión nunca sustituye a los resultados; el paso «críticas» del tutorial solo cuenta si el jugador cierra los resultados (no si otra ventana los sustituye).
+3. **Resaltado perdido durante un frame.** Al reconstruirse el HUD (p. ej. al cambiar la velocidad) el botón nuevo no tenía el resaltado del tutorial hasta el siguiente frame (~160 ms aquí). Corrección: el resaltado se reaplica en el mismo momento en que se reconstruye el HUD.
+- Además, la prueba del móvil medía el coach a 600 ms fijos (menos de dos frames con GL por software): ahora espera a que aparezca.
+
+---
+
 ## 2026-11-23 — Undécima sesión: From Little to Empire — progresión por desbloqueos (0.16.0)
 
 ### Estado verificado al empezar

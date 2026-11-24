@@ -12,6 +12,8 @@ import { debtLevel } from '../sim/systems/debt';
 import { FAME_ASPECTS, fameLevel, fameOf } from '../sim/systems/reputation';
 import { profileFor } from '../sim/systems/ambition';
 import { isFresh, unlocked } from '../sim/systems/progress';
+import { nextGoal } from '../sim/systems/goals';
+import { launchTier } from '../sim/systems/launch';
 import { effectiveRisk, FEATURE_CFG, featureLock } from '../sim/systems/features';
 import { FEATURE_SLOTS, FEATURES, getFeature } from '../content/features';
 import type { Game } from '../sim/game';
@@ -114,6 +116,7 @@ export class GameUI {
     this.game = game;
     this.closeModal();
     this.shownResultFor = new Set(game.state.projects.filter((p) => p.result).map((p) => p.id));
+    this.queuedResults = [];
     this.lastHudKey = '';
     this.start();
   }
@@ -172,7 +175,7 @@ export class GameUI {
   }
 
   // ------------------------------------------------------------------- HUD
-  private hudRefs: { day?: HTMLElement; money?: HTMLElement; bar?: HTMLElement; bugs?: HTMLElement; days?: HTMLElement; phase?: HTMLElement } = {};
+  private hudRefs: { goal?: HTMLElement; day?: HTMLElement; money?: HTMLElement; bar?: HTMLElement; bugs?: HTMLElement; days?: HTMLElement; phase?: HTMLElement } = {};
 
   renderHud(force = false): void {
     const s = this.state;
@@ -186,6 +189,17 @@ export class GameUI {
     }
     const r = this.hudRefs;
     if (r.day) r.day.textContent = t('common.day', { day: s.day });
+    if (r.goal) {
+      const g = nextGoal(s);
+      const key = g ? `${g.id}|${tr(g.text)}` : '';
+      if (r.goal.dataset.key !== key) {
+        r.goal.dataset.key = key;
+        clear(r.goal);
+        if (g) r.goal.append(icon('star', 16), h('span', null, tr(g.text)));
+        r.goal.style.display = g ? '' : 'none';
+        r.goal.dataset.goal = g?.id ?? '';
+      }
+    }
     if (r.money) {
       r.money.textContent = fmtMoney(s.company.money);
       r.money.classList.toggle('neg', s.company.money < 0);
@@ -197,6 +211,17 @@ export class GameUI {
     }
     if (p) {
       const prog = productionProgress(p);
+      // Block 1.1: small moments of creation while the game takes shape (no windows).
+      if (p.phase === 'production' || p.phase === 'concept') {
+        const mark = prog >= 0.75 ? 75 : prog >= 0.5 ? 50 : prog >= 0.25 ? 25 : 0;
+        const prev = this.milestones.get(p.id) ?? (prog >= 0.25 ? mark : 0); // a loaded game doesn't replay old moments
+        if (!this.milestones.has(p.id)) this.milestones.set(p.id, prev);
+        if (mark > prev) {
+          this.milestones.set(p.id, mark);
+          const first = s.projects.filter((q) => q.phase === 'released').length === 0;
+          if (first || mark === 50) this.toast(t(`ms.${mark}`, { project: projectName(p) }), mark === 25 ? 'idea' : mark === 50 ? 'star' : 'rocket');
+        }
+      }
       if (r.bar) r.bar.style.width = `${Math.round((p.phase === 'polish' ? 1 : prog) * 100)}%`;
       if (r.bugs) r.bugs.textContent = String(p.bugs.known);
       if (r.days) r.days.textContent = t('common.days_short', { n: p.deadlineDay - s.day });
@@ -222,6 +247,8 @@ export class GameUI {
       h('div.hud-tl', null,
         h('div.pill', null, icon('calendar'), r.day),
         h('div.pill', null, icon('coin'), r.money, h('span.company', null, s.company.name)),
+        // Block 1.3: the next natural goal, one discreet line (tap to go there).
+        (r.goal = h('button.pill.goal', { id: 'hud-goal', onclick: () => this.goToGoal() })),
       ),
       h('div.hud-tr', null,
         h('div.pill.speeds', null, speedBtn(0, icon('pause', 18)), speedBtn(1, '1x'), speedBtn(2, '2x'), speedBtn(4, '4x'), speedBtn(8, '8x')),
@@ -264,6 +291,8 @@ export class GameUI {
       ].filter((x): x is HTMLButtonElement => !!x));
     }
     this.hud.append(bottom);
+    // The guide's highlight follows the rebuilt buttons now, not one frame later (no flicker).
+    this.tutorial?.reglow();
   }
 
   /** Per-frame: speech bubble position + diagnostics. */
@@ -324,6 +353,8 @@ export class GameUI {
           break;
         case 'project_released':
           this.services.save();
+          this.logModal(`released ${e.projectId}`);
+          this.launchBanner(e.projectId);
           setTimeout(() => this.showResults(e.projectId), 1800);
           break;
         case 'phase_changed':
@@ -387,6 +418,31 @@ export class GameUI {
     this.renderHud();
   }
 
+  private countedUp = new Set<string>();
+  private milestones = new Map<string, number>();
+
+  /** Block 5: "Now on sale!" — the game's name over the office while the reviews come in. */
+  private launchBanner(projectId: string): void {
+    const p = getProject(this.state, projectId);
+    if (!p) return;
+    const el = h('div.launch-banner', { id: 'launch-banner' }, icon('box', 40), h('div', null, h('div.t', null, projectName(p)), h('div.d', null, t('launch.on_sale'))));
+    this.root.append(el);
+    setTimeout(() => el.classList.add('out'), 1500);
+    setTimeout(() => el.remove(), 2100);
+  }
+
+  /** Tapping the goal opens what it is about. */
+  private goToGoal(): void {
+    const g = nextGoal(this.state);
+    if (!g || this.modal) return;
+    if (g.action === 'new_project') this.showNewProject();
+    else if (g.action === 'project') this.showProjectPanel();
+    else if (g.action === 'decor') this.decor.open();
+    else if (g.action === 'contracts') this.showContracts();
+    else if (g.action === 'team') this.showTeam();
+    else if (g.action === 'story') this.showStory();
+  }
+
   private unlockQueue: string[] = [];
   private nextUnlockNote(): void {
     const id = this.unlockQueue[0];
@@ -444,7 +500,8 @@ export class GameUI {
 
   // ---------------------------------------------------------------- modals
   private openModal(kind: string, card: HTMLElement, opts: { pause?: boolean; cls?: string } = {}): void {
-    this.closeModal();
+    this.closeModal(false, true);
+    this.logModal(`open ${kind}`);
     if (opts.pause !== false) {
       if (this.game.clock.speed !== 0) this.resumeSpeed = this.game.clock.speed;
       this.game.clock.setSpeed(0);
@@ -459,15 +516,33 @@ export class GameUI {
     this.renderHud(true);
   }
 
-  closeModal(resume = false): void {
+  closeModal(resume = false, replacing = false): void {
     if (!this.modal) return;
-    // The reviews step counts once the player has seen (and closed) the results.
-    if (this.modalKind.startsWith('results:')) this.tutorial.mark('reviews');
+    this.logModal(`close ${this.modalKind}${replacing ? ' (replaced)' : ''}`);
+    // The reviews step counts once the player has seen (and closed) the results — not when something replaced them.
+    if (this.modalKind.startsWith('results:') && !replacing) this.tutorial.mark('reviews');
     this.modal.remove();
     this.modal = null;
     this.modalKind = '';
     if (resume && this.state.setupComplete && !this.state.pendingDecision) this.game.clock.setSpeed(this.resumeSpeed);
     this.renderHud(true);
+    if (!replacing) this.showWaiting();
+  }
+
+  /** What had to wait for the screen to be free: a pending decision first, then launch results (0.17.0). */
+  private queuedResults: string[] = [];
+  /** Last modal moves (for ?debug diagnostics of intermittent UI failures). */
+  readonly modalLog: string[] = [];
+  private logModal(what: string): void {
+    this.modalLog.push(`${Math.round(performance.now())} d${this.state.day}t${this.state.tick} ${what}`);
+    if (this.modalLog.length > 40) this.modalLog.shift();
+  }
+  private showWaiting(): void {
+    setTimeout(() => {
+      if (this.modal) return;
+      if (this.state.pendingDecision) this.showDecision(this.state.pendingDecision);
+      else if (this.queuedResults.length) this.showResults(this.queuedResults.shift()!);
+    }, 350);
   }
 
   private closeBtn(): HTMLElement {
@@ -831,6 +906,8 @@ export class GameUI {
 
   showDecision(d: PendingDecision): void {
     if (this.modalKind === 'decision') return;
+    // A launch's results are never swept away by a decision: it waits until they are closed (0.17.0).
+    if (this.modalKind.startsWith('results:')) return;
     const speaker = this.state.empirians.find((e) => e.id === d.speakerId);
     const card = h('div.card.decision.wide', null,
       h('div.row', { style: { alignItems: 'flex-start', flexWrap: 'nowrap' } },
@@ -859,15 +936,26 @@ export class GameUI {
     const r = p?.result;
     if (!p || !r) return;
     this.shownResultFor.add(projectId);
+    // Never cover a decision (it would stay pending and invisible, with the game paused): wait (0.17.0).
+    if (this.modalKind === 'decision' || (this.state.pendingDecision && !this.modalKind.startsWith('results:'))) {
+      if (!this.queuedResults.includes(projectId)) this.queuedResults.push(projectId);
+      this.logModal(`queue results ${projectId} (modal ${this.modalKind}, pending ${this.state.pendingDecision?.kind ?? '-'})`);
+      return;
+    }
     const ledger = this.state.ledger;
     const why = r.explanation.map((id) => ledger.find((e) => e.id === id)).filter((e): e is NonNullable<typeof e> => !!e);
     const maxW = Math.max(1, ...r.weeklySales);
     const verdict = t(r.averageScore >= 8 ? 'res.verdict.hit' : r.averageScore >= 6.5 ? 'res.verdict.good' : r.averageScore >= 5 ? 'res.verdict.meh' : 'res.verdict.lesson');
-    const card = h('div.card.wide', null, this.closeBtn(),
+    // Block 5: the emotional headline of the launch.
+    const tier = launchTier(this.state, p);
+    const lesson = tier === 'flop' ? why.find((e) => e.tone < 0) : null;
+    const scoreEl = h('div.score-big', { id: 'res-score' }, fmtNum1(r.averageScore));
+    const card = h(`div.card.wide.results.tier-${tier}`, null, this.closeBtn(),
+      h('div.tier-banner', { dataset: { tier } }, icon(tier === 'flop' ? 'sweat' : tier === 'ok' ? 'check' : 'star', 22), h('span', null, t(`res.tier.${tier}`))),
       h('h2', null, projectName(p)),
       h('p.sub', null, t('res.sub', { verdict, day: r.releasedDay, price: r.price })),
       h('div.row', null,
-        h('div.score-big', null, fmtNum1(r.averageScore)),
+        scoreEl,
         h('div', null,
           h('div.chip', null, icon('box', 16), t('res.units', { n: r.totalUnits })), ' ',
           h('div.chip.good', null, icon('coin', 16), t('res.revenue', { n: r.revenue })),
@@ -881,10 +969,22 @@ export class GameUI {
           const causes = e.causes.map((c) => ledger.find((x) => x.id === c)).filter((x) => !!x).slice(0, 2);
           return h(`li.${e.tone > 0 ? 'good' : e.tone < 0 ? 'bad' : 'neutral'}`, null, tr(e.text), ...causes.map((c) => h('span.cause', null, `↳ ${tr(c!.text)}`)));
         }))),
+      lesson ? h('p.hint.lesson', { id: 'res-lesson' }, icon('idea', 16), ` ${t('res.lesson', { what: tr(lesson.text) })}`) : null,
       this.productStory(p),
-      h('div.actions', null, h('button.big-btn.mint', { onclick: () => this.closeModal(true) }, t('res.continue'))),
+      h('div.actions', null, h('button.big-btn.mint', { onclick: () => this.closeModal(true) }, t(tier === 'flop' ? 'res.continue_flop' : 'res.continue'))),
     );
     this.openModal(`results:${projectId}`, card);
+    // The score counts up the first time (UI only; respects reduced motion).
+    if (!this.countedUp.has(projectId) && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.countedUp.add(projectId);
+      const start = performance.now();
+      const tick = (now: number) => {
+        const k = Math.min(1, (now - start) / 900);
+        scoreEl.textContent = fmtNum1(Math.round(r.averageScore * (1 - Math.pow(1 - k, 3)) * 10) / 10);
+        if (k < 1 && scoreEl.isConnected) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
   }
 
   /** LS.6 (2nd part) / ML.2: the life of a product, from its box on the shelf. */

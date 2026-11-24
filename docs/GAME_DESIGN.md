@@ -148,6 +148,8 @@ Cada partida genera historias diferentes. El jugador siempre tiene objetivos atr
 
 `[PROPUESTA]` **Sistema de objetivos visibles**: siempre hay 1–3 objetivos sugeridos en pantalla (no obligatorios), generados a partir del estado de la partida ("Publica tu primer juego", "Ahorra para el garaje", "Supera a PixelForge en críticas").
 
+`[IMPLEMENTADO]` (0.17.0, D-063) Versión discreta: **un solo** objetivo cercano en una línea del HUD, leído del estado real (`systems/goals.ts`), sin recompensas ni lista de misiones; nunca apunta a algo bloqueado y al tocarlo abre lo que corresponde. Los objetivos múltiples y los rivales concretos siguen como propuesta.
+
 ---
 
 ## 6. Personalización profunda de los proyectos
@@ -325,6 +327,8 @@ Queremos un mundo que parezca vivo y cambie durante la partida.
 El lanzamiento es uno de los momentos más emocionantes. Los Empirians se reúnen y celebran. El jugador recibe: primeras críticas, ventas, usuarios, reacciones, noticias, resultados económicos, opiniones de clientes y propuestas de actualización.
 
 El éxito no depende solo de una puntuación global de calidad: influyen mercado, precio, competencia, público objetivo, marketing y reputación.
+
+`[IMPLEMENTADO]` (0.17.0, D-063) **Lanzamientos memorables:** banner «¡A la venta!», titular según el nivel del lanzamiento (fracaso, correcto, sorpresa, éxito; `systems/launch.ts`), nota que sube contando y, en un fracaso, la lección principal y «Aprender y seguir». Una decisión que llega al lanzar va primero; los resultados esperan.
 
 Tras el lanzamiento: mantener, actualizar, expansiones, secuela, cambiar modelo de negocio, vender o licenciar, abandonar el mantenimiento.
 
