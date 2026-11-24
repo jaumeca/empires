@@ -3,7 +3,7 @@ import {
   Box3,
   BoxGeometry, BufferGeometry, CanvasTexture, Color, DirectionalLight, DynamicDrawUsage, Float32BufferAttribute, Group, HemisphereLight,
   InstancedMesh, LineBasicMaterial, LineSegments, Matrix4, Mesh, MeshBasicMaterial, MeshLambertMaterial, NearestFilter, Object3D,
-  OrthographicCamera, PCFSoftShadowMap, Plane, PlaneGeometry, PointLight, Raycaster, Scene, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
+  OrthographicCamera, PCFSoftShadowMap, Plane, PlaneGeometry, PointLight, Raycaster, Scene, Sprite, SpriteMaterial, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
 } from 'three';
 import type { SimEvent } from '../sim/core/events';
 import type { Activity, Appearance, GameState, Office, PlacedItem, Project, Rot } from '../sim/model/state';
@@ -269,6 +269,37 @@ export class OfficeScene {
     this.bubbles = new BubbleSystem(this.scene);
     this.installInput();
     this.resize();
+  }
+
+  private syncCount = 0;
+  private warm: Object3D[] = [];
+  /**
+   * Block 10 (0.18.0): compile now the shaders that would otherwise compile on first use in
+   * the middle of play (speech bubbles, confetti, decoration ghost and grid). Measured: the
+   * first bubble froze the page 1.3–1.6 s under software GL (tens of ms on a real GPU, still a hitch).
+   * Same lights as the real office (it runs after the first office sync), so the programs match.
+   */
+  private warmUpShaders(): void {
+    const tex = new CanvasTexture(document.createElement('canvas'));
+    const tmp: Object3D[] = [
+      new Sprite(new SpriteMaterial({ map: tex, transparent: true, depthTest: false })),
+      new Mesh(new BoxGeometry(1, 1, 1), GHOST_MATERIAL),
+      new LineSegments(new BufferGeometry(), new LineBasicMaterial({ transparent: true, opacity: 0.6 })),
+      new Mesh(new PlaneGeometry(1, 1), new MeshBasicMaterial({ transparent: true, opacity: 0.45, depthWrite: false })),
+    ];
+    const confettiCount = this.confetti.count;
+    // Nothing of this is ever seen: microscopic and (confetti) a collapsed instance.
+    if (confettiCount === 0) { this.confetti.setMatrixAt(0, new Matrix4().makeScale(0, 0, 0)); this.confetti.instanceMatrix.needsUpdate = true; }
+    this.confetti.count = Math.max(1, confettiCount);
+    for (const o of tmp) { o.scale.setScalar(1e-4); this.scene.add(o); }
+    // Asynchronous where the browser can link shaders in parallel (no frame waits for them).
+    const done = () => {
+      // Keep the materials alive: disposing them would release the compiled programs (three.js counts uses).
+      for (const o of tmp) { this.scene.remove(o); (o as Mesh).geometry?.dispose(); }
+      this.warm = tmp;
+      if (confettiCount === 0 && this.confetti.count === 1) this.confetti.count = 0;
+    };
+    this.renderer.compileAsync(this.scene, this.camera).then(done, done);
   }
 
   // ---------------------------------------------------------------- building
@@ -691,10 +722,12 @@ export class OfficeScene {
   /** Reads the latest simulation state. Cheap: call whenever state changes. */
   sync(state: GameState): void {
     this.lastState = state;
+    this.syncCount++;
     this.realStyle = state.office.style ?? { wall: 'cream', floor: 'oak' };
     if (!this.stylePreview) this.applyRoomStyle(this.realStyle);
     this.lastProjectPace = state.projects.find((p) => p.id === state.activeProjectId)?.pace ?? null;
     this.syncOffice(state.office);
+    if (this.syncCount === 1) this.warmUpShaders();
     for (const e of state.empirians) {
       this.ensureEmpirian(e.id, e.appearance);
       // Edited looks (AW.C): rebuild only that Empirian's model.

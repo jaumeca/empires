@@ -4,6 +4,15 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-24 — Después de 0.17.0: rendimiento (bloque 10), en desarrollo
+
+- **Tirones por compilación de shaders en mitad de la partida.** Perfil de CPU de un primer juego completo: dos tareas largas de 1,3–1,6 s (`WebGLProgram.getUniforms` → `getProgramInfoLog`) en el primer bocadillo (material `Sprite`) y en otro material diferido. Con GL por software es extremo; en GPU real son decenas de ms, pero sigue siendo un tirón visible.
+- **Corrección:** `OfficeScene.warmUpShaders()` tras la primera sincronización de la oficina (mismas luces que la escena real): compila con `renderer.compileAsync` los materiales que se usan más tarde (bocadillos, confeti, fantasma y rejilla de Decorar, casilla de colocación). Los objetos temporales son microscópicos y los materiales se mantienen vivos (si se liberan, three.js libera también el programa).
+- **Medido (3 ejecuciones):** antes, 2 tareas > 1,3 s durante el primer juego; después, ninguna por encima de 60 ms (la carga inicial de la página sigue en ~430 ms). e2e launch 10/10, pause 19/19, routines 8/8.
+- **No publicado todavía** en `production-web` (pendiente del ciclo completo de la próxima versión).
+
+---
+
 ## 2026-11-24 — Duodécima sesión: Make the Game Come Alive (0.17.0)
 
 ### Estado verificado al empezar
