@@ -1,4 +1,8 @@
 import { ScreenDeck, type ScreenMode } from './screens';
+import { personalItem } from './models/personal';
+import { gestureGap, hash01, idleGesture, reactionTo, type Gesture, type Persona } from './gestures';
+import type { Expression } from './face';
+import type { IconName } from './icons';
 import {
   Box3,
   BoxGeometry, BufferGeometry, CanvasTexture, Color, DirectionalLight, DynamicDrawUsage, Float32BufferAttribute, Group, HemisphereLight,
@@ -6,7 +10,7 @@ import {
   OrthographicCamera, PCFSoftShadowMap, Plane, PlaneGeometry, PointLight, Raycaster, Scene, Sprite, SpriteMaterial, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
 } from 'three';
 import type { SimEvent } from '../sim/core/events';
-import type { Activity, Appearance, GameState, Office, PlacedItem, Project, Rot } from '../sim/model/state';
+import type { Activity, Appearance, Empirian, GameState, Office, PlacedItem, Project, Rot } from '../sim/model/state';
 import { blockedCells, founderDesk, getItemDef, rotatedSize, useSpot } from '../sim/systems/office';
 import { OFFICE_GRID } from '../content/officeItems';
 import { chairModel, computerModel, itemModel } from './models/catalogModels';
@@ -85,6 +89,10 @@ export function hashId(id: string): number {
   return h;
 }
 
+/** Computer lights (0.18.0). */
+const LED_ON = new MeshBasicMaterial({ color: 0x7dffb0 });
+const LED_OFF = new MeshBasicMaterial({ color: 0x3c5a48 });
+const STEAM_MAX = 36;
 const GHOST_MATERIAL = new MeshLambertMaterial({ color: 0x9ff0c8, transparent: true, opacity: 0.55, depthWrite: false });
 
 /** What a tap on a piece of furniture means outside decoration mode. */
@@ -115,6 +123,9 @@ export class EmpirianActor {
   /** Curious: looking at a newly placed item until this world time. */
   inspectUntil = 0;
   inspectPoi: Poi | null = null;
+  /** Personal rhythm of small gestures (0.18.0), world time. */
+  nextGesture = 0;
+  gestureN = 0;
 
   constructor(readonly view: EmpirianView, start: Poi) {
     this.pos = [start.x, start.z];
@@ -192,6 +203,11 @@ export class OfficeScene {
   private screenGeo = new PlaneGeometry(1, 1);
   /** Desk uid → its monitor's screen. */
   private deskScreens = new Map<string, Mesh>();
+  /** Per desk: mug (steam) and computer light (0.18.0). */
+  private deskFx = new Map<string, { mug?: Vector3; led?: Mesh; phase: number; nextPuff?: number }>();
+  private readonly ledGeo = new PlaneGeometry(0.07, 0.11);
+  private steam!: InstancedMesh;
+  private steamState: { p: Vector3; age: number; life: number; drift: number }[] = [];
   private screenMode: ScreenMode = 'off';
   private screenTimer = 0;
   private screenLine = 0;
@@ -265,6 +281,12 @@ export class OfficeScene {
     const confettiColors = [P.coral, P.mint, P.mustard, P.sky, P.lavender];
     for (let i = 0; i < 80; i++) this.confetti.setColorAt(i, new Color(PALETTE_HEX[confettiColors[i % 5]!]!));
     this.scene.add(this.confetti);
+    // Steam from the mugs (0.18.0): a few soft voxels that rise and fade.
+    this.steam = new InstancedMesh(new BoxGeometry(VOXEL * 0.9, VOXEL * 0.9, VOXEL * 0.9), new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false }), STEAM_MAX);
+    this.steam.instanceMatrix.setUsage(DynamicDrawUsage);
+    this.steam.count = 0;
+    this.steam.frustumCulled = false;
+    this.scene.add(this.steam);
 
     this.bubbles = new BubbleSystem(this.scene);
     this.installInput();
@@ -291,6 +313,7 @@ export class OfficeScene {
     // Nothing of this is ever seen: microscopic and (confetti) a collapsed instance.
     if (confettiCount === 0) { this.confetti.setMatrixAt(0, new Matrix4().makeScale(0, 0, 0)); this.confetti.instanceMatrix.needsUpdate = true; }
     this.confetti.count = Math.max(1, confettiCount);
+    if (this.steam.count === 0) { this.steam.setMatrixAt(0, new Matrix4().makeScale(0, 0, 0)); this.steam.count = 1; }
     for (const o of tmp) { o.scale.setScalar(1e-4); this.scene.add(o); }
     // Asynchronous where the browser can link shaders in parallel (no frame waits for them).
     const done = () => {
@@ -298,6 +321,7 @@ export class OfficeScene {
       for (const o of tmp) { this.scene.remove(o); (o as Mesh).geometry?.dispose(); }
       this.warm = tmp;
       if (confettiCount === 0 && this.confetti.count === 1) this.confetti.count = 0;
+      if (!this.steamState.length) this.steam.count = 0;
     };
     this.renderer.compileAsync(this.scene, this.camera).then(done, done);
   }
@@ -376,7 +400,7 @@ export class OfficeScene {
     return fw(x * CELL, y, z * CELL);
   }
 
-  private buildItemGroup(item: PlacedItem, opts: { ghost?: boolean } = {}): { group: Group; pick: Object3D[]; screenAnchor?: Group } {
+  private buildItemGroup(item: PlacedItem, opts: { ghost?: boolean; owner?: Empirian } = {}): { group: Group; pick: Object3D[]; screenAnchor?: Group; mug?: Vector3; led?: Mesh } {
     const def = getItemDef(item.defId);
     const model = itemModel(def.model);
     const outer = new Group();
@@ -402,6 +426,8 @@ export class OfficeScene {
     };
     for (const part of model.parts) addPart(part.grid, part.at, inner);
     let screenAnchor: Group | undefined;
+    let led: Mesh | undefined;
+    let mugLocal: Vector3 | undefined;
     if (model.anchor && item.mounts) {
       const mx = model.anchor.monitorX;
       if (item.mounts.computer) {
@@ -411,15 +437,26 @@ export class OfficeScene {
         screenAnchor.position.set((pc.screen.x + mx) * VOXEL, pc.screen.y * VOXEL, pc.screen.z * VOXEL);
         screenAnchor.scale.set(pc.screen.w * VOXEL, pc.screen.h * VOXEL, 1);
         inner.add(screenAnchor);
+        if (!opts.ghost) {
+          // The computer's little light, under the screen (0.18.0): blinks while someone works.
+          led = new Mesh(this.ledGeo, LED_OFF);
+          led.position.set(0.42, -0.62, 0.01);
+          screenAnchor.add(led);
+        }
       }
       if (item.mounts.chair) for (const part of chairModel(item.mounts.chair)) addPart(part.grid, [part.at[0] + model.anchor.chairX, part.at[1], part.at[2]], inner);
+      // Something personal on the desk, as its owner is (0.18.0; decorative only).
+      if (opts.owner && model.anchor.personal) addPart(personalItem(opts.owner.trait), model.anchor.personal, inner);
+      if (model.anchor.mug && !opts.ghost) mugLocal = new Vector3(...model.anchor.mug).multiplyScalar(VOXEL);
     }
     if (model.light && !opts.ghost) {
       const light = new PointLight(0xffc670, 1.1, 3.2, 1.5);
       light.position.set(model.light[0] * VOXEL, model.light[1] * VOXEL, model.light[2] * VOXEL);
       inner.add(light);
     }
-    return { group: outer, pick, screenAnchor };
+    let mug: Vector3 | undefined;
+    if (mugLocal) { outer.updateMatrixWorld(true); mug = inner.localToWorld(mugLocal.clone()); }
+    return { group: outer, pick, screenAnchor, mug, led };
   }
 
   /** Rebuilds the furniture that changed (cheap when nothing did). */
@@ -440,11 +477,14 @@ export class OfficeScene {
     const seen = new Set<string>();
     for (const item of office.items) {
       seen.add(item.uid);
-      const k = JSON.stringify(item) + (desk?.uid === item.uid ? '*' : '');
+      const ownerId = desk?.uid === item.uid ? this.lastState?.founderId : item.assignedTo;
+      const owner = ownerId ? this.lastState?.empirians.find((x) => x.id === ownerId) : undefined;
+      const k = JSON.stringify(item) + (desk?.uid === item.uid ? '*' : '') + (owner?.trait ?? (owner ? '-' : ''));
       const old = this.itemGroups.get(item.uid);
       if (old && old.key === k) continue;
       if (old) this.removeItemGroup(item.uid);
-      const built = this.buildItemGroup(item);
+      const built = this.buildItemGroup(item, { owner });
+      if (built.mug || built.led) this.deskFx.set(item.uid, { mug: built.mug, led: built.led, phase: hash01(item.uid, 3) * 10 });
       this.scene.add(built.group);
       this.pickables.push(...built.pick);
       this.itemGroups.set(item.uid, { key: k, group: built.group, pick: built.pick });
@@ -485,8 +525,9 @@ export class OfficeScene {
       this.screenAnchor = null;
     }
     this.deskScreens.delete(uid);
+    this.deskFx.delete(uid);
     g.group.removeFromParent();
-    g.group.traverse((o) => { if (o instanceof Mesh && o !== this.screenMesh && o.geometry !== this.screenGeo) o.geometry.dispose(); });
+    g.group.traverse((o) => { if (o instanceof Mesh && o !== this.screenMesh && o.geometry !== this.screenGeo && o.geometry !== this.ledGeo) o.geometry.dispose(); });
     this.pickables = this.pickables.filter((p) => !g.pick.includes(p));
     this.itemGroups.delete(uid);
   }
@@ -816,6 +857,8 @@ export class OfficeScene {
           // Perfectionists take every bug personally.
           const perf = this.lastState?.empirians.find((x) => x.id === e.empirianId)?.trait === 'perfectionist';
           actor.view.flash('frustrated', perf ? 2.2 : 0.9, now);
+          // A facepalm: always for a perfectionist, sometimes for the others.
+          if ((perf || hash01(e.empirianId, Math.floor(now * 10)) < 0.35) && !actor.view.currentGesture(now)) actor.view.playGesture('facepalm', now);
           break;
         }
         case 'bug_found':
@@ -825,9 +868,12 @@ export class OfficeScene {
         case 'bug_fixed':
           this.bubbles.spawn(head, off, 'check', now, { cooldown: 0.9 });
           actor.view.flash('happy', 0.8, now);
+          if (hash01(e.empirianId, Math.floor(now * 10)) < 0.3 && !actor.view.currentGesture(now)) actor.view.playGesture('fistpump', now);
           break;
         case 'idea':
           this.bubbles.spawn(head, off, 'idea', now, { cooldown: 1.5 });
+          // A eureka, and the others turn to look.
+          if (!actor.view.currentGesture(now)) { actor.view.playGesture('eureka', now); this.react('call', e.empirianId, now); }
           break;
         case 'quality_up':
           this.bubbles.spawn(head, off, 'star', now, { cooldown: 1.5 });
@@ -839,10 +885,10 @@ export class OfficeScene {
           // The team reacts to how it went (AW.B): a flop is felt, a hit is celebrated.
           const score = this.lastState?.projects.find((p) => p.id === e.projectId)?.result?.averageScore ?? 7;
           if (score >= 6.5) this.burstConfetti(actor);
-          for (const a of this.actors.values()) {
-            if (score >= 8) { a.view.flash('joyful', 3, now); this.bubbles.spawn(a.view.head, off, 'star', now, { cooldown: 0.2, life: 2.4 }); }
-            else if (score < 5) { a.view.flash('frustrated', 3, now); this.bubbles.spawn(a.view.head, off, 'sweat', now, { cooldown: 0.2, life: 2.4 }); }
-          }
+          // Each one in their own way and their own moment (0.18.0).
+          if (score >= 8) this.react('good', null, now, { flash: ['joyful', 3], bubble: 'star', includeSource: true });
+          else if (score >= 6.5) this.react('good', null, now, { flash: ['happy', 2], includeSource: true });
+          else if (score < 5) this.react('bad', null, now, { flash: ['frustrated', 3], bubble: 'sweat', includeSource: true });
           break;
         }
         case 'routine': {
@@ -871,7 +917,7 @@ export class OfficeScene {
         case 'fame': {
           // The studio's name changes (F3.8): everyone reacts — proud, or worried.
           const good = e.level !== 'poor';
-          for (const a of this.actors.values()) { a.view.flash(good ? 'joyful' : 'frustrated', 2.5, now); this.bubbles.spawn(a.view.head, off + 0.5, good ? 'star' : 'sweat', now, { cooldown: 0.2, life: 2.6 }); }
+          this.react(good ? 'good' : 'bad', null, now, { flash: [good ? 'joyful' : 'frustrated', 2.5], bubble: good ? 'star' : 'sweat', includeSource: true });
           break;
         }
         case 'relation': {
@@ -890,17 +936,24 @@ export class OfficeScene {
         case 'office_expanded':
           // A new, bigger studio: everyone celebrates.
           this.burstConfetti(actor);
-          for (const a of this.actors.values()) { a.view.flash('joyful', 3, now); this.bubbles.spawn(a.view.head, off, 'star', now, { cooldown: 0.2, life: 2.6 }); }
+          this.react('good', null, now, { flash: ['joyful', 3], bubble: 'star', includeSource: true });
           break;
         case 'achievement':
-          for (const a of this.actors.values()) { a.view.flash('joyful', 2.5, now); this.bubbles.spawn(a.view.head, off, 'star', now, { cooldown: 0.2, life: 2.4 }); }
+          this.react('good', null, now, { flash: ['joyful', 2.5], bubble: 'star', includeSource: true });
           break;
         case 'hired':
-          for (const [aid, a] of this.actors) if (aid !== e.empirianId) { a.view.flash('happy', 2, now); this.bubbles.spawn(a.view.head, off, 'heart', now, { cooldown: 0.2 }); }
+          // Welcome: the others turn to the newcomer (a wave, a nod…).
+          this.react('good', e.empirianId, now, { flash: ['happy', 2], bubble: 'heart' });
           break;
         case 'fired':
-          for (const a of this.actors.values()) { a.view.flash('frustrated', 2.5, now); this.bubbles.spawn(a.view.head, off, 'sweat', now, { cooldown: 0.2 }); }
+          this.react('bad', null, now, { flash: ['frustrated', 2.5], bubble: 'sweat', includeSource: true });
           break;
+        case 'decision_requested': {
+          // Someone raises a hand: the others look at them.
+          const sp = this.lastState?.pendingDecision?.speakerId;
+          if (sp) this.react('call', sp, now);
+          break;
+        }
         case 'office_changed': {
           // Curious Empirians who are free go and have a look at the newest thing.
           const st = this.lastState;
@@ -909,6 +962,15 @@ export class OfficeScene {
           const sp = useSpot(newest);
           const rs = rotatedSize(getItemDef(newest.defId), newest.rot);
           const c = sp ? [sp.vx, sp.vz] : this.nearestFreeCell((newest.x + rs.w / 2) * CELL, (newest.z + rs.d + 0.5) * CELL);
+          // Everyone else turns to look at it (0.18.0), each in their own moment; some like it out loud.
+          const lookPos: [number, number] = [(newest.x + rs.w / 2) * CELL, (newest.z + rs.d / 2) * CELL];
+          const n = ++this.reactionN;
+          for (const emp of st.empirians) {
+            if (emp.trait === 'curious' && emp.activity === 'idle') continue;
+            const roll = hash01(emp.id, n);
+            const like = emp.trait === 'sociable' ? roll < 0.7 : roll < 0.3;
+            this.reactions.push({ id: emp.id, at: now + 0.2 + roll * 1.1, g: like ? 'nod' : 'look', lookPos, bubble: like ? (roll < 0.15 ? 'heart' : 'star') : undefined });
+          }
           for (const emp of st.empirians) {
             const a = this.actors.get(emp.id);
             if (!a || emp.trait !== 'curious' || emp.activity !== 'idle') continue;
@@ -930,6 +992,7 @@ export class OfficeScene {
         case 'skill_up':
           this.bubbles.spawn(head, off, 'star', now, { cooldown: 0.3, life: 2.4 });
           actor.view.flash('joyful', 1.4, now);
+          if (!actor.view.currentGesture(now)) actor.view.playGesture('fistpump', now);
           break;
       }
     }
@@ -1031,7 +1094,121 @@ export class OfficeScene {
    * paused, which freezes every world animation in place. Rendering, camera and
    * decoration preview keep working.
    */
+  /** Reactions waiting for their moment (personal delays: nobody reacts in sync). World time. */
+  private reactions: { id: string; at: number; g?: Gesture; lookAt?: string; lookPos?: [number, number]; flash?: [Expression, number]; bubble?: IconName }[] = [];
+  private reactionN = 0;
+  private lastGreet = new Map<string, number>();
+
+  /** Yaw (relative to the body) that makes `a` look at the point (x, z). */
+  private yawTo(a: EmpirianActor, x: number, z: number): number {
+    let d = Math.atan2(x - a.pos[0], z - a.pos[1]) - a.view.root.rotation.y;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    return d;
+  }
+
+  /** Everyone else reacts to `sourceId`'s moment, each with their own delay and style. */
+  private react(kind: 'good' | 'bad' | 'call', sourceId: string | null, now: number, extra?: { flash?: [Expression, number]; bubble?: IconName; includeSource?: boolean }): void {
+    const st = this.lastState;
+    if (!st) return;
+    const n = ++this.reactionN;
+    for (const emp of st.empirians) {
+      if (emp.id === sourceId && !extra?.includeSource) continue;
+      const rx = reactionTo(kind, emp.trait, hash01(emp.id, n));
+      if (!rx) { if (extra?.flash || extra?.bubble) this.reactions.push({ id: emp.id, at: now + 0.2 + hash01(emp.id, n + 1) * 0.6, flash: extra.flash, bubble: extra.bubble }); continue; }
+      this.reactions.push({ id: emp.id, at: now + rx.delay, g: emp.id === sourceId ? undefined : rx.gesture, lookAt: sourceId ?? undefined, flash: extra?.flash, bubble: extra?.bubble });
+    }
+  }
+
+  private runReactions(t: number): void {
+    if (!this.reactions.length) return;
+    const due = this.reactions.filter((r) => r.at <= t);
+    if (!due.length) return;
+    this.reactions = this.reactions.filter((r) => r.at > t);
+    for (const r of due) {
+      const a = this.actors.get(r.id);
+      if (!a) continue;
+      const src = r.lookAt ? this.actors.get(r.lookAt) : undefined;
+      const yaw = r.lookPos ? this.yawTo(a, r.lookPos[0], r.lookPos[1]) : src && src !== a ? this.yawTo(a, src.pos[0], src.pos[1]) : 0;
+      if (r.g && !a.view.currentGesture(t)) a.view.playGesture(r.g, t, yaw);
+      if (r.flash) a.view.flash(r.flash[0], r.flash[1], t);
+      if (r.bubble) this.bubbles.spawn(a.view.head, 1.05, r.bubble, t, { cooldown: 0.2, life: 2.4 });
+    }
+  }
+
+  private gestureTick(actor: EmpirianActor, id: string, e: { trait?: Persona['trait']; energy: number; morale: number }, state: GameState, t: number, moving: boolean, activity: Activity): void {
+    const place: Persona['place'] = actor.target.pose === 'sit' && actor.targetName.startsWith('seat') ? 'desk' : actor.target.pose === 'lounge' ? 'lounge' : 'stand';
+    const persona: Persona = { id, trait: e.trait, energy: e.energy, morale: e.morale, activity, place, hour: state.tick % 8 };
+    if (actor.nextGesture === 0) { actor.nextGesture = t + gestureGap(persona, actor.gestureN++) * hash01(id, 99); return; }
+    // Greeting a colleague when passing close by (once in a while per pair; sociable people first).
+    if (moving) {
+      for (const [oid, o] of this.actors) {
+        if (oid === id || Math.hypot(o.pos[0] - actor.pos[0], o.pos[1] - actor.pos[1]) > 14) continue;
+        const key = id < oid ? `${id}|${oid}` : `${oid}|${id}`;
+        if (t - (this.lastGreet.get(key) ?? -999) < 45) continue;
+        this.lastGreet.set(key, t);
+        const chance = e.trait === 'sociable' ? 0.8 : 0.35;
+        if (hash01(key, Math.floor(t)) < chance) {
+          actor.view.playGesture('wave', t, this.yawTo(actor, o.pos[0], o.pos[1]));
+          this.reactions.push({ id: oid, at: t + 0.3 + hash01(oid, Math.floor(t)) * 0.4, g: 'nod', lookAt: id });
+        }
+      }
+    }
+    if (t < actor.nextGesture) return;
+    actor.nextGesture = t + gestureGap(persona, actor.gestureN++);
+    if (moving || actor.view.currentGesture(t) || activity === 'raising_hand' || activity === 'celebrating' || actor.path.length) return;
+    const g = idleGesture(persona, hash01(id, actor.gestureN * 31 + 5));
+    if (!g) return;
+    let yaw = 0;
+    if (g === 'look') {
+      // Look at a colleague, or at something in the room (window, plant…).
+      const others = [...this.actors.entries()].filter(([oid]) => oid !== id);
+      const pick = others.length && hash01(id, actor.gestureN) < 0.6 ? others[Math.floor(hash01(id, actor.gestureN + 1) * others.length)]![1] : null;
+      const poi = pick ? { x: pick.pos[0], z: pick.pos[1] } : this.pois.window ?? this.pois.plant ?? null;
+      if (!poi) return;
+      yaw = this.yawTo(actor, poi.x, poi.z);
+    }
+    actor.view.playGesture(g, t, yaw);
+    if (g === 'eureka') this.bubbles.spawn(actor.view.head, 1.05, 'idea', t, { cooldown: 4 });
+    if (g === 'yawn') this.bubbles.spawn(actor.view.head, 1.05, 'zzz', t, { cooldown: 12 });
+  }
+
+  /** Mugs that steam in the morning, computer lights that blink while someone works (0.18.0). */
+  private deskLife(dt: number, t: number): void {
+    const off = this.screens.material('off');
+    const hour = (this.lastState?.tick ?? 0) % 8;
+    for (const [uid, fx] of this.deskFx) {
+      const scr = this.deskScreens.get(uid);
+      const working = !!scr && scr.material !== off && scr.material !== this.screens.material('party');
+      if (fx.led) {
+        // Irregular blinking (disk activity), different on each desk.
+        const blink = working && Math.sin(t * 7.3 + fx.phase) + Math.sin(t * 3.1 + fx.phase * 2) > 0.4;
+        fx.led.material = blink ? LED_ON : LED_OFF;
+      }
+      if (fx.mug && working && hour < 4) {
+        fx.nextPuff ??= t + (fx.phase % 1.5);
+        if (t >= fx.nextPuff) {
+          if (this.steamState.length < STEAM_MAX) this.steamState.push({ p: fx.mug.clone(), age: 0, life: 1.8 + hash01(uid, Math.floor(t * 3)) * 0.8, drift: (hash01(uid, Math.floor(t * 5)) - 0.5) * 0.06 });
+          fx.nextPuff = t + 0.7 + hash01(uid, Math.floor(t)) * 0.9;
+        }
+      }
+    }
+    if (dt <= 0 && !this.steamState.length) return;
+    const m = new Matrix4();
+    let n = 0;
+    this.steamState = this.steamState.filter((sp) => (sp.age += dt) < sp.life);
+    for (const sp of this.steamState) {
+      const k = sp.age / sp.life;
+      const sc = (1 - k) * 0.9 + 0.15;
+      m.makeScale(sc, sc, sc).setPosition(sp.p.x + sp.drift * k * 10, sp.p.y + k * 6 * VOXEL, sp.p.z + Math.sin(k * 6 + sp.drift * 50) * 0.01);
+      this.steam.setMatrixAt(n++, m);
+    }
+    this.steam.count = n;
+    this.steam.instanceMatrix.needsUpdate = true;
+  }
+
   update(dt: number, t: number, speedFactor: number, render = true): void {
+    if (dt > 0) { this.runReactions(t); this.deskLife(dt, t); }
     const state = this.lastState;
     for (const [id, actor] of this.actors) {
       const e = state?.empirians.find((x) => x.id === id);
@@ -1078,7 +1255,8 @@ export class OfficeScene {
       if (dt > 0 || actor.view.snap) actor.view.pose = actor.target.pose;
       // Small, recognisable habits (AW.B) — world time only, so pause freezes them too.
       const seatedWork = !moving && actor.targetName.startsWith('seat') && ['coding', 'designing', 'testing'].includes(activity);
-      actor.view.stretching = seatedWork && energy < 45 && (t + (hashId(id) % 20)) % 20 < 1.4;
+      // Little gestures (0.18.0): each person at their own rhythm, as who they are.
+      if (dt > 0 && e && state && !this.focus) this.gestureTick(actor, id, e, state, t, moving, activity);
       if (dt > 0 && e) {
         if (energy < 22 && activity !== 'lounging') this.bubbles.spawn(actor.view.head, 1.05, 'zzz', t, { cooldown: 9 });
         const crunch = this.lastProjectPace === 'crunch';

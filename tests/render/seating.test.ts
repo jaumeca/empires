@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { Box3, Vector3 } from 'three';
+import { Box3, Matrix4, Vector3 } from 'three';
 import { EmpirianView } from '../../src/render/empirianView';
 import { buildEmpirianParts } from '../../src/render/models/empirian';
 import { chairModel, itemModel } from '../../src/render/models/catalogModels';
 import { VOXEL } from '../../src/render/voxel';
 import { ITEMS } from '../../src/content/officeItems';
 import { DEFAULT_APPEARANCE } from '../../src/sim/state';
+import { GESTURES, GESTURE_DUR, type Gesture } from '../../src/render/gestures';
 
 /**
  * Block 0.1 (0.17.0): the owner saw the head go through the chair. Real
@@ -15,9 +16,11 @@ import { DEFAULT_APPEARANCE } from '../../src/sim/state';
 const CHAIRS = ITEMS.filter((d) => d.category === 'chair').map((d) => d.id);
 const DESKS = ITEMS.filter((d) => d.category === 'desk');
 
-function seated(hairStyle: number, deskSpot: { x: number; z: number }) {
+function seated(hairStyle: number, deskSpot: { x: number; z: number }, gesture?: Gesture) {
   const v = new EmpirianView({ ...DEFAULT_APPEARANCE, hairStyle, accessory: 0 }, 'E-1');
   v.pose = 'sit';
+  // With a gesture: measured at its peak (half way), after enough frames to settle.
+  if (gesture) v.playGesture(gesture, 59 * 0.05 - GESTURE_DUR[gesture] / 2, 0.8);
   for (let i = 0; i < 60; i++) v.animate(i * 0.05, 0.05, 'coding', 100, false, 1);
   // Facing the desk (towards −z), at the seat spot, like the office scene does.
   v.root.position.set(deskSpot.x * VOXEL, 0, deskSpot.z * VOXEL);
@@ -36,7 +39,7 @@ function seated(hairStyle: number, deskSpot: { x: number; z: number }) {
     const min = new Vector3((x - hairPart.origin[0]) * VOXEL, (y - hairPart.origin[1]) * VOXEL, (z - hairPart.origin[2]) * VOXEL);
     hairVoxels.push(new Box3(min, min.clone().addScalar(VOXEL)).applyMatrix4(v.head.matrixWorld));
   }
-  return { head: skull, torso: new Box3().setFromObject(torsoMesh), hairVoxels };
+  return { head: skull, headMatrix: v.head.matrixWorld.clone(), torso: new Box3().setFromObject(torsoMesh), hairVoxels };
 }
 
 /** Occupied chair voxels as boxes, in the desk's local space (as the scene places them). */
@@ -79,5 +82,40 @@ describe('seated Empirians fit their chairs (block 0.1)', () => {
         }
       });
     }
+  }
+});
+
+/**
+ * Oriented check (a rotated head's axis-aligned box is much bigger than the head): each chair
+ * voxel centre in the head's own space must stay outside the 10×10×9 skull, by more than the
+ * same tolerance as above.
+ */
+function headHits(headMatrix: Matrix4, boxes: Box3[]): number {
+  const inv = headMatrix.clone().invert();
+  const scale = new Vector3().setFromMatrixScale(headMatrix).x;
+  const half = (0.5 - 0.2) * VOXEL / scale; // chair voxel half size minus tolerance, in head units
+  let n = 0;
+  for (const b of boxes) {
+    const c = b.getCenter(new Vector3()).applyMatrix4(inv);
+    if (Math.abs(c.x) < 5 * VOXEL + half && c.y > -half && c.y < 10 * VOXEL + half && Math.abs(c.z) < 4.5 * VOXEL + half) n++;
+  }
+  return n;
+}
+
+describe('gestures at the desk never go through the chair (0.18.0)', () => {
+  const desk = DESKS[0]!;
+  for (const chair of CHAIRS) {
+    it(`${chair}: every gesture at its peak keeps head and torso out of the chair`, () => {
+      const boxes = chairBoxes(chair, itemModel(desk.model).anchor!.chairX);
+      for (const g of GESTURES) {
+        for (const hair of [0, 3, 5]) {
+          const body = seated(hair, desk.spot!, g);
+          const hits = headHits(body.headMatrix, boxes);
+          if (hits) process.stderr.write(`\nHIT ${chair} ${g} hair ${hair}: ${hits}\n`);
+          expect.soft(hits, `${g} head (hair ${hair})`).toBe(0);
+          expect.soft(boxes.filter((b) => overlaps(body.torso, b)).length, `${g} torso`).toBe(0);
+        }
+      }
+    });
   }
 });

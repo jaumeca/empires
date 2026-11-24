@@ -18,6 +18,8 @@ function partMesh(def: PartDef, name: string): Mesh {
   return m;
 }
 
+import { applyGesture, GESTURE_DUR, gestureExpression, type Gesture } from './gestures';
+
 export type Pose = 'stand' | 'walk' | 'sit' | 'cheer' | 'raise' | 'think' | 'lounge';
 
 /**
@@ -45,8 +47,8 @@ export class EmpirianView {
   pose: Pose = 'stand';
   /** Apply the next pose instantly (no easing). Cleared after one frame. */
   snap = false;
-  /** Stretching at the desk (AW.B): arms up for a moment. */
-  stretching = false;
+  /** The gesture being played (0.18.0), on world time. */
+  private gesture: { g: Gesture; start: number; dur: number; yaw: number } | null = null;
   /** Facing angle (radians, 0 = +z). */
   heading = 0;
   private walkPhase = 0;
@@ -131,6 +133,16 @@ export class EmpirianView {
     this.redrawFace();
   }
 
+  /** Plays a small gesture (stretch, eureka, wave…). `yaw` = where to look, relative to the body. */
+  playGesture(g: Gesture, now: number, yaw = 0): void {
+    this.gesture = { g, start: now, dur: GESTURE_DUR[g], yaw };
+  }
+
+  /** The gesture under way, if any (for tests and for not interrupting one with another). */
+  currentGesture(now: number): Gesture | null {
+    return this.gesture && now < this.gesture.start + this.gesture.dur ? this.gesture.g : null;
+  }
+
   /** Temporarily shows an expression (e.g. frustration when a bug appears). */
   flash(expr: Expression, seconds: number, now: number): void {
     this.flashExpr = { expr, until: now + seconds };
@@ -161,6 +173,11 @@ export class EmpirianView {
   animate(t: number, dt: number, activity: Activity, energy: number, moving: boolean, speedFactor: number): void {
     // Face
     let expr = this.baseExpression(activity, energy);
+    const gst = this.gesture;
+    const gp = gst ? (t - gst.start) / gst.dur : 1;
+    if (gst && gp >= 1) this.gesture = null; // (p < 0: scheduled, not started yet)
+    const gexpr = this.gesture ? gestureExpression(this.gesture.g, gp) : null;
+    if (gexpr) expr = gexpr;
     if (this.flashExpr && t < this.flashExpr.until) expr = this.flashExpr.expr;
     if (t > this.nextBlink) {
       if (t < this.nextBlink + 0.12) expr = expr === 'joyful' ? expr : 'blink';
@@ -192,11 +209,7 @@ export class EmpirianView {
         target.legL = target.legR = -Math.PI / 2;
         target.bodyY = 2.7 * VOXEL; // hips on the chair seat
         const typing = activity === 'coding' || activity === 'testing';
-        if (this.stretching) {
-          target.armLx = target.armRx = -Math.PI + 0.15;
-          target.armLz = 0.3; target.armRz = -0.3;
-          target.headX = -0.25;
-        } else if (typing) {
+        if (typing) {
           const k = Math.sin(t * 14 * s);
           target.armLx = -1.15 + k * 0.1;
           target.armRx = -1.15 - k * 0.1;
@@ -239,8 +252,9 @@ export class EmpirianView {
         const j = Math.abs(Math.sin(t * 7));
         target.bodyY = j * 4 * VOXEL;
         target.armLx = target.armRx = -Math.PI + 0.2;
-        target.armLz = 0.4 + j * 0.2;
-        target.armRz = -0.4 - j * 0.2;
+        // Arms up and open (with the arm raised, the outward direction flips sign: 0.18.0 fix, they were hidden behind the head).
+        target.armLz = -0.5 - j * 0.2;
+        target.armRz = 0.5 + j * 0.2;
         target.legL = target.legR = -j * 0.3;
         target.headX = -0.15;
         break;
@@ -275,6 +289,13 @@ export class EmpirianView {
         target.armLz = 0.06 + Math.sin(t * 2.2) * 0.03;
         target.armRz = -0.06 - Math.sin(t * 2.2) * 0.03;
       }
+    }
+
+    // Gestures on top of the pose (only head/arms when seated or lounging: no new chair collisions).
+    if (this.gesture) {
+      const g = this.gesture.g;
+      const walkingOk = g === 'wave' || g === 'look' || g === 'nod';
+      if (!moving || walkingOk) applyGesture(target, g, gp, t, pose === 'sit' || pose === 'lounge', this.gesture.yaw, VOXEL);
     }
 
     // `snap`: jump straight to the pose (editor preview while the world is paused).

@@ -18,7 +18,7 @@ export interface ModelPart {
 export interface ItemModel {
   parts: ModelPart[];
   /** Desks: where computers/chairs attach (voxels, item-local). */
-  anchor?: { monitorX: number; chairX: number };
+  anchor?: { monitorX: number; chairX: number; /** Top of the mug (steam) and a free corner for a personal item (0.18.0). */ mug?: [number, number, number]; personal?: [number, number, number] };
   /** Point light (voxels, item-local), e.g. a lamp. */
   light?: [number, number, number];
 }
@@ -339,9 +339,9 @@ let shelfCache: VoxelGrid | null = null;
 export function itemModel(model: string): ItemModel {
   switch (model) {
     case 'desk_basic':
-      return { parts: [{ grid: buildDesk(), at: [0, 0, 0] }, { grid: buildDeskLamp(), at: [1, 10, 1] }, { grid: buildMug(), at: [19, 10, 5] }], anchor: { monitorX: 6, chairX: 8 }, light: [4, 19, 3] };
+      return { parts: [{ grid: buildDesk(), at: [0, 0, 0] }, { grid: buildDeskLamp(), at: [1, 10, 1] }, { grid: buildMug(), at: [19, 10, 5] }], anchor: { monitorX: 6, chairX: 8, mug: [20.5, 13, 6.5], personal: [1, 10, 7] }, light: [4, 19, 3] };
     case 'desk_wide':
-      return { parts: [{ grid: deskWide(), at: [0, 0, 0] }, { grid: buildDeskLamp(), at: [1, 10, 1] }, { grid: buildMug(), at: [24, 10, 6] }], anchor: { monitorX: 12, chairX: 14 }, light: [4, 19, 3] };
+      return { parts: [{ grid: deskWide(), at: [0, 0, 0] }, { grid: buildDeskLamp(), at: [1, 10, 1] }, { grid: buildMug(), at: [24, 10, 6] }], anchor: { monitorX: 12, chairX: 14, mug: [25.5, 13, 7.5], personal: [3, 10, 7] }, light: [4, 19, 3] };
     case 'armchair':
       return { parts: [{ grid: buildArmchair(), at: [0, 0, 0] }] };
     case 'sofa':

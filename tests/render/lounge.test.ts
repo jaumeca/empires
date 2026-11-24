@@ -5,6 +5,8 @@ import { itemModel } from '../../src/render/models/catalogModels';
 import { VOXEL } from '../../src/render/voxel';
 import { ITEMS } from '../../src/content/officeItems';
 import { DEFAULT_APPEARANCE } from '../../src/sim/state';
+import { GESTURES, GESTURE_DUR, type Gesture } from '../../src/render/gestures';
+import type { Matrix4 } from 'three';
 
 /**
  * Block 0.3 (0.17.0): the same real-geometry check as the desk chairs, for the
@@ -13,9 +15,10 @@ import { DEFAULT_APPEARANCE } from '../../src/sim/state';
  */
 const SEATS = ITEMS.filter((d) => d.spot?.pose === 'lounge');
 
-function lounging(spot: { x: number; z: number }) {
+function lounging(spot: { x: number; z: number }, gesture?: Gesture) {
   const v = new EmpirianView({ ...DEFAULT_APPEARANCE, accessory: 0 }, 'E-1');
   v.pose = 'lounge';
+  if (gesture) v.playGesture(gesture, 79 * 0.05 - GESTURE_DUR[gesture] / 2, 0.8);
   for (let i = 0; i < 80; i++) v.animate(i * 0.05, 0.05, 'resting', 100, false, 1);
   // Facing away from the backrest (+z), as the scene does (use-spot heading + π).
   v.root.position.set(spot.x * VOXEL, 0, spot.z * VOXEL);
@@ -23,7 +26,7 @@ function lounging(spot: { x: number; z: number }) {
   v.root.updateMatrixWorld(true);
   const skull = new Box3(new Vector3(-5 * VOXEL, 0, -4.5 * VOXEL), new Vector3(5 * VOXEL, 10 * VOXEL, 4.5 * VOXEL)).applyMatrix4(v.head.matrixWorld);
   const torsoMesh = v.torso.children.find((c) => (c as { isMesh?: boolean }).isMesh)!;
-  return { head: skull, torso: new Box3().setFromObject(torsoMesh) };
+  return { head: skull, headMatrix: v.head.matrixWorld.clone(), torso: new Box3().setFromObject(torsoMesh) };
 }
 
 function itemBoxes(model: string): Box3[] {
@@ -60,6 +63,29 @@ describe('lounging Empirians fit their seats (block 0.3)', () => {
       const under = boxes.filter((b) => b.min.x <= c.x && b.max.x >= c.x && b.min.z <= c.z && b.max.z >= c.z && b.max.y <= body.torso.min.y + VOXEL);
       const surface = Math.max(...under.map((b) => b.max.y));
       expect((body.torso.min.y - surface) / VOXEL, 'gap under the body').toBeLessThanOrEqual(1);
+    });
+  }
+});
+
+/** Oriented: chair voxel centres in the head's own space stay outside the skull (sinking ≤ 1 voxel into a cushion is fine). */
+function headDepth(m: Matrix4, boxes: Box3[]): number {
+  const inv = m.clone().invert();
+  const scale = new Vector3().setFromMatrixScale(m).x;
+  let worst = 0;
+  for (const b of boxes) {
+    const c = b.getCenter(new Vector3()).applyMatrix4(inv);
+    const dx = 5 * VOXEL - Math.abs(c.x), dz = 4.5 * VOXEL - Math.abs(c.z), dy = Math.min(c.y, 10 * VOXEL - c.y);
+    const d = Math.min(dx, dy, dz) * scale / VOXEL + 0.5; // + half a furniture voxel
+    if (d > worst) worst = d;
+  }
+  return worst;
+}
+
+describe('gestures while lounging stay out of the furniture (0.18.0)', () => {
+  for (const def of SEATS) {
+    it(`${def.id}: every gesture`, () => {
+      const boxes = itemBoxes(def.model);
+      for (const g of GESTURES) expect(headDepth(lounging(def.spot!, g).headMatrix, boxes), `${def.id} ${g}`).toBeLessThanOrEqual(0.2);
     });
   }
 });
