@@ -106,8 +106,10 @@ export function buildChair(): VoxelGrid {
   g.box(4, 0, 1, 5, 1, 8, P.metalDark);
   g.box(0, 4, 0, 9, 6, 9, P.fabricBlue); // seat
   g.box(0, 5, 0, 9, 6, 9, P.fabricBlue);
-  g.box(0, 6, 7, 9, 14, 9, P.fabricBlue); // backrest (behind the sitter: +z)
-  g.box(1, 7, 7, 8, 13, 8, P.fabricBlueDark);
+  // Backrest (behind the sitter: +z). Empirians have big heads: the seated head
+  // starts at height ≈10 (≈9.3 tilted back), so the backrest stays below 9 (0.17.0).
+  g.box(0, 6, 7, 9, 9, 9, P.fabricBlue);
+  g.box(1, 6, 7, 8, 8, 8, P.fabricBlueDark);
   return g;
 }
 

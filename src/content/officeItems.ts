@@ -58,8 +58,8 @@ export interface ItemDef {
 
 export const ITEMS: readonly ItemDef[] = [
   // --- Work
-  { id: 'desk_basic', category: 'desk', price: 150, size: { w: 4, d: 2 }, layer: 'solid', reserve: { w: 4, d: 2 }, spot: { x: 12.5, z: 17.5, pose: 'sit' }, rotatable: true, model: 'desk_basic', effects: { ambiance: 0.2 } },
-  { id: 'desk_wide', category: 'desk', price: 520, size: { w: 6, d: 2 }, layer: 'solid', reserve: { w: 4, d: 2, x: 1 }, spot: { x: 18.5, z: 17.5, pose: 'sit' }, rotatable: true, model: 'desk_wide', effects: { ambiance: 0.8 } },
+  { id: 'desk_basic', category: 'desk', price: 150, size: { w: 4, d: 2 }, layer: 'solid', reserve: { w: 4, d: 2 }, spot: { x: 12.5, z: 17, pose: 'sit' }, rotatable: true, model: 'desk_basic', effects: { ambiance: 0.2 } },
+  { id: 'desk_wide', category: 'desk', price: 520, size: { w: 6, d: 2 }, layer: 'solid', reserve: { w: 4, d: 2, x: 1 }, spot: { x: 18.5, z: 17, pose: 'sit' }, rotatable: true, model: 'desk_wide', effects: { ambiance: 0.8 } },
   { id: 'pc_basic', category: 'computer', price: 300, size: { w: 0, d: 0 }, layer: 'mount', mount: 'desk', rotatable: false, model: 'pc_basic', effects: {} },
   { id: 'pc_dev', category: 'computer', price: 1400, size: { w: 0, d: 0 }, layer: 'mount', mount: 'desk', rotatable: false, model: 'pc_dev', effects: { techSpeed: 1.08, designSpeed: 1.06 } },
   { id: 'pc_workstation', category: 'computer', price: 3600, upkeep: 6, size: { w: 0, d: 0 }, layer: 'mount', mount: 'desk', rotatable: false, model: 'pc_workstation', effects: { techSpeed: 1.16, designSpeed: 0.98 } },

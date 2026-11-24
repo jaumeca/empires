@@ -86,9 +86,11 @@ function chairErgo(): VoxelGrid {
   g.box(4, 0, 1, 5, 1, 8, P.metal);
   g.box(0, 4, 0, 9, 6, 9, P.plastic);
   g.box(1, 5, 1, 8, 6, 8, P.mintDark);
-  g.box(0, 6, 7, 9, 15, 9, P.plastic); // tall back
-  g.box(1, 7, 7, 8, 14, 8, P.mintDark);
-  g.box(2, 15, 7, 7, 18, 9, P.plastic); // headrest
+  // Ergonomic back: lumbar support and a rounded top, below the seated head (no headrest:
+  // it could never coexist with an Empirian's head, 0.17.0).
+  g.box(0, 6, 7, 9, 9, 9, P.plastic);
+  g.box(1, 6, 7, 8, 8, 8, P.mintDark); // lumbar cushion
+  g.box(1, 9, 8, 8, 10, 9, P.plastic); // rounded top rail, at the very back
   g.box(0, 7, 2, 1, 8, 7, P.metalDark); // armrests
   g.box(8, 7, 2, 9, 8, 7, P.metalDark);
   return g;
