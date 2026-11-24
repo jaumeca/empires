@@ -1,20 +1,21 @@
 # Continuar el desarrollo de EMPIRES
 
-Actualizado: 2026-11-23 tras publicar 0.16.0 (progresión por desbloqueos). Todo el trabajo está confirmado y subido; no hay nada a medias.
+Actualizado: 2026-11-24 tras publicar 0.17.0 («Make the Game Come Alive», 1.ª tanda). Todo confirmado y subido.
 
 ## Estado
-- **Rama de desarrollo:** `claude/friendly-ptolemy-klybh8` (último commit `d77a304` o posterior).
-- **production-web:** 0.16.0 (`9506242`), estable y verificada (ver `docs/WEB_RELEASES.md`). `main` sin tocar.
-- **Guardado:** esquema v10 (carga v0–v10). Campos nuevos opcionales, sin migración: `Empirian.role`, `Project.storyEvents`, `ActiveContract.renegotiated`, `result.criticCovered`.
-- **Verificación al cerrar:** `npx vitest run` → 187 pruebas OK; `npm run build` OK. Las 16 suites e2e pasaron en la versión 0.10.0.
+- **Rama de desarrollo:** `claude/friendly-ptolemy-klybh8`.
+- **production-web:** 0.17.0 (`e992610`), estable y verificada (ver `docs/WEB_RELEASES.md`). `main` sin tocar.
+- **Guardado:** esquema v12 (carga v0–v12). v12 añade `support` (trabajo de mantenimiento, GT.6).
+- **Verificación al cerrar:** `npx vitest run` → 260 pruebas OK; 26 suites e2e en serie OK; galería 53.
 
 ## Hecho en la última sesión
-- E.2 Reparto de tareas (D-054): `src/sim/systems/project.ts` (roles, `mixPenalty`, `testWhileBuilding`, `hasActiveTester`), comando `set_role`, UI en `src/ui/gameUI.ts` (`rolesSection`), `SIM_CONFIG.roles`.
-- Primeros eventos de historia (D-055): `src/sim/systems/storyEvents.ts`, integrados en `src/sim/systems/events.ts` (portavoz `speakerId`), `SIM_CONFIG.storyEvents`, textos en `src/i18n/es.ts`/`en.ts`.
-- Correcciones: el tutorial cuenta los eventos como decisiones; la experiencia de gestión va al fundador; el "¿Por qué?" ya no culpa a eventos ajenos (`src/sim/systems/market.ts`).
-- Pruebas: `tests/sim/roles.test.ts`, `tests/sim/storyEvents.test.ts`; e2e `tools/e2e/roles.cjs`, `tools/e2e/events.cjs`. Ayudas de depuración (`?debug`): `__empires.play(n)` y `__empires.forceEvent(kind)`.
+- Bloque 0: cabeza/silla (`tests/render/seating.test.ts`), salón (`tests/render/lounge.test.ts`), tutorial intermitente con 4 causas medidas (iconos `toDataURL` 4 s, cola de modales, resaltado tras reconstruir el HUD, capturas de Playwright que retrasan frames en la prueba). Detalle en `docs/DEVELOPMENT_LOG.md`.
+- Objetivo cercano (`src/sim/systems/goals.ts`), niveles de lanzamiento (`src/sim/systems/launch.ts`), pantallas (`src/render/screens.ts`) — D-063.
+- GT.6 productos persistentes (`src/sim/systems/products.ts`, `docs/PRODUCTS.md`) — D-064. Estrategia «M» en `tools/sim-runner/careers.ts`.
+- Ayuda de depuración nueva: `__empires.ui.modalLog` (últimos movimientos de ventanas).
 
 ## Tareas pendientes (orden recomendado)
+0. **Siguientes bloques de «Make the Game Come Alive»:** 2 (animaciones y personalidad: estirarse, celebrar, frustración, saludar, café, cansancio), 3.2/3.3 (objetos nuevos y recuerdos físicos de hitos; registrar en `ASSET_REGISTRY.md`), 6 (decisiones contextuales), 7 (sonido procedural con volumen y silencio), 8 (revisar ritmos de progresión con `tools/sim-runner`), 10 (rendimiento: hay una tarea larga de ~1,2 s al cerrar una decisión de fecha de lanzamiento, sin investigar).
 1. ~~E.3 Relaciones~~ hecho en 0.11.0 (D-056, `src/sim/systems/relations.ts`). F3.4 deuda técnica hecha (D-057, `src/sim/systems/debt.ts`). Idea de alcance (D-058) y reputación con memoria (D-059) hechas. D.4 (D-060), conexiones (D-061) y progresión por desbloqueos (D-062, `docs/PROGRESSION.md`, `src/sim/systems/progress.ts`) hechos. Las suites e2e de mecánicas llaman a `__empires.unlockAll()`; `progression.cjs` y `firstminutes.cjs` prueban el comienzo real. Siguiente paso exacto: revisar con el propietario la sensación de los primeros 30 minutos; después **GT.6 productos persistentes** (mantenimiento y parches tras el lanzamiento; con él, el evento aplazado "un juego antiguo vuelve a estar de moda") o **F3.8 (2.ª parte)**: promesas explícitas al anunciar un juego y lecciones aprendidas visibles al planear el siguiente.
 2. **D.3/D.4:** decisiones de alcance, deuda técnica y comentarios de usuarios; diferenciar juego indie, ambicioso y por encargo (F3).
 3. **GT.6 productos persistentes** (y el evento aplazado "un juego antiguo vuelve a estar de moda"); **GT.7** reequilibrio económico; **AW.F** pequeñas satisfacciones.
