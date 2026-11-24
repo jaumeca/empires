@@ -1,4 +1,4 @@
-# EMPIRES — Productos persistentes (GT.6) · `[PROPUESTA]` → en implementación (0.17.0)
+# EMPIRES — Productos persistentes (GT.6) · `[IMPLEMENTADO]` 0.17.0 (provisional, D-064)
 
 > Un juego publicado no desaparece: tiene una vida comercial, una comunidad y una historia.
 > Diseño para D-064 (provisional hasta que el propietario juegue).
@@ -15,8 +15,8 @@
 
 | Acción | Requisitos | Trabajo | Efecto |
 |---|---|---|---|
-| **Parche** | quedan bugs en el juego publicado; el estudio está libre | base + puntos por bug restante | bugs a 0 (cuentan como arreglados), +1 reputación, fama de calidad +, ventas ×1,15 durante 4 semanas si sigue a la venta |
-| **Actualización de contenido** | nota ≥ 6,5, ≤ 2 por juego, ≤ 300 días desde el lanzamiento; estudio libre | 30 % del tamaño original, +50 % por cada anterior | vuelve a la venta si había parado, rebobina la cola de ventas, ventas ×1,5 (×0,6 la siguiente) durante 6 semanas, fama de innovación + |
+| **Parche** | quedan bugs en el juego publicado; el estudio está libre | 20 + 3 puntos por bug restante (~1 semana con el fundador solo) | bugs a 0 (cuentan como arreglados), +1 reputación, fama de calidad +, ventas ×1,15 durante 4 semanas si sigue a la venta |
+| **Actualización de contenido** | nota ≥ 6,5, ≤ 2 por juego, ≤ 300 días desde el lanzamiento; estudio libre | 30 % del tamaño original, +50 % por cada anterior | vuelve a la venta si había parado, rebobina 8 semanas de cola y abre una ola de ventas: cada semana 25 % de las de la primera semana del juego, decayendo ×0,75 durante 8 semanas (la siguiente actualización, ×0,6); fama de innovación + |
 
 ## Vida después del lanzamiento (notas y recuerdos, máximo una por producto y una cada ~3 semanas en el estudio)
 

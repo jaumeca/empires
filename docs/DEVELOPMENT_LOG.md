@@ -4,7 +4,7 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
-## 2026-11-24 — Duodécima sesión: Make the Game Come Alive — 1.ª parte (0.17.0)
+## 2026-11-24 — Duodécima sesión: Make the Game Come Alive (0.17.0)
 
 ### Estado verificado al empezar
 Coincide: `production-web` = 0.16.0 (`9506242`), desarrollo `43b14ea`, 243 pruebas.
@@ -15,12 +15,21 @@ Coincide: `production-web` = 0.16.0 (`9506242`), desarrollo `43b14ea`, 243 prueb
 - **1.3 Objetivo siguiente:** una línea en el HUD (`systems/goals.ts`) con la próxima ambición cercana; al tocarla abre lo que corresponde.
 - **3.1 Pantallas expresivas:** cada monitor muestra la actividad de su dueño (`render/screens.ts`, una textura por actividad, compartida).
 - **5 Lanzamientos:** banner «¡A la venta!», nivel del lanzamiento (fracaso/correcto/sorpresa/éxito, `systems/launch.ts`), nota que sube contando, lección en los fracasos, avisos de progreso 25/50/75 %.
+- **0.3 Revisión visual:** sofá, sillón y puf comprobados con geometría real (`tests/render/lounge.test.ts`: ni la cabeza ni el torso atraviesan el mueble, sin flotar); pantallas revisadas exportando sus texturas (colores de código repetidos y filas borrosas en «pruebas», corregidos).
+- **GT.6 Productos persistentes (D-064, `docs/PRODUCTS.md`):** catálogo «Tus juegos», parches, contenido nuevo (pequeño relanzamiento, máx. 2, rendimientos decrecientes) y vida posterior con notas tranquilas. Tercera actividad con coste de oportunidad real. Desbloqueo nuevo; guardado v12.
 
 ### Problemas encontrados (bloque 0.2, con medidas)
 1. **Congelación de 4 s al lanzar.** Instrumentando la UI (registro de modales en `?debug`) se vio que la tarjeta de resultados, programada a 1,8 s, se abría a los 9 s. Un perfil de CPU (CDP) atribuyó el bloqueo a `iconUrl → toDataURL`: cada icono pedido con un tamaño nuevo (40 px en el banner, 22 px en la tarjeta) leía un lienzo 2D acelerado por GPU, lo que obliga a esperar a que la GPU termine todo lo encolado (la oficina). 4,0–4,5 s por tamaño con GL por software; en un móvil real sería mucho menos, pero también una espera síncrona. Corrección: lienzo de CPU (`willReadFrequently`). Después: resultados a +1,8 s exactos, ninguna tarea larga > 1,5 s alrededor del lanzamiento (comprobado en `launch.cjs`).
 2. **Bloqueo sin salida (error real de juego).** `openModal` cerraba en silencio el modal anterior: si una decisión llegaba justo al lanzar, los resultados la tapaban; la decisión quedaba pendiente e invisible y el juego en pausa sin forma de seguir hasta recargar. Reproducido de forma determinista (lanzar + `forceEvent('critical_bug')`). Corrección: la decisión va primero y los resultados esperan en cola; una decisión nunca sustituye a los resultados; el paso «críticas» del tutorial solo cuenta si el jugador cierra los resultados (no si otra ventana los sustituye).
 3. **Resaltado perdido durante un frame.** Al reconstruirse el HUD (p. ej. al cambiar la velocidad) el botón nuevo no tenía el resaltado del tutorial hasta el siguiente frame (~160 ms aquí). Corrección: el resaltado se reaplica en el mismo momento en que se reconstruye el HUD.
 - Además, la prueba del móvil medía el coach a 600 ms fijos (menos de dos frames con GL por software): ahora espera a que aparezca.
+4. **Paso «meet» y «Ayuda reinicia» (artefacto de la prueba, demostrado).** Tras los arreglos anteriores siguió fallando a veces el paso 2. Primera hipótesis (CPU compartida con `vitest`) **descartada**: volvió a fallar en serie. Con diagnóstico ampliado: a los 655 ms el estado era correcto (paso «meet», tutorial activo, sin modal) pero el coach no estaba; a los 2,6 s sí. Sonda con navegador en frío: el coach aparece en 130–210 ms, pero **1,1–1,65 s si justo antes se hace una captura de Playwright** (sin tareas largas en la página: es el canal de renderizado por software poniéndose al día). La prueba hacía una captura justo antes de esos dos clics. Corrección en la prueba: esperar al coach (hasta 4 s) en lugar de 600/400 ms fijos. El juego no tenía fallo en este punto.
+
+### Problemas encontrados (GT.6)
+- Primer diseño de actualizaciones = trampa: solo multiplicaban la cola de ventas (≈ 5 % de la primera semana) y rendían menos que la mitad de lo que daría ese tiempo en un juego nuevo. Rediseñadas como ola de ventas proporcional al lanzamiento.
+- El sorteo de la vida posterior consumía el generador aleatorio del mercado y reordenaba la suerte de todo (la prueba de economía de encargos saltó de 0,74 a 0,765): ahora usa su propio hash.
+- Parches de 12–19 días en la primera versión (demasiado caros): ahora ~1 semana.
+- En la e2e, el bocadillo del fundador pedía «¿Un juego nuevo o un encargo?» durante un parche, y el tema salía como clave sin traducir: corregidos.
 
 ---
 

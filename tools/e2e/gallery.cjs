@@ -397,6 +397,29 @@ const VARIANTS = [
     await shot('g48-ambitious-plan', 400);
   }
 
+  // 50–52 (0.17.0): a launch ("Now on sale!" and its tier), your games (GT.6) and a patch at work.
+  for (let i = 0; i < 4 && (await page.isVisible('.card .close')); i++) { await page.click('.card .close'); await page.waitForTimeout(150); }
+  await ev(() => {
+    const E = window.__empires, g = E.game;
+    if (!g.state.activeProjectId) g.dispatch({ type: 'start_project', name: 'Faro', topicId: 'kart', size: 'small', focus: 0.6, budget: 500, days: 35, price: 9.99 });
+    for (let i = 0; i < 20000 && g.state.activeProjectId; i++) { const d = g.state.pendingDecision; if (d) g.dispatch({ type: 'choose_option', decisionId: d.id, optionId: d.kind === 'deadline' ? 'release' : d.options[0].id }); else E.advance(1); }
+  });
+  await shot('g50-now-on-sale', 500);
+  await page.waitForTimeout(2200);
+  for (let i = 0; i < 4 && (await page.isVisible('.card.decision')); i++) { await page.keyboard.press('1'); await page.waitForTimeout(600); }
+  if (await page.isVisible('.card.results')) await shot('g51-launch-tier', 1200);
+  for (let i = 0; i < 4 && (await page.isVisible('.card .close')); i++) { await page.click('.card .close'); await page.waitForTimeout(150); }
+  await ev(() => { const s = window.__empires.game.state; window.__empires.unlockAll(); window.__empires.ui.setSpeed(0); const p = s.projects.find((q) => q.result); p.bugs.hidden = Math.max(p.bugs.hidden, 14); window.__empires.ui.showProducts(); });
+  await shot('g52-your-games', 600);
+  const pid = await ev(() => window.__empires.game.state.projects.find((q) => q.result && q.bugs.hidden > 0)?.id);
+  if (pid && (await page.isEnabled(`[data-support="patch"][data-project="${pid}"]`))) {
+    await page.click(`[data-support="patch"][data-project="${pid}"]`);
+    await page.waitForTimeout(600);
+    for (let i = 0; i < 4 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(300); }
+    await ev(() => window.__empires.ui.setSpeed(1));
+    await shot('g53-patching', 1200);
+  }
+
 
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });
