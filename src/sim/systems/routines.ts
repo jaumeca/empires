@@ -36,7 +36,7 @@ function begin(state: GameState, e: Empirian, kind: BreakKind, emit: EventSink, 
 /** Called at the start of every working tick, before work. */
 export function routinesTick(state: GameState, emit: EventSink): void {
   const p = getActiveProject(state);
-  const working = !state.pendingDecision && ((!!p && p.phase !== 'released' && !(p.restUntilDay !== undefined && state.day < p.restUntilDay)) || (!p && !!state.contracts.active));
+  const working = !state.pendingDecision && ((!!p && p.phase !== 'released' && !(p.restUntilDay !== undefined && state.day < p.restUntilDay)) || (!p && (!!state.contracts.active || !!state.support)));
   // Breaks end on their own.
   for (const e of state.empirians) if (e.breakUntil !== undefined && state.tick >= e.breakUntil) { delete e.breakUntil; delete e.breakKind; delete e.chatWith; }
   if (!working) return;

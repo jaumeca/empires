@@ -15,6 +15,8 @@ import { DEFAULT_STYLE, FLOOR_STYLES, STYLE_PRICE, WALL_STYLES } from '../conten
 import { isUnlocked, remember, rememberFounding } from './systems/story';
 import { NEXT_SIZE, OFFICE_SIZES } from '../content/officeSizes';
 import { acceptContract, cancelContract } from './systems/contracts';
+import { cancelSupport, startSupport } from './systems/products';
+import { unlocked } from './systems/progress';
 import { getActiveProject, getFounder } from './state';
 import { getTopic } from '../content/topics';
 import { resolveDecision } from './systems/decisions';
@@ -47,6 +49,8 @@ export type Command =
   | { type: 'mark_news_read' }
   | { type: 'accept_contract'; offerId: string }
   | { type: 'cancel_contract' }
+  | { type: 'start_support'; projectId: string; kind: 'patch' | 'update' }
+  | { type: 'cancel_support' }
   | { type: 'hire'; candidateId: string }
   | { type: 'fire'; empirianId: string }
   | { type: 'tutorial'; action: 'mark' | 'skip' | 'restart' | 'finish'; step?: string }
@@ -83,6 +87,7 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
     case 'start_project': {
       if (getActiveProject(state)) return fail('project_in_progress');
       if (state.contracts.active) return fail('contract_in_progress');
+      if (state.support) return fail('support_in_progress');
       try {
         getTopic(cmd.topicId);
       } catch {
@@ -328,6 +333,17 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
     }
     case 'cancel_contract': {
       const err = cancelContract(state);
+      return err ? fail(err) : { ok: true };
+    }
+
+    case 'start_support': {
+      if (!unlocked(state, 'products')) return fail('locked');
+      const err = startSupport(state, cmd.projectId, cmd.kind);
+      return err ? fail(err) : { ok: true };
+    }
+
+    case 'cancel_support': {
+      const err = cancelSupport(state);
       return err ? fail(err) : { ok: true };
     }
 

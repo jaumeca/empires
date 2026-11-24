@@ -105,4 +105,7 @@ export const MIGRATIONS: Record<number, (s: AnyState) => AnyState> = {
   // v11 (D-062): progressive unlocks. Everything an older save already reached
   // (or used) is unlocked silently — nothing is ever taken away.
   10: (s) => ({ ...s, schemaVersion: 11, progress: { seen: reachedUnlocks(s as unknown as GameState), days: {} } }),
+  // v12 (GT.6, D-064): products after launch. No maintenance job yet; the products unlock
+  // is announced normally when reached (it is a new feature, not something taken away).
+  11: (s) => ({ ...s, schemaVersion: 12, support: null }),
 };

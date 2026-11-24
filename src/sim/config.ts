@@ -388,6 +388,43 @@ export const SIM_CONFIG = {
     sizeAudience: { small: 1, medium: 1.9 } as Record<string, number>,
     sizePriceBonus: { small: 0, medium: 3 } as Record<string, number>,
   },
+  /** GT.6 (D-064): products after launch. See docs/PRODUCTS.md. */
+  products: {
+    /** A patch is a short job: ~1 week for a typical bug count with a solo founder. */
+    patchBase: 20,
+    patchPerBug: 3,
+    patchReputation: 1,
+    patchFame: 0.6,
+    patchSales: 1.15,
+    patchWeeks: 4,
+    updateMinScore: 6.5,
+    maxUpdates: 2,
+    updateMaxAgeDays: 300,
+    /** Work of an update: share of the original size, +growth per previous update. */
+    updateShare: 0.3,
+    updateGrowth: 0.5,
+    /** An update is a small relaunch: weekly extra units = week-1 units × share × strength × decay^week. */
+    updateWaveShare: 0.25,
+    updateWaveDecay: 0.75,
+    updateWeeks: 8,
+    /** Each next update counts this much less. */
+    updateDiminishing: 0.6,
+    /** Tail weeks given back (the product feels fresh again). */
+    updateRewind: 8,
+    updateFame: 0.8,
+    /** Later-life happenings: one per product, at most one every few weeks. */
+    happeningGapDays: 21,
+    happeningChance: 0.35,
+    lateCriticAge: 90,
+    lateCriticSales: 1.6,
+    loyalAge: 28,
+    loyalSales: 1.3,
+    communityAge: 60,
+    farewellUnits: 3000,
+    abandonBugs: 8,
+    abandonAge: 120,
+    abandonFame: 0.8,
+  },
 } as const;
 
 export type Pace = 'relaxed' | 'normal' | 'crunch';

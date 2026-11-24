@@ -94,7 +94,7 @@ export interface Relation {
 }
 
 /** Progression unlocks (D-062, docs/PROGRESSION.md). */
-export type UnlockId = 'equipment' | 'planning' | 'newspaper' | 'contracts' | 'team' | 'studio' | 'expansion';
+export type UnlockId = 'equipment' | 'planning' | 'newspaper' | 'contracts' | 'team' | 'studio' | 'expansion' | 'products';
 
 /** D.4: indie (small, small team), ambitious (medium with features) or standard. */
 export type ProjectProfile = 'indie' | 'ambitious' | 'standard';
@@ -221,6 +221,22 @@ export interface ProjectResult {
   salesBoost?: { factor: number; untilDay: number };
   /** An influential critic already covered it (story event). */
   criticCovered?: boolean;
+  /** GT.6: maintenance after launch (patches, content updates). */
+  support?: { patches: number; updates: number; lastDay?: number };
+  /** GT.6: a content update's wave of sales (a small relaunch that fades). */
+  updateWave?: { startDay: number; strength: number };
+  /** GT.6: the one later-life happening this product had (late critic, community…). */
+  happening?: string;
+}
+
+/** GT.6: the studio's maintenance job on a released product (like a contract, one at a time). */
+export interface SupportJob {
+  projectId: string;
+  kind: 'patch' | 'update';
+  work: number;
+  done: number;
+  startDay: number;
+  causeId: string;
 }
 
 export interface Project {
@@ -442,6 +458,10 @@ export interface GameState {
   tutorial: Tutorial;
   /** Progression (D-062): what has been unlocked (announced) and when. */
   progress?: { seen: UnlockId[]; days?: Partial<Record<UnlockId, number>> };
+  /** GT.6: maintenance job in progress (null = none). Optional: older saves have none. */
+  support?: SupportJob | null;
+  /** GT.6: pacing of the later-life happenings of products. */
+  productsLog?: { lastDay: number };
   /** Deferred consequences (LS.7). */
   scheduled: ScheduledEffect[];
   /** Pacing of dynamic events. */

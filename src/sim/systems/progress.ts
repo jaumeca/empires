@@ -1,3 +1,4 @@
+import { SIM_CONFIG } from '../config';
 import type { EventSink } from '../core/events';
 import type { GameState, UnlockId } from '../model/state';
 import { remember } from './story';
@@ -11,7 +12,7 @@ import { getItemDef } from './office';
  * (stored in `state.progress.seen`) and is also granted by evidence that the
  * player already used it (old saves never lose anything).
  */
-export const UNLOCKS: readonly UnlockId[] = ['equipment', 'planning', 'newspaper', 'contracts', 'team', 'studio', 'expansion'];
+export const UNLOCKS: readonly UnlockId[] = ['equipment', 'planning', 'newspaper', 'contracts', 'team', 'studio', 'expansion', 'products'];
 
 const released = (s: GameState) => s.projects.filter((p) => p.phase === 'released').length;
 const bought = (s: GameState, cats: string[]) => s.office.items.some((it) => cats.includes(getItemDef(it.defId).category) && !['pc_basic', 'chair_basic'].includes(it.defId))
@@ -25,6 +26,8 @@ const MET: Record<UnlockId, (s: GameState) => boolean> = {
   contracts: (s) => s.projects.some((p) => (p.result?.weeklySales.length ?? 0) >= 1) || s.contracts.completed > 0 || !!s.contracts.active,
   team: (s) => released(s) >= 2 || s.contracts.completed >= 1 || (released(s) >= 1 && s.company.money >= 15000) || s.hiring.hired > 0 || s.empirians.length > 1,
   studio: (s) => released(s) >= 2 || s.projects.some((p) => p.size === 'medium' || p.prototype),
+  // GT.6: two games out and one of them past its launch weeks (it has a later life to look after).
+  products: (s) => (released(s) >= 2 && s.projects.some((p) => (p.result?.weeklySales.length ?? 0) >= SIM_CONFIG.market.salesWeeks)) || !!s.support || s.projects.some((p) => !!p.result?.support),
   expansion: (s) => released(s) >= 4 || (s.office.size ?? 'room') !== 'room' || (s.empirians.length - 1 >= OFFICE_SIZES.room.maxEmployees && (s.hiring.hired > 0)),
 };
 

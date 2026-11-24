@@ -45,10 +45,12 @@ export class ScreenDeck {
         box('#1f2633', 0, 0, W, H);
         const colors = ['#7fd1b9', '#ffd27a', '#8ec5ff', '#ff8a7a', '#b9a6e8', '#e8e3da'];
         for (let row = 0; row < 7; row++) {
-          const seed = (row + line) * 7919;
-          const indent = (seed >> 3) % 4;
-          const len = 6 + ((seed >> 5) % 22);
-          box(colors[(seed >> 2) % colors.length]!, 2 + indent * 2, 2 + row * 3, Math.min(len, W - 4 - indent * 2), 2);
+          // Integer hash per source line (lines scroll up as `line` grows).
+          let seed = Math.imul(row + line + 1, 2654435761) >>> 0;
+          seed ^= seed >>> 13;
+          const indent = seed % 4;
+          const len = 6 + ((seed >>> 4) % 22);
+          box(colors[(seed >>> 9) % colors.length]!, 2 + indent * 2, 2 + row * 3, Math.min(len, W - 4 - indent * 2), 2);
         }
         box('#ffffff', 2 + ((line * 3) % 30), 2 + 6 * 3, 1, 2);
         break;
@@ -61,8 +63,9 @@ export class ScreenDeck {
         box('#1f2633', 0, 0, W, H);
         for (let row = 0; row < 6; row++) {
           const ok = ((row + line) * 13) % 5 !== 0;
-          box(ok ? '#4fae95' : '#e2675a', 2, 2 + row * 3.5, 2, 2);
-          box('#e8e3da', 6, 2 + row * 3.5, 10 + ((row * 7) % 18), 2);
+          // Whole pixels only (fractional rows blur on a nearest-filtered texture).
+          box(ok ? '#4fae95' : '#e2675a', 2, 2 + row * 4, 2, 2);
+          box('#e8e3da', 6, 2 + row * 4, 10 + ((row * 7) % 18), 2);
         }
         break;
       case 'fix': {

@@ -305,6 +305,8 @@ La empresa desarrolla una **cultura propia** según las decisiones del jugador. 
 
 Los productos no desaparecen tras el lanzamiento. Generan: ventas, suscripciones, usuarios, críticas, reputación, gastos de mantenimiento, necesidades de soporte, actualizaciones y oportunidades comerciales.
 
+`[IMPLEMENTADO]` (0.17.0, D-064, `docs/PRODUCTS.md`) **Productos persistentes para videojuegos:** catálogo «Tus juegos», parches (arreglan bugs sin cambiar la nota), actualizaciones de contenido (pequeño relanzamiento con rendimientos decrecientes, máx. 2) y vida posterior contada con notas tranquilas (crítica tardía, comunidad, pocos pero fieles, despedida, abandonado). Suscripciones, usuarios, expansiones y secuelas siguen como `[FUTURO]`.
+
 | Tipo | Factores propios |
 |---|---|
 | Videojuegos | Diversión, diseño, arte, rendimiento, comunidad, críticas, expansiones, secuelas |

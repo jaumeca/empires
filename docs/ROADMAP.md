@@ -136,7 +136,7 @@ Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, of
 | CA.1.3 | Objetivo cercano discreto en el HUD | ✅ `systems/goals.ts`, `tests/sim/goals.test.ts`, e2e `launch.cjs` |
 | CA.3.1 | Pantallas expresivas por actividad | ✅ `render/screens.ts` |
 | CA.5 | Lanzamientos memorables (niveles, banner, lección) | ✅ `systems/launch.ts`, e2e `launch.cjs` 10/10 |
-| CA.GT6 | Productos persistentes: catálogo, parches, actualizaciones, vida posterior | 🟦 diseño e implementación en curso (0.18.0) |
+| CA.GT6 | Productos persistentes: catálogo, parches, actualizaciones, vida posterior | ✅ 0.17.0 `systems/products.ts`, `tests/sim/products.test.ts`, no-dominancia en `economy.test.ts`, e2e `products.cjs` (D-064) |
 | CA.2/3.2/7 | Más animaciones y personalidad, objetos nuevos y recuerdos físicos, sonido | ⬜ |
 
 ---
@@ -148,7 +148,7 @@ Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, of
 | PR.1 | Diseño y documento de progresión (`docs/PROGRESSION.md`), auditoría antes/después (`tools/e2e/firstminutes.cjs`) | ✅ |
 | PR.2 | Desbloqueos por hitos en la simulación, guardado v11 con migración, primer juego tranquilo | ✅ `systems/progress.ts`, `tests/sim/progress.test.ts` |
 | PR.3 | Interfaz progresiva: HUD, primer juego, tarjeta del proyecto, Decorar; avisos, celebración, recuerdo y punto «nuevo» | ✅ e2e `progression.cjs` 15/15 |
-| PR.4 | [FUTURO] Etapa «Imperio» con productos persistentes (GT.6) y clientes importantes; tutorial aún más ligero tras pruebas del propietario | ⬜ |
+| PR.4 | Etapa «Imperio»: productos persistentes (GT.6, desbloqueo *Tus juegos*) ✅ · [FUTURO] clientes importantes; tutorial aún más ligero tras pruebas del propietario | 🟦 |
 
 ---
 

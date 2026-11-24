@@ -14,6 +14,7 @@ import { OFFICE_SIZES } from '../content/officeSizes';
 import { onBreak, routinesTick } from './systems/routines';
 import { harmony, relationsDay } from './systems/relations';
 import { progressTick } from './systems/progress';
+import { productsWeek, supportTick } from './systems/products';
 import { coordinationFactor, hiringDay, payroll, teamMoraleBonus, traitDrain, workstationEffects } from './systems/team';
 
 const C = SIM_CONFIG;
@@ -35,6 +36,14 @@ export function step(state: GameState, emit: EventSink): void {
     for (const e of state.empirians) {
       if (onBreak(state, e)) continue;
       contractTick(state, e, emit, coord);
+      e.energy = Math.max(0, e.energy - (C.energy.drainPerTick.normal ?? 0.85) * workstationEffects(state, e).fatigue * traitDrain(e));
+    }
+  } else if (state.support && !state.pendingDecision) {
+    // GT.6: the whole team looks after a released product (patch or update).
+    const coord = coordinationFactor(state.empirians.length) * harmony(state);
+    for (const e of state.empirians) {
+      if (onBreak(state, e) || !state.support) continue;
+      supportTick(state, e, emit, coord);
       e.energy = Math.max(0, e.energy - (C.energy.drainPerTick.normal ?? 0.85) * workstationEffects(state, e).fatigue * traitDrain(e));
     }
   } else if (!state.pendingDecision) {
@@ -69,7 +78,7 @@ function dayBoundary(state: GameState, emit: EventSink): void {
   state.company.money -= C.economy.dailyLivingCost;
   const fx = officeEffects(state.office);
   const resting = !!project && isResting(state, project);
-  const working = !!project || !!state.contracts.active;
+  const working = !!project || !!state.contracts.active || !!state.support;
   const relaxedBonus = resting ? 8 : project?.pace === 'relaxed' ? 2 : working ? 0 : 6;
   // A good place to rest helps every night, and much more on days off (LS.4).
   const restBonus = fx.rest * (resting || !working ? 1.5 : 0.5);
@@ -96,13 +105,14 @@ function dayBoundary(state: GameState, emit: EventSink): void {
   contractsDay(state);
   hiringDay(state, emit);
   // Relationships (E.3): a working day together, mentoring, tension fading.
-  relationsDay(state, (!!project && !resting && project.phase !== 'released') || (!project && !!state.contracts.active), emit, project?.pace === 'crunch' && !resting);
+  relationsDay(state, (!!project && !resting && project.phase !== 'released') || (!project && (!!state.contracts.active || !!state.support)), emit, project?.pace === 'crunch' && !resting);
   storyDay(state, emit);
   if (state.contracts.active) gainXp(state, founder, 'management', C.progression.managementPerProjectDay, emit);
   applyScheduled(state, emit);
   maybeTriggerEvent(state, emit);
   if ((state.day - 1) % 7 === 0) {
     marketWeek(state, emit);
+    productsWeek(state, emit);
     const paid = payroll(state);
     if (paid > 0) emit({ type: 'payroll', total: paid, severity: 'info' });
   }

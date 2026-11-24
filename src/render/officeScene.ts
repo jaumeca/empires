@@ -976,7 +976,8 @@ export class OfficeScene {
     switch (e.activity) {
       case 'coding': return 'code';
       case 'designing': return 'design';
-      case 'testing': return p && p.bugs.known > 0 ? 'fix' : 'test';
+      // A patch (GT.6) is squashing bugs too.
+      case 'testing': return (p && p.bugs.known > 0) || state.support?.kind === 'patch' ? 'fix' : 'test';
       case 'thinking': return 'think';
       default: return 'off';
     }

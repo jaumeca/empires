@@ -41,6 +41,17 @@ describe('economy review (LS.9)', () => {
     expect(gainF).toBeLessThan(gainE * 1.6);
   });
 
+  it('looking after products (GT.6) is a real option, never a dominant one', () => {
+    const M = year('M');
+    const ratio = money(M) / money(A);
+    expect(M.reduce((n, r) => n + r.supports, 0)).toBeGreaterThan(0);
+    expect(ratio).toBeGreaterThan(0.95);
+    expect(ratio).toBeLessThan(1.1);
+    const wins = M.filter((m, i) => m.money > A[i]!.money).length;
+    expect(wins).toBeGreaterThan(1);
+    expect(wins).toBeLessThan(seeds.length);
+  });
+
   it('growing to medium games pays more when the office keeps the founder rested', () => {
     expect(money(I)).toBeGreaterThan(money(B));
   });

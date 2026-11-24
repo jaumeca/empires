@@ -108,7 +108,7 @@ export function contractsDay(state: GameState): void {
 
 export function acceptContract(state: GameState, offerId: string): string | null {
   const c = state.contracts;
-  if (state.activeProjectId || c.active) return 'busy';
+  if (state.activeProjectId || c.active || state.support) return 'busy';
   const o = c.offers.find((x) => x.id === offerId);
   if (!o) return 'offer_gone';
   c.offers = c.offers.filter((x) => x.id !== offerId);

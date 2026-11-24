@@ -32,6 +32,7 @@
 | **Equipo** | Dos lanzamientos, o un encargo entregado, o un lanzamiento con 15 000 € en caja | Botón Equipo, candidatos, escritorios | Alguien contratado |
 | **Estudio** | Dos juegos publicados | Juegos medianos, prototipo, estado del código y su revisión, «Lo que se dice del estudio» | Proyecto mediano o con prototipo |
 | **Ampliación** | El equipo llena la oficina, o cuatro juegos publicados | «Ampliar el estudio» | Oficina ya ampliada |
+| **Tus juegos** (0.17.0, D-064) | Dos juegos publicados y uno con su campaña de lanzamiento completa (10 semanas) | Botón «Tus juegos»: parches y contenido nuevo | Ya hizo algún mantenimiento |
 
 - **Nunca se vuelve a bloquear** lo ya desbloqueado (se guarda) ni lo que el jugador ya usó (evidencia).
 - **Partidas antiguas:** al cargarlas, todo lo que ya cumple su condición o su evidencia queda desbloqueado **sin celebración** (migración v10 → v11).

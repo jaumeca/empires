@@ -14,6 +14,7 @@ import { profileFor } from '../sim/systems/ambition';
 import { isFresh, unlocked } from '../sim/systems/progress';
 import { nextGoal } from '../sim/systems/goals';
 import { launchTier } from '../sim/systems/launch';
+import { patchBlock, productStatus, supportDays, supportOf, updateBlock } from '../sim/systems/products';
 import { effectiveRisk, FEATURE_CFG, featureLock } from '../sim/systems/features';
 import { FEATURE_SLOTS, FEATURES, getFeature } from '../content/features';
 import type { Game } from '../sim/game';
@@ -165,6 +166,7 @@ export class GameUI {
     else if ((k === 'c' || k === 'C') && (unlocked(s, 'contracts') || s.contracts.active)) { if (s.contracts.active) this.showContract(); else if (!getActiveProject(s)) this.showContracts(); used(); }
     else if (k === 'p' || k === 'P') {
       if (getActiveProject(s)) this.showProjectPanel();
+      else if (s.support) this.showProducts();
       else if (!s.contracts.active) this.showNewProject();
       used();
     }
@@ -182,7 +184,7 @@ export class GameUI {
     const p = getActiveProject(s);
     // Structure is rebuilt only when it changes; values are patched in place so
     // buttons are never replaced under the player's finger.
-    const key = JSON.stringify([this.game.clock.speed, p?.id, p?.phase, s.setupComplete, !!this.modal, s.projects.length, this.unreadNews(), s.contracts.active?.id, s.contracts.offers.length, s.hiring.candidates.length, s.empirians.length, hiringUnlocked(s)]);
+    const key = JSON.stringify([this.game.clock.speed, p?.id, p?.phase, s.setupComplete, !!this.modal, s.projects.length, this.unreadNews(), s.contracts.active?.id, s.support?.projectId ?? null, unlocked(s, 'products'), s.contracts.offers.length, s.hiring.candidates.length, s.empirians.length, hiringUnlocked(s)]);
     if (force || key !== this.lastHudKey) {
       this.lastHudKey = key;
       this.buildHud();
@@ -204,6 +206,7 @@ export class GameUI {
       r.money.textContent = fmtMoney(s.company.money);
       r.money.classList.toggle('neg', s.company.money < 0);
     }
+    if (s.support && !p && r.bar) r.bar.style.width = `${Math.round(Math.min(1, s.support.done / s.support.work) * 100)}%`;
     const ct = s.contracts.active;
     if (ct && !p) {
       if (r.bar) r.bar.style.width = `${Math.round(Math.min(1, ct.done / ct.work) * 100)}%`;
@@ -255,6 +258,8 @@ export class GameUI {
         // Progression (D-062): the newspaper appears with the first launch.
         unlocked(s, 'newspaper') ? h(`button.icon-btn.badge-host${isFresh(s, 'newspaper') ? '.fresh' : ''}`, { 'aria-label': t('daily.button'), title: t('kbd.tip', { label: t('daily.button'), key: 'N' }), id: 'hud-news', onclick: () => this.showDaily() }, icon('news'), this.unreadNews() ? h('span.badge', null, String(Math.min(9, this.unreadNews()))) : null) : null,
         h('button.icon-btn', { 'aria-label': t('decor.button'), title: t('kbd.tip', { label: t('decor.button'), key: 'D' }), id: 'hud-decor', onclick: () => this.decor.open() }, icon('decor')),
+        // GT.6: the catalogue of released games, once they have a later life to look after.
+        unlocked(s, 'products') ? h(`button.icon-btn.badge-host${isFresh(s, 'products') ? '.fresh' : ''}`, { 'aria-label': t('products.button'), title: t('products.button'), id: 'hud-products', onclick: () => this.showProducts() }, icon('box')) : null,
         hiringUnlocked(s) || s.empirians.length > 1 ? h(`button.icon-btn.badge-host${isFresh(s, 'team') ? '.fresh' : ''}`, { 'aria-label': t('team.button'), title: t('kbd.tip', { label: t('team.button'), key: 'T' }), id: 'hud-team', onclick: () => this.showTeam() }, icon('team'), s.hiring.candidates.length && s.empirians.length - 1 < maxEmployees(s) ? h('span.badge', null, String(s.hiring.candidates.length)) : null) : null,
         h('button.icon-btn', { 'aria-label': t('hud.menu'), title: t('kbd.tip', { label: t('hud.menu'), key: 'M' }), id: 'hud-menu', onclick: () => this.showMenu() }, icon('menu')),
       ),
@@ -284,6 +289,16 @@ export class GameUI {
           h('span.stat', null, icon('clock', 18), r.days),
         ),
       );
+    } else if (s.support) {
+      const job = s.support;
+      const jp = getProject(s, job.projectId);
+      r.bar = h('i');
+      bottom.append(
+        h('div.pill.project-pill.contract.support', { id: 'hud-support', onclick: () => this.showProducts() },
+          h('div', null, h('div.name', null, t(`support.pill.${job.kind}`, { project: jp ? projectName(jp) : '' })), h('div.phase', null, t('support.phase'))),
+          h('div.bar.contract', null, r.bar),
+        ),
+      );
     } else if (!this.modal) {
       bottom.append(...[
         h('button.big-btn.mint', { id: 'hud-new-project', onclick: () => this.showNewProject() }, s.projects.length ? t('hud.new_project') : t('hud.first_project')),
@@ -300,7 +315,7 @@ export class GameUI {
     this.tutorial.frame();
     const s = this.state;
     const founder = s.setupComplete ? getFounder(s) : null;
-    const want = founder && !this.modal && !this.decor.active && !this.tutorial.visible && !getActiveProject(s) && !s.contracts.active && founder.activity !== 'celebrating' ? (!s.projects.length ? t('speech.first') : s.contracts.offers.length ? t('speech.idle_options') : t('speech.again')) : null;
+    const want = founder && !this.modal && !this.decor.active && !this.tutorial.visible && !getActiveProject(s) && !s.contracts.active && !s.support && founder.activity !== 'celebrating' ? (!s.projects.length ? t('speech.first') : s.contracts.offers.length ? t('speech.idle_options') : t('speech.again')) : null;
     if (want && founder) {
       if (!this.speechEl) {
         this.speechEl = h('div.speech', { onclick: () => (this.state.projects.length ? this.showWorkChooser() : this.showNewProject()) });
@@ -357,6 +372,18 @@ export class GameUI {
           this.launchBanner(e.projectId);
           setTimeout(() => this.showResults(e.projectId), 1800);
           break;
+        case 'support_done': {
+          const sp = getProject(this.state, e.projectId);
+          this.toast(t(`toast.support_done.${e.kind}`, { project: sp ? projectName(sp) : '' }), e.kind === 'patch' ? 'check' : 'rocket');
+          this.services.save();
+          break;
+        }
+        case 'product_happening': {
+          // GT.6: a quiet note about a product's later life (never a window).
+          const hp = getProject(this.state, e.projectId);
+          this.toast(t(`ledger.product.${e.kind}`, { project: hp?.name ?? '' }), e.kind === 'abandoned' ? 'alert' : 'box');
+          break;
+        }
         case 'phase_changed':
           if (e.phase === 'polish') this.toast(t('toast.polish'), 'star');
           else if (e.phase === 'production') this.toast(t('toast.production'), 'idea');
@@ -471,6 +498,7 @@ export class GameUI {
       case 'computer':
         if (getActiveProject(s)) this.showProjectPanel();
         else if (s.contracts.active) this.showContract();
+        else if (s.support) this.showProducts();
         else this.showWorkChooser();
         break;
       case 'empirian':
@@ -971,7 +999,10 @@ export class GameUI {
         }))),
       lesson ? h('p.hint.lesson', { id: 'res-lesson' }, icon('idea', 16), ` ${t('res.lesson', { what: tr(lesson.text) })}`) : null,
       this.productStory(p),
-      h('div.actions', null, h('button.big-btn.mint', { onclick: () => this.closeModal(true) }, t(tier === 'flop' ? 'res.continue_flop' : 'res.continue'))),
+      h('div.actions', null,
+        // GT.6: from a product's box, straight to looking after it.
+        unlocked(this.state, 'products') && r.weeklySales.length > 0 ? h('button.big-btn.ghost', { id: 'res-products', onclick: () => this.showProducts() }, icon('box', 18), t('products.button')) : null,
+        h('button.big-btn.mint', { onclick: () => this.closeModal(true) }, t(tier === 'flop' ? 'res.continue_flop' : 'res.continue'))),
     );
     this.openModal(`results:${projectId}`, card);
     // The score counts up the first time (UI only; respects reduced motion).
@@ -1097,7 +1128,7 @@ export class GameUI {
     const specs = specializations(e);
     const p = getActiveProject(s);
     const working = ['coding', 'designing', 'testing', 'thinking'].includes(e.activity);
-    const task = working && p ? t('emp.task.project', { project: projectName(p) }) : working && s.contracts.active ? t('emp.task.contract', { client: s.contracts.active.clientId }) : t(`emp.activity.${e.activity}`);
+    const task = working && p ? t('emp.task.project', { project: projectName(p) }) : working && s.contracts.active ? t('emp.task.contract', { client: s.contracts.active.clientId }) : working && s.support ? t(`support.pill.${s.support.kind}`, { project: getProject(s, s.support.projectId)?.name ?? '' }) : t(`emp.activity.${e.activity}`);
     const since = e.id === s.founderId ? 1 : e.hiredDay ?? 1;
     const mems = memoriesOf(s, { empirianId: e.id }).slice(-5).reverse();
     const big = this.portraitOf(e.appearance, e.energy < 30 ? 'tired' : e.morale >= 60 ? 'happy' : 'neutral');
@@ -1268,6 +1299,60 @@ export class GameUI {
         : h('p.hint', null, t('contracts.none')),
     );
     this.openModal('contracts', card, { cls: 'desk-side' });
+  }
+
+  // ------------------------------------------------------------ GT.6 products
+  /** The studio's games after launch: how each one is doing, and looking after them. */
+  showProducts(): void {
+    const s = this.state;
+    const rel = s.projects.filter((p) => p.result).sort((a, b) => b.result!.releasedDay - a.result!.releasedDay);
+    const job = s.support;
+    const row = (p: Project) => {
+      const r = p.result!;
+      const st = productStatus(p);
+      const sup = supportOf(p);
+      const bugs = p.bugs.hidden + p.bugs.known;
+      const patchErr = patchBlock(s, p);
+      const updErr = updateBlock(s, p);
+      const working = job?.projectId === p.id;
+      const btn = (kind: 'patch' | 'update', err: string | null) => {
+        const reason = err && err !== 'busy' ? t(`support.block.${err}`) : null;
+        if (reason && (err === 'no_bugs' || err === 'updated_enough' || err === 'no_audience' || err === 'too_old')) return h('span.hint', { dataset: { block: `${kind}:${err}` } }, reason);
+        return h(`button.big-btn.small.${kind === 'patch' ? 'ghost' : 'mint'}`, {
+          dataset: { support: kind, project: p.id }, disabled: !!err,
+          title: err ? t(`support.block.${err}`) : t(`support.${kind}.hint`),
+          onclick: () => {
+            const res = this.game.dispatch({ type: 'start_support', projectId: p.id, kind });
+            if (!res.ok) return this.toast(t(`error.${res.error}`));
+            this.services.save();
+            this.closeModal(true);
+            this.toast(t(`support.started.${kind}`, { project: projectName(p) }), kind === 'patch' ? 'bug' : 'idea');
+          },
+        }, t(`support.${kind}.button`, { days: supportDays(s, p, kind) }));
+      };
+      return h('li.product', { dataset: { product: p.id, status: st } },
+        h('div.row', { style: { justifyContent: 'space-between', flexWrap: 'nowrap' } },
+          h('div', null, h('div.name', null, projectName(p)), h('div.hint', null, t('products.line', { topic: t(`topic.${p.topicId}.name`), day: r.releasedDay }))),
+          h('div.score-mini', null, fmtNum1(r.averageScore)),
+        ),
+        h('div.row', null,
+          h(`span.chip.status-${st}`, null, t(`products.status.${st}`)),
+          h('span.chip', null, icon('box', 16), t('res.units', { n: r.totalUnits })),
+          h('span.chip.good', null, icon('coin', 16), t('res.revenue', { n: r.revenue })),
+          bugs ? h('span.chip.bad', null, icon('bug', 16), t('products.bugs', { count: bugs })) : null,
+          sup.patches ? h('span.chip', null, t('products.patches', { count: sup.patches })) : null,
+          sup.updates ? h('span.chip', null, t('products.updates', { count: sup.updates })) : null,
+        ),
+        working ? h('p.hint', null, icon('code', 16), ` ${t(`support.working.${job!.kind}`, { pct: Math.min(1, job!.done / job!.work) })}`) : h('div.actions.left', null, btn('patch', patchErr), btn('update', updErr)),
+      );
+    };
+    const card = h('div.card.wide.products', { id: 'products-card' }, this.closeBtn(),
+      h('h2', null, t('products.title')),
+      h('p.sub', null, t('products.sub')),
+      job ? h('div.row', null, h('span.hint', null, t('support.busy_hint')), h('button.link', { id: 'support-cancel', onclick: () => { this.game.dispatch({ type: 'cancel_support' }); this.showProducts(); } }, t('support.cancel'))) : null,
+      rel.length ? h('ul.products-list', null, ...rel.map(row)) : h('p.hint', null, t('products.none')),
+    );
+    this.openModal('products', card);
   }
 
   private showContract(): void {

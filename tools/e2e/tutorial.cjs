@@ -29,7 +29,8 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await shot('t1-founder');
   await page.click('#start-game');
   await page.waitForTimeout(600);
-  check('2 meet: points at the founder in the office', (await step()) === 'meet' && (await page.isVisible('.tut-arrow')));
+  const meetDiag = () => page.evaluate(() => { const a = document.querySelector('.tut-arrow'); const r = a?.getBoundingClientRect(); return JSON.stringify({ coach: document.getElementById('tutorial-coach')?.dataset.step ?? null, arrow: a ? { display: a.style.display, x: Math.round(r.x), y: Math.round(r.y), w: r.width, h: r.height } : null, pos: window.__empires.scene.empirianScreenPos(window.__empires.game.state.founderId), modal: window.__empires.ui.modalKind, log: window.__empires.ui.modalLog.slice(-4) }); });
+  { const ok = (await step()) === 'meet' && (await page.isVisible('.tut-arrow')); check('2 meet: points at the founder in the office', ok, ok ? '' : await meetDiag()); }
   await shot('t2-meet');
   // Click the founder in the scene.
   const pos = await page.evaluate(() => window.__empires.scene.empirianScreenPos(window.__empires.game.state.founderId));
@@ -118,7 +119,7 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await shot('t-help');
   await page.click('#help-restart-tutorial');
   await page.waitForTimeout(400);
-  { const same = (await page.evaluate(() => JSON.stringify(window.__empires.game.state.projects))) === before; const ok = (await step()) === 'meet' && same; check('Help restarts the tutorial; the game is untouched', ok, ok ? '' : `same=${same} ` + await diag()); }
+  { const same = (await page.evaluate(() => JSON.stringify(window.__empires.game.state.projects))) === before; const ok = (await step()) === 'meet' && same; check('Help restarts the tutorial; the game is untouched', ok, ok ? '' : `same=${same} ` + await meetDiag() + ' ' + await diag()); }
 
   // Skip from the very first screen.
   await page.goto(`${base}/?fresh&debug&seed=41`);

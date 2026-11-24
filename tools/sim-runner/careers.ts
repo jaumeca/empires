@@ -11,11 +11,14 @@ import { canPlace } from '../../src/sim/systems/office';
 import { employees, freeWorkstations } from '../../src/sim/systems/team';
 import type { GameState, Rot } from '../../src/sim/model/state';
 import type { Command } from '../../src/sim/commands';
+import { patchBlock, updateBlock } from '../../src/sim/systems/products';
+import { unlocked } from '../../src/sim/systems/progress';
+import { SIM_CONFIG } from '../../src/sim/config';
 
 export const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 export const pct = (xs: number[], p: number) => [...xs].sort((a, b) => a - b)[Math.floor((xs.length - 1) * p)]!;
 
-type Next = { kind: 'game'; topicId: string; size: 'small' | 'medium'; budget: number; days: number } | { kind: 'contract' } | { kind: 'wait' };
+type Next = { kind: 'game'; topicId: string; size: 'small' | 'medium'; budget: number; days: number } | { kind: 'contract' } | { kind: 'wait' } | { kind: 'support'; projectId: string; job: 'patch' | 'update' };
 export interface Strategy {
   name: string;
   next: (s: GameState, ctx: Ctx) => Next;
@@ -30,6 +33,17 @@ const game = (topicId: string, size: 'small' | 'medium' = 'small', budget = 1500
 const kart = () => game('kart');
 const trendTopic = (s: GameState) => s.world.trends.find((x) => s.day - x.startDay <= 14 && s.day < x.peakDay)?.topicId ?? 'kart';
 
+/** GT.6: the product most worth looking after now (null = none). */
+function careFor(s: GameState): Next | null {
+  if (!unlocked(s, 'products')) return null;
+  for (const p of s.projects) {
+    if (!p.result) continue;
+    if (!updateBlock(s, p) && p.result.averageScore >= 7 && (p.result.salesEnded || p.result.weeklySales.length >= SIM_CONFIG.market.salesWeeks)) return { kind: 'support', projectId: p.id, job: 'update' };
+    if (!patchBlock(s, p) && p.bugs.hidden + p.bugs.known >= 6 && p.result.averageScore >= 6.5 && !p.result.salesEnded) return { kind: 'support', projectId: p.id, job: 'patch' };
+  }
+  return null;
+}
+
 export const STRATEGIES: Strategy[] = [
   { name: 'A games only (small)', next: () => kart() },
   { name: 'B growth (medium when rich)', next: (s, c) => (c.games >= 2 && s.company.money > 14000 ? game('kart', 'medium', 3000, 98) : kart()) },
@@ -43,6 +57,8 @@ export const STRATEGIES: Strategy[] = [
   { name: 'J realistic + hire 1', hire: 1, next: (s, c) => (c.games > 0 && (c.lastScore < 6.5 || s.company.money < 7000) && s.contracts.offers.length && !c.justContracted ? { kind: 'contract' } : c.games >= 2 && s.company.money > 14000 ? game('kart', 'medium', 3000, 98) : kart()), shopping: [{ defId: 'pc_dev', mount: true }, { defId: 'chair_ergo', mount: true }, { defId: 'coffee_machine' }, { defId: 'whiteboard' }, { defId: 'sofa' }, { defId: 'plant_tall' }] },
   { name: 'K realistic + hire 2', hire: 2, next: (s, c) => (c.games > 0 && (c.lastScore < 6.5 || s.company.money < 7000) && s.contracts.offers.length && !c.justContracted ? { kind: 'contract' } : c.games >= 2 && s.company.money > 14000 ? game('kart', 'medium', 3000, 98) : kart()), shopping: [{ defId: 'pc_dev', mount: true }, { defId: 'chair_ergo', mount: true }, { defId: 'coffee_machine' }, { defId: 'whiteboard' }, { defId: 'sofa' }, { defId: 'plant_tall' }] },
   { name: 'L small games + hire 1', hire: 1, next: () => kart() },
+  // GT.6: between games, patch a buggy hit and give good games new content when they can.
+  { name: 'M games + look after products', next: (s) => careFor(s) ?? kart() },
   { name: 'G early trends + growth', next: (s, c) => (c.games >= 2 && s.company.money > 14000 ? game(trendTopic(s), 'medium', 3000, 98) : game(trendTopic(s))) },
 ];
 
@@ -64,7 +80,7 @@ export function career(seed: number, st: Strategy, horizon = 365) {
   g.dispatch({ type: 'setup_founder', name: 'T', companyName: 'T', appearance: DEFAULT_APPEARANCE });
   const ctx: Ctx = { games: 0, lastScore: 10 };
   let minMoney = g.state.company.money;
-  let spentOffice = 0, contracts = 0, late = 0, hires = 0, hireRetryDay = 0;
+  let spentOffice = 0, contracts = 0, late = 0, hires = 0, hireRetryDay = 0, supports = 0;
   const decisions = new Set<string>();
   const scores: number[] = [];
   const shop = [...(st.shopping ?? [])];
@@ -111,8 +127,9 @@ export function career(seed: number, st: Strategy, horizon = 365) {
       shop.shift();
       continue;
     }
-    if (!s.activeProjectId && !s.contracts.active && s.day >= idleUntil) {
+    if (!s.activeProjectId && !s.contracts.active && !s.support && s.day >= idleUntil) {
       const n = st.next(s, ctx);
+      if (n.kind === 'support') { if (g.dispatch({ type: 'start_support', projectId: n.projectId, kind: n.job }).ok) { supports++; continue; } }
       if (n.kind === 'contract' && s.contracts.offers.length) {
         const best = [...s.contracts.offers].sort((a, b) => b.payment / estimateDays(s, b.work, b.focus) - a.payment / estimateDays(s, a.work, a.focus))[0]!;
         g.dispatch({ type: 'accept_contract', offerId: best.id });
@@ -134,7 +151,7 @@ export function career(seed: number, st: Strategy, horizon = 365) {
   }
   const f = g.state.empirians[0]!;
   return {
-    money: g.state.company.money, minMoney, games: scores.length, score: mean(scores), contracts, late,
+    money: g.state.company.money, minMoney, supports, games: scores.length, score: mean(scores), contracts, late,
     spentOffice, hires, salaries: g.state.hiring.salariesPaid, team: g.state.empirians.length, rep: g.state.company.reputation, skill: `${f.skills.tech.toFixed(1)}/${f.skills.design.toFixed(1)}/${f.skills.creativity.toFixed(1)}/${f.skills.management.toFixed(1)}`, decisions,
     unlockDays: g.state.progress?.days ?? {},
     relations: (g.state.relations ?? []).map((r) => ({ bond: Math.round(r.bond), shared: r.shared, hits: r.hits, days: r.days, mentor: !!r.mentor, mentorDone: !!r.mentorDone })),
