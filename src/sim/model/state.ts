@@ -115,7 +115,7 @@ export type UnlockId = 'equipment' | 'planning' | 'newspaper' | 'contracts' | 't
 export type ProjectProfile = 'indie' | 'ambitious' | 'standard';
 
 /** A client of contract work (D.4): trust −10…10 and jobs done. */
-export interface ClientRelation { jobs: number; trust: number }
+export interface ClientRelation { jobs: number; trust: number; /** 0.20.0: already recommended the studio to someone. */ referred?: boolean }
 
 /** Track record (F3.8 / D-059): what players and clients remember, −10…10 each. */
 export type FameAspect = 'quality' | 'reliability' | 'innovation';
@@ -388,6 +388,8 @@ export interface ContractOffer {
   days: number;
   payment: number;
   expiresDay: number;
+  /** 0.20.0: a loyal client recommended the studio to this one. */
+  referredBy?: string;
 }
 
 export interface ActiveContract extends ContractOffer {

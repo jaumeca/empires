@@ -210,7 +210,10 @@ export const STORY_EVENTS: EventDef[] = [
       // Disagreements surface where relationships are weakest (E.3); ties are decided by the seed.
       const pairs = staff.flatMap((a) => s.empirians.filter((b) => b.id !== a.id).map((b) => [a, b] as const));
       const lowest = Math.min(...pairs.map(([a, b]) => bond(s, a.id, b.id)));
-      const [a, b] = pick(s.rng.events, pairs.filter(([x, y]) => bond(s, x.id, y.id) === lowest));
+      const [x, y] = pick(s.rng.events, pairs.filter(([x, y]) => bond(s, x.id, y.id) === lowest));
+      // Personality (0.20.0): a perfectionist is the one who wants to redo it properly; a night owl, to push on.
+      const wantsClean = (e: Empirian) => (e.trait === 'perfectionist' ? 2 : 0) - (e.trait === 'night_owl' ? 1 : 0);
+      const [a, b] = wantsClean(y) > wantsClean(x) ? [y, x] : [x, y];
       return { projectId: p.id, aId: a.id, bId: b.id };
     },
     build: (s, c) => {

@@ -103,7 +103,7 @@ function dayBoundary(state: GameState, emit: EventSink): void {
     projectDay(state, project);
     maybeDeadlineDecision(state, project, founder, emit);
   }
-  contractsDay(state);
+  contractsDay(state, emit);
   hiringDay(state, emit);
   // Relationships (E.3): a working day together, mentoring, tension fading.
   relationsDay(state, (!!project && !resting && project.phase !== 'released') || (!project && (!!state.contracts.active || !!state.support)), emit, project?.pace === 'crunch' && !resting);

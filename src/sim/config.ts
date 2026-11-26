@@ -118,6 +118,8 @@ export const SIM_CONFIG = {
   /** External contracts (LS.8). */
   contracts: {
     maxOffers: 3,
+    /** 0.20.0: a recommended client pays a bit better. */
+    referralPay: 1.05,
     ratePerPoint: 40,
     /** Extra days on top of the estimate (min, max share). */
     slack: [0.05, 0.5] as [number, number],

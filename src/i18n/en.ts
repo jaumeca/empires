@@ -1163,4 +1163,5 @@ export const en: Record<string, string> = {
   "np.idea_needs": "Needs: {what}",
   "error.idea_gone": "That idea is gone.",
   "error.idea_not_fit": "The plan doesn't follow that idea (topic or feature).",
+  "ledger.contract.referral": "{client:client} is so happy with you that they recommended you to {other:client}: there's a slightly better-paid offer from them.",
 };

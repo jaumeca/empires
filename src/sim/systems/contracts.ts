@@ -13,6 +13,7 @@ import { traitSpeed, workstationEffects } from './team';
 import { teamSpeedFactor } from '../estimates';
 import { gainXp } from './progression';
 import { toolMultiplier } from './world';
+import { hashUnit } from './features';
 
 /**
  * External contracts (LS.8): the first alternative activity. Predictable income
@@ -91,7 +92,7 @@ function makeOffer(state: GameState): ContractOffer {
 }
 
 /** Daily: drop expired offers, refresh weekly up to the maximum. */
-export function contractsDay(state: GameState): void {
+export function contractsDay(state: GameState, emit: EventSink = () => {}): void {
   const c = state.contracts;
   c.offers = c.offers.filter((o) => o.expiresDay > state.day);
   // Clients start calling once the studio has a first game on sale (D-062).
@@ -103,7 +104,39 @@ export function contractsDay(state: GameState): void {
     // At least one new offer each week (when there is room), sometimes more.
     if (c.offers.length < K().maxOffers) c.offers.push(makeOffer(state));
     while (c.offers.length < K().maxOffers && nextFloat(state.rng.people) < 0.6) c.offers.push(makeOffer(state));
+    referral(state, emit);
   }
+}
+
+/**
+ * Word of mouth (0.20.0): a loyal, happy client recommends the studio once to
+ * someone new — a news item, not a window: a better-paid offer appears with a note.
+ * Its own deterministic draw (no luck reshuffle for the rest of the economy).
+ */
+function referral(state: GameState, emit: EventSink): void {
+  const c = state.contracts;
+  const fan = Object.entries(c.clients ?? {}).find(([, r]) => r.jobs >= A().loyalJobs && r.trust > 0 && !r.referred);
+  if (!fan || hashUnit(state.seed, `day${state.day}`, 'referral') > 0.5) return;
+  const fresh = CLIENTS.filter((id) => id !== fan[0] && clientOf(state, id).jobs === 0);
+  if (!fresh.length) return;
+  const to = fresh[Math.floor(hashUnit(state.seed, `day${state.day}`, 'referral-to') * fresh.length)]!;
+  // Built with a copy of the random stream, then restored: the rest of the economy keeps its luck.
+  const saved = JSON.parse(JSON.stringify(state.rng.people));
+  const base = makeOffer(state);
+  state.rng.people = saved;
+  const offer: ContractOffer = { ...base, clientId: to, payment: Math.round((base.payment * K().referralPay) / 50) * 50, expiresDay: state.day + 14, referredBy: fan[0] };
+  // A full list: the recommendation takes the place of the offer that expires soonest (no extra draws).
+  if (c.offers.length >= K().maxOffers) {
+    const soonest = [...c.offers].filter((o) => !o.referredBy).sort((x, y) => x.expiresDay - y.expiresDay)[0];
+    if (!soonest) return;
+    c.offers = c.offers.filter((o) => o !== soonest);
+  }
+  c.offers.push(offer);
+  c.clients = { ...(c.clients ?? {}), [fan[0]]: { ...fan[1], referred: true } };
+  const text = { key: 'ledger.contract.referral', params: { client: fan[0], other: to } };
+  record(state, { kind: 'contract', text, causes: [], tone: 1 });
+  remember(state, `referral:${fan[0]}`, 'decision', text, { tone: 1 }, emit);
+  emit({ type: 'client_referral', clientId: fan[0], offerId: offer.id, severity: 'important' });
 }
 
 export function acceptContract(state: GameState, offerId: string): string | null {

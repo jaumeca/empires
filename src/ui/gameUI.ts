@@ -383,6 +383,14 @@ export class GameUI {
           this.launchBanner(e.projectId);
           setTimeout(() => this.showResults(e.projectId), 1800);
           break;
+        case 'client_referral': {
+          // 0.20.0: news, not a window. The better offer waits with the others.
+          const o = this.state.contracts.offers.find((x) => x.id === e.offerId);
+          this.sfx('notify');
+          this.toast(t('ledger.contract.referral', { client: e.clientId, other: o?.clientId ?? '' }), 'heart');
+          this.renderHud(true);
+          break;
+        }
         case 'inspiration': {
           // D-068: a quiet note (no window); the idea waits in the new-game dialog.
           const i = (this.state.company.inspirations ?? []).find((x) => x.id === e.inspirationId);

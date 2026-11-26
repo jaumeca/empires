@@ -143,7 +143,7 @@ Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, of
 | CA.10 | Rendimiento: precompilar shaders diferidos | ✅ 0.18.0 (sin tirones de 0,6–1,6 s; arranque no más lento) |
 | CA.3.2/3.3 | Catálogo ampliado, cajas físicas de juegos coleccionables, trofeos y recuerdos | ✅ 0.19.0 `productArt.ts`, `models/collection.ts`, `tests/render/collection.test.ts`, e2e `collection.cjs` (D-067) |
 | CA.8 | Ideas e inspiración | ✅ 0.19.0 `systems/inspiration.ts`, no-dominancia en `economy.test.ts` (D-068) |
-| CA.6 | Acontecimientos contextuales (revisión de eventos, ambientales/noticias/conversaciones/decisiones) | ⬜ siguiente |
+| CA.6 | Acontecimientos contextuales (revisión de eventos, ambientales/noticias/conversaciones/decisiones) | 🟦 1.ª parte en desarrollo (D-069): recomendación de clientes, personalidad en el debate; sin publicar |
 | CA.9/10 | Ritmo de progresión y calidad de vida | ⬜ |
 
 ---
