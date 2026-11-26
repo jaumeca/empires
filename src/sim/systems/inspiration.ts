@@ -8,6 +8,7 @@ import { hashUnit } from './features';
 import { relationsOf } from './relations';
 import { remember } from './story';
 import { unlocked } from './progress';
+import { demandFactor } from './world';
 
 /**
  * Ideas and inspiration (0.19.0, D-068). A light mechanic: the people of the
@@ -25,6 +26,8 @@ import { unlocked } from './progress';
 export const IDEA_GAP = 12;
 export const IDEA_MAX = 3;
 export const IDEA_BONUS = 0.3;
+/** Days of a production without any idea before someone starts daydreaming about the next game. */
+export const QUIET_DAYS = 25;
 /** Following an idea makes the game a bit more ambitious: more work (time and salaries). */
 export const IDEA_WORK = 0.12;
 
@@ -38,8 +41,7 @@ function add(s: GameState, idea: Omit<Inspiration, 'id' | 'day'>, emit: EventSin
   ideas.push(full);
   if (ideas.length > IDEA_MAX) ideas.shift();
   s.company.lastIdeaDay = s.day;
-  const by = s.empirians.find((e) => e.id === idea.by);
-  remember(s, `idea:${full.id}`, 'decision', ideaText(s, full), { tone: 1, empirianIds: by ? [by.id] : undefined }, emit);
+  // The memory comes when a game follows it (see useIdea): that is what the story keeps.
   emit({ type: 'inspiration', inspirationId: full.id, empirianId: idea.by, severity: 'info' });
 }
 
@@ -69,6 +71,17 @@ export function inspirationDay(s: GameState, emit: EventSink): void {
     const score = last.result!.averageScore;
     if (score >= 8) return add(s, { kind: 'topic', source: 'sequel', topicId: last.topicId, by: founder.id, project: last.name }, emit);
     if (score < 6) return add(s, { kind: 'polish', source: 'lesson', by: founder.id, project: last.name }, emit);
+  }
+  // A long production with nothing new (0.20.0, measured gaps of up to 79 days): someone starts
+  // daydreaming about the next game. Still at most one idea every IDEA_GAP days and 3 waiting.
+  const active = s.projects.find((p) => p.id === s.activeProjectId);
+  const quietSince = Math.max(s.company.lastIdeaDay ?? -999, active?.startDay ?? -999);
+  if (active && s.day - quietSince >= QUIET_DAYS) {
+    const dreamer = [...s.empirians].sort((a, b) => b.skills.creativity - a.skills.creativity || (a.id < b.id ? -1 : 1))[0]!;
+    // What the market wants right now (an opportunity, not a random wish).
+    const others = TOPICS.filter((t) => t.id !== active.topicId);
+    const topic = [...others].sort((a, b) => demandFactor(s, b.id) - demandFactor(s, a.id) || hashUnit(s.seed, a.id, `d${s.day}`) - hashUnit(s.seed, b.id, `d${s.day}`))[0]!;
+    return add(s, { kind: 'topic', source: 'daydream', topicId: topic.id, by: dreamer.id }, emit);
   }
   if (roll > 0.35) return; // most days, nothing
   // 2. Two friends chatting today: a combination (their favourite topic + a feature that suits it).
@@ -108,6 +121,7 @@ export function useIdea(s: GameState, p: Project, ideaId: string): string | null
   s.company.inspirations = ideas.filter((x) => x.id !== ideaId);
   const id = record(s, { kind: 'decision', text: { key: 'ledger.idea_used', params: { ...ideaText(s, i).params, game: p.name, source: i.source } }, causes: [], tone: 1, projectId: p.id });
   p.ceilingMods.push({ amount: IDEA_BONUS, causeId: id });
+  remember(s, `idea:${i.id}`, 'decision', { key: 'ledger.idea_used', params: { ...ideaText(s, i).params, game: p.name, source: i.source } }, { tone: 1, empirianIds: i.by ? [i.by] : undefined, projectId: p.id });
   p.requiredPoints = Math.round(p.requiredPoints * (1 + IDEA_WORK));
   return null;
 }

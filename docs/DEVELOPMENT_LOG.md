@@ -4,6 +4,21 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-26 — Decimotercera sesión (3.ª parte): acontecimientos contextuales y ritmo (0.20.0)
+
+### Resumen
+- **Recomendación de clientes** (noticia sin ventana) y **personalidad en el debate** (D-069).
+- **Ritmo:** el simulador de carreras registra los días con algo notable; los periodos tranquilos largos (hasta 79 días con equipo y juegos medianos) se acortan con ideas de «ensoñación» durante producciones largas (25–31 días como máximo).
+
+### Problemas encontrados
+- Una prueba de la recomendación era **vacía**: en partidas normales la lista de ofertas está llena y la recomendación nunca ocurría. Ahora sustituye a la oferta que antes caduca y la prueba exige que ocurra.
+- Exigir que no cambiara la suerte del resto de la economía era imposible (cambiar la lista de ofertas cambia sorteos posteriores): la prueba comprueba determinismo y el equilibrio se comprueba con las carreras.
+- La prima del 15 % llevaba los encargos a 0,755 del dinero de solo juegos (límite 0,75); con 5 %, 0,744.
+- Ideas de ensoñación al azar: «seguir siempre» bajaba al 87 % (trampa). Ahora eligen el tema con más demanda; la estrategia del simulador planifica +5 días al seguir una idea; resultado: mejor nota, menos dinero (intercambio).
+- Cada idea dejaba un recuerdo y el guardado volvió a superar su presupuesto: el recuerdo se crea al usar la idea.
+
+---
+
 ## 2026-11-26 — Decimotercera sesión (2.ª parte): recuerdos físicos, identidad e ideas (0.19.0)
 
 ### Resumen

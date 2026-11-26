@@ -1183,4 +1183,5 @@ export const es: Record<string, string> = {
   "error.idea_gone": "Esa idea ya no está.",
   "error.idea_not_fit": "El plan no sigue esa idea (tema o funcionalidad).",
   "ledger.contract.referral": "{client:client} está tan contenta con vosotros que os ha recomendado a {other:client}: tenéis una oferta suya, algo mejor pagada.",
+  "idea.daydream": "Mientras trabaja, {name} no deja de imaginar un juego de {topic:topic} para después.",
 };

@@ -60,7 +60,7 @@ export const STRATEGIES: Strategy[] = [
   // GT.6: between games, patch a buggy hit and give good games new content when they can.
   { name: 'M games + look after products', next: (s) => careFor(s) ?? kart() },
   // D-068: always follow the team's oldest idea when there is one (its topic and feature).
-  { name: 'N games following the team\'s ideas', next: (s) => { const i = (s.company.inspirations ?? [])[0]; return i ? { ...game(i.topicId ?? 'kart'), features: i.featureId ? [i.featureId] : undefined, ideaId: i.id } : kart(); } },
+  { name: 'N games following the team\'s ideas', next: (s) => { const i = (s.company.inspirations ?? [])[0]; return i ? { ...game(i.topicId ?? 'kart', 'small', 1500, 47), features: i.featureId ? [i.featureId] : undefined, ideaId: i.id } : kart(); } }, // +12 % work → ~+5 days, as a player would plan
   { name: 'G early trends + growth', next: (s, c) => (c.games >= 2 && s.company.money > 14000 ? game(trendTopic(s), 'medium', 3000, 98) : game(trendTopic(s))) },
 ];
 
@@ -86,7 +86,10 @@ export function career(seed: number, st: Strategy, horizon = 365) {
   const decisions = new Set<string>();
   const scores: number[] = [];
   const shop = [...(st.shopping ?? [])];
-  g.onUpdate((ev) => { for (const e of ev) if (e.type === 'contract_done') { contracts++; if (e.lateDays > 0) late++; } });
+  // 0.20.0: days with something notable happening (to find long quiet stretches).
+  const NOTABLE = new Set(['unlock', 'decision_requested', 'inspiration', 'project_released', 'achievement', 'product_happening', 'client_referral', 'hired', 'contract_done', 'support_done', 'fame', 'relation']);
+  const notable: number[] = [];
+  g.onUpdate((ev) => { for (const e of ev) { if (e.type === 'contract_done') { contracts++; if (e.lateDays > 0) late++; } if (NOTABLE.has(e.type) && notable[notable.length - 1] !== g.state.day) notable.push(g.state.day); } });
   let pid: string | null = null;
   let idleUntil = 0;
   while (g.state.day < horizon) {
@@ -153,7 +156,7 @@ export function career(seed: number, st: Strategy, horizon = 365) {
   }
   const f = g.state.empirians[0]!;
   return {
-    money: g.state.company.money, minMoney, supports, games: scores.length, score: mean(scores), contracts, late,
+    money: g.state.company.money, minMoney, supports, notable, games: scores.length, score: mean(scores), contracts, late,
     spentOffice, hires, salaries: g.state.hiring.salariesPaid, team: g.state.empirians.length, rep: g.state.company.reputation, skill: `${f.skills.tech.toFixed(1)}/${f.skills.design.toFixed(1)}/${f.skills.creativity.toFixed(1)}/${f.skills.management.toFixed(1)}`, decisions,
     unlockDays: g.state.progress?.days ?? {},
     relations: (g.state.relations ?? []).map((r) => ({ bond: Math.round(r.bond), shared: r.shared, hits: r.hits, days: r.days, mentor: !!r.mentor, mentorDone: !!r.mentorDone })),

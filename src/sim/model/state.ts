@@ -79,7 +79,7 @@ export interface Inspiration {
   id: string;
   day: number;
   kind: 'topic' | 'combo' | 'polish';
-  source: 'sequel' | 'lesson' | 'chat' | 'curious' | 'community';
+  source: 'sequel' | 'lesson' | 'chat' | 'curious' | 'community' | 'daydream';
   topicId?: string;
   featureId?: string;
   /** Who had it (and with whom, for a chat). */

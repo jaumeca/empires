@@ -52,14 +52,15 @@ describe('economy review (LS.9)', () => {
     expect(wins).toBeLessThan(seeds.length);
   });
 
-  it('following the team\'s ideas (D-068) is a bet, not a dominant strategy', () => {
+  it('following the team\'s ideas (D-068) is a trade-off: better games, not more money', () => {
     const N = year('N');
     const ratio = money(N) / money(A);
-    expect(ratio).toBeGreaterThan(0.93);
-    expect(ratio).toBeLessThan(1.06);
-    const wins = N.filter((m, i) => m.money > A[i]!.money).length;
-    expect(wins).toBeGreaterThan(1);
-    expect(wins).toBeLessThan(seeds.length - 1);
+    // Not dominant: it does not win on money in most seeds…
+    expect(ratio).toBeLessThan(1.03);
+    expect(N.filter((m, i) => m.money > A[i]!.money).length).toBeLessThan(seeds.length / 2 + 1);
+    // …not a trap either: the games really are better, at a moderate cost.
+    expect(mean(N.map((r) => r.score))).toBeGreaterThan(mean(A.map((r) => r.score)) + 0.15);
+    expect(ratio).toBeGreaterThan(0.88);
   });
 
   it('growing to medium games pays more when the office keeps the founder rested', () => {

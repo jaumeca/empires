@@ -143,8 +143,9 @@ Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, of
 | CA.10 | Rendimiento: precompilar shaders diferidos | ✅ 0.18.0 (sin tirones de 0,6–1,6 s; arranque no más lento) |
 | CA.3.2/3.3 | Catálogo ampliado, cajas físicas de juegos coleccionables, trofeos y recuerdos | ✅ 0.19.0 `productArt.ts`, `models/collection.ts`, `tests/render/collection.test.ts`, e2e `collection.cjs` (D-067) |
 | CA.8 | Ideas e inspiración | ✅ 0.19.0 `systems/inspiration.ts`, no-dominancia en `economy.test.ts` (D-068) |
-| CA.6 | Acontecimientos contextuales (revisión de eventos, ambientales/noticias/conversaciones/decisiones) | 🟦 1.ª parte en desarrollo (D-069): recomendación de clientes, personalidad en el debate; sin publicar |
-| CA.9/10 | Ritmo de progresión y calidad de vida | ⬜ |
+| CA.6 | Acontecimientos contextuales | 🟦 1.ª parte 0.20.0 (D-069): recomendación de clientes, personalidad en el debate; faltan más decisiones nuevas (oficina frente a proyecto, juego antiguo de moda como evento propio) |
+| CA.9 | Ritmo de progresión: periodos tranquilos medidos y acortados | 🟦 0.20.0 (ideas de «ensoñación»; simulador registra días notables) |
+| CA.10 | Calidad de vida (clics, paneles, cámara, móvil, atajos) | ⬜ |
 
 ---
 
