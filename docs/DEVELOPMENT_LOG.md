@@ -17,6 +17,9 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 - Ideas de ensoñación al azar: «seguir siempre» bajaba al 87 % (trampa). Ahora eligen el tema con más demanda; la estrategia del simulador planifica +5 días al seguir una idea; resultado: mejor nota, menos dinero (intercambio).
 - Cada idea dejaba un recuerdo y el guardado volvió a superar su presupuesto: el recuerdo se crea al usar la idea.
 
+### Pruebas ejecutadas (0.20.0)
+- `npx vitest run`: **335 pruebas**. E2E en serie: 26 suites en verde a la primera + auditoría de primeros minutos. Actualización real 0.19.0 → 0.20.0 sin errores. Galería sin cambios visuales nuevos (56).
+
 ---
 
 ## 2026-11-26 — Decimotercera sesión (2.ª parte): recuerdos físicos, identidad e ideas (0.19.0)
