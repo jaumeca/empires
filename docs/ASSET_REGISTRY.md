@@ -25,6 +25,10 @@ Todo recurso que entre en el repositorio (modelos, texturas, animaciones, fuente
 | A-016 | Modelos voxel de trofeos: trofeo de oro, placa, foto del equipo, bonsái, cartel luminoso, cactus de la suerte | `src/render/models/catalogModels.ts` | Claude Code | Código (definición voxel) | Todos los derechos reservados | Original | 2026-11-16 |
 | A-015 | Nombres de pila para Empirians generados (40) e icono pixel-art de equipo | `src/content/names.ts`, `src/render/icons.ts` | Claude Code | Código | Todos los derechos reservados | Nombres comunes; personas ficticias | 2026-11-16 |
 | A-014 | Nombres ficticios: competidores (PixelForge, ByteBakery, Nimbus Games, LoopLab), periódico "Empires Daily", clientes (Panadería, Gimnasio, Museo, Startup, Escuela, Floristería Pétalo) | `src/sim/systems/world.ts`, `contracts.ts`, `src/i18n/*` | Claude Code | Código | Todos los derechos reservados | Ficticios (D-021); comprobar antes del lanzamiento que no coinciden con marcas reales | 2026-11-16 |
+| A-020 | Objetos personales de escritorio (papeles, globo, foto, lata, cactus) | `src/render/models/personal.ts` | Claude Code | Código (definición voxel) | Todos los derechos reservados | Original (0.18.0) | 2026-11-26 |
+| A-021 | Vapor de taza y luz del ordenador | `src/render/officeScene.ts` (`deskLife`) | Claude Code | Código | Todos los derechos reservados | Original (0.18.0) | 2026-11-26 |
+| A-022 | Identidad sonora: clics, confirmaciones, compras, colocar, desbloqueo, publicación, celebración, avisos, teclados, ambiente | `src/audio/sound.ts` | Claude Code | Código (síntesis Web Audio en tiempo real; sin archivos de audio) | Todos los derechos reservados | Original por construcción: notas y ruido generados por código (0.18.0) | 2026-11-26 |
+| A-023 | Gestos de los Empirians (estirarse, bostezar, inspiración, saludo…) | `src/render/gestures.ts` | Claude Code | Código (animación procedural) | Todos los derechos reservados | Original (0.18.0) | 2026-11-26 |
 
 Tipografía: la interfaz usa la fuente del sistema (`system-ui`/`ui-rounded`); no se incluye ningún archivo de fuente. Sin sonidos ni música todavía.
 

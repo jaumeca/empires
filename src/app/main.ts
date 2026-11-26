@@ -10,6 +10,7 @@ import { DEBUG_SAVE_PREFIX, downloadText, LocalSaveStorage, onAppHidden, pickTex
 import { BUILD_INFO } from './buildInfo';
 import { WorldClock } from '../render/worldClock';
 import { CATALOGS, setLocale, t, type Locale } from '../i18n/i18n';
+import { SoundEngine } from '../audio/sound';
 
 const GAME_VERSION = BUILD_INFO.version;
 const params = new URLSearchParams(location.search);
@@ -50,7 +51,7 @@ const savedCam = (() => { try { return localStorage.getItem('empires.camera'); }
 const camMode: CameraMode = (params.get('cam') as CameraMode) ?? (savedCam === 'iso' ? 'iso' : 'dim');
 const scene = new OfficeScene(document.getElementById('stage')!, camMode);
 
-const services = {
+const services: import('../ui/gameUI').UIServices = {
   save(): void {
     if (!saves.save(game.state)) ui.toast(t('toast.save_failed'), 'alert');
   },
@@ -86,6 +87,12 @@ const services = {
   },
 };
 
+// Sound (0.18.0): created on the first gesture (autoplay rules); preferences in this browser only.
+const AC = (window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }).AudioContext
+  ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+const sound = new SoundEngine(AC && !params.has('mute') ? () => new AC() : null, (() => { try { return localStorage; } catch { return null; } })());
+for (const ev of ['pointerdown', 'keydown'] as const) window.addEventListener(ev, () => sound.unlock(), { capture: true });
+services.sound = sound;
 const ui = new GameUI(document.getElementById('ui')!, game, scene, services, debug, BUILD_INFO);
 let pending: SimEvent[] = [];
 game.onUpdate((events) => pending.push(...events));
@@ -135,6 +142,12 @@ function loop(now: number): void {
     ui.handleEvents(evs);
   }
   scene.update(world.dt, world.time, game.clock.speed);
+  // World sounds only while the world runs (the pause silences keyboards and the room, not the interface).
+  {
+    const s = game.state;
+    const typists = s.setupComplete ? s.empirians.filter((e) => e.activity === 'coding' || e.activity === 'testing').length : 0;
+    sound.world(world.dt, s.setupComplete && game.clock.speed > 0, typists, game.clock.speed);
+  }
   ui.frame(fps);
   requestAnimationFrame(loop);
 }
@@ -147,6 +160,7 @@ if (debug) {
     scene,
     world,
     ui,
+    sound,
     /** Advance n ticks instantly (test helper). */
     advance(n: number) { for (let i = 0; i < n && !game.state.pendingDecision; i++) game.tick(); },
     /** Advance n ticks, answering any question with its first option (test helper). */

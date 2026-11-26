@@ -1119,4 +1119,10 @@ export const en: Record<string, string> = {
   "unlock.products.name": "Your games",
   "unlock.products.text": "Your games live on: you can patch them or give them new content (box button).",
   "memory.unlock.products": "The first games have a life of their own now, and someone has to look after them.",
+  "sound.title": "Sound",
+  "sound.master": "Main volume",
+  "sound.effects": "Effects",
+  "sound.ambience": "Office ambience",
+  "sound.mute": "Mute",
+  "sound.tap_to_start": "Sound starts with your first tap or key press (browser rule).",
 };

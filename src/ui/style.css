@@ -436,3 +436,10 @@ label.check input { width: 20px; height: 20px; }
 .products-list .actions.left { justify-content: flex-start; gap: 8px; margin: 0; flex-wrap: wrap; }
 .products-list .big-btn.small { padding: 6px 12px; font-size: 13px; }
 .pill.support .phase { color: var(--mint-dark); }
+
+/* 0.18.0: sound settings in the menu */
+.section.sound { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.sound-row { display: grid; grid-template-columns: 1fr 180px; align-items: center; gap: 12px; font-weight: 700; font-size: 14px; text-transform: none; }
+.sound-row input[type="range"] { width: 100%; accent-color: var(--mint-dark); }
+.sound-row input[type="checkbox"] { justify-self: start; }
+.sound-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--mint-dark); }

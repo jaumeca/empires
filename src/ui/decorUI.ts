@@ -21,6 +21,8 @@ interface Host {
   state(): GameState;
   dispatch(cmd: Command): CommandResult;
   toast(text: string, icon?: IconName): void;
+  /** Sound (0.18.0), optional. */
+  sfx?(s: 'buy' | 'place' | 'error' | 'coin'): void;
   save(): void;
   pause(): () => void; // returns a restore function
   refreshHud(): void;
@@ -207,8 +209,9 @@ export class DecorUI {
     const res = p.mode === 'buy'
       ? this.host.dispatch({ type: 'buy_item', defId: p.defId, x: p.x, z: p.z, rot: p.rot })
       : this.host.dispatch({ type: 'move_item', uid: p.uid!, x: p.x, z: p.z, rot: p.rot });
-    if (!res.ok) return this.host.toast(t(`error.${res.error}`), 'alert');
-    if (p.mode === 'buy') this.host.toast(t('decor.bought', { item: p.defId }), 'decor');
+    if (!res.ok) { this.host.sfx?.('error'); return this.host.toast(t(`error.${res.error}`), 'alert'); }
+    if (p.mode === 'buy') { this.host.sfx?.('buy'); this.host.toast(t('decor.bought', { item: p.defId }), 'decor'); }
+    this.host.sfx?.('place');
     this.placement = null;
     this.scene.setGhost(null);
     this.render();
@@ -236,15 +239,16 @@ export class DecorUI {
   private mount(defId: string, deskUid: string): void {
     this.pickDeskFor = null;
     const res = this.host.dispatch({ type: 'mount_item', defId, deskUid });
-    if (!res.ok) this.host.toast(t(`error.${res.error}`), 'alert');
-    else this.host.toast(t('decor.bought', { item: defId }), 'decor');
+    if (!res.ok) { this.host.sfx?.('error'); this.host.toast(t(`error.${res.error}`), 'alert'); }
+    else { this.host.sfx?.('buy'); this.host.toast(t('decor.bought', { item: defId }), 'decor'); }
     this.render();
   }
 
   private sell(it: PlacedItem): void {
     const before = this.host.state().company.money;
     const res = this.host.dispatch({ type: 'sell_item', uid: it.uid });
-    if (!res.ok) return this.host.toast(t(`error.${res.error}`), 'alert');
+    if (!res.ok) { this.host.sfx?.('error'); return this.host.toast(t(`error.${res.error}`), 'alert'); }
+    this.host.sfx?.('coin');
     this.host.toast(t('decor.sold', { refund: this.host.state().company.money - before }), 'coin');
     this.selected = null;
     this.render();

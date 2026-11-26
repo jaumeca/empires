@@ -1,3 +1,4 @@
+import type { AudioPrefs, Sfx, SoundEngine } from '../audio/sound';
 import type { Speed } from '../sim/config';
 import type { SimEvent } from '../sim/core/events';
 import { PROJECT_LIMITS } from '../sim/commands';
@@ -45,6 +46,8 @@ export interface UIServices {
   newGame(): void;
   setCamera(mode: 'iso' | 'dim'): void;
   setLocale(l: Locale): void;
+  /** Sound (0.18.0); optional: the game works the same without it. */
+  sound?: SoundEngine;
 }
 
 const icon = (name: IconName, size = 22) => h('img.px', { src: iconUrl(name, 32), width: size, height: size, alt: '' });
@@ -87,10 +90,13 @@ export class GameUI {
       toast: (text, ic) => this.toast(text, ic),
     });
     window.addEventListener('keydown', (ev) => this.onKey(ev));
+    // A soft click on every button (0.18.0); specific moments add their own sound.
+    root.addEventListener('pointerdown', (ev) => { if ((ev.target as Element | null)?.closest?.('button:not([disabled])')) this.sfx('click'); });
     this.decor = new DecorUI(root, scene, {
       state: () => this.game.state,
       dispatch: (cmd) => this.game.dispatch(cmd),
       toast: (text, ic) => this.toast(text, ic),
+      sfx: (s) => this.sfx(s),
       save: () => this.services.save(),
       expand: () => this.showExpand(),
       pause: () => {
@@ -361,6 +367,7 @@ export class GameUI {
           if (this.state.pendingDecision) setTimeout(() => this.state.pendingDecision && this.showDecision(this.state.pendingDecision), 650);
           break;
         case 'unlock':
+          this.sfx('unlock');
           // Progression (D-062): a friendly "New!" note, one at a time, and the new button appears.
           this.unlockQueue.push(e.unlockId);
           if (this.unlockQueue.length === 1) this.nextUnlockNote();
@@ -369,10 +376,16 @@ export class GameUI {
         case 'project_released':
           this.services.save();
           this.logModal(`released ${e.projectId}`);
+          this.sfx('release');
+          { const sc = getProject(this.state, e.projectId)?.result?.averageScore ?? 0; if (sc >= 6.5) setTimeout(() => this.sfx('celebrate'), 900); }
           this.launchBanner(e.projectId);
           setTimeout(() => this.showResults(e.projectId), 1800);
           break;
+        case 'bug_created': case 'bug_found': this.sfx('bug'); break;
+        case 'bug_fixed': this.sfx('fixed'); break;
+        case 'idea': this.sfx('idea'); break;
         case 'support_done': {
+          this.sfx('confirm');
           const sp = getProject(this.state, e.projectId);
           this.toast(t(`toast.support_done.${e.kind}`, { project: sp ? projectName(sp) : '' }), e.kind === 'patch' ? 'check' : 'rocket');
           this.services.save();
@@ -395,6 +408,7 @@ export class GameUI {
           this.toast(t('toast.money_low'), 'alert');
           break;
         case 'contract_done':
+          this.sfx('coin');
           this.toast(e.lateDays > 0 ? t('toast.contract_late', { days: e.lateDays, pay: e.pay }) : t('toast.contract_done', { pay: e.pay }), 'coin');
           this.services.save();
           break;
@@ -405,6 +419,7 @@ export class GameUI {
           }
           break;
         case 'achievement':
+          this.sfx('celebrate');
           this.toast(t('toast.achievement', { achievement: t(`ach.${e.achievementId}.name`), item: t(`item.${e.itemId}.name`) }), 'star');
           this.services.save();
           break;
@@ -417,6 +432,7 @@ export class GameUI {
           this.toast(t('toast.candidates', { count: e.count }), 'team');
           break;
         case 'hired': {
+          this.sfx('confirm');
           const who = this.state.empirians.find((x) => x.id === e.empirianId);
           if (who) this.toast(t('toast.hired', { name: who.name }), 'team');
           this.services.save();
@@ -433,6 +449,7 @@ export class GameUI {
         }
         case 'sales_week': {
           const p = getProject(this.state, e.projectId);
+          if (p?.result && p.result.weeklySales.length <= 3) this.sfx('coin');
           if (p?.result && p.result.weeklySales.length <= 3) this.toast(t('toast.sales_week', { project: projectName(p), units: e.units, revenue: e.revenue }), 'coin');
           if (this.modalKind === `results:${e.projectId}`) this.showResults(e.projectId);
           break;
@@ -479,6 +496,11 @@ export class GameUI {
     this.toastBox.append(note);
     setTimeout(() => note.remove(), 6500);
     setTimeout(() => { this.unlockQueue.shift(); this.nextUnlockNote(); }, 1600);
+  }
+
+  /** Plays a sound if there is sound (0.18.0). */
+  sfx(s: Sfx): void {
+    this.services.sound?.play(s);
   }
 
   toast(text: string, ic: IconName = 'alert'): void {
@@ -535,6 +557,8 @@ export class GameUI {
       this.game.clock.setSpeed(0);
     }
     this.modalKind = kind;
+    if (kind === 'decision') this.sfx('decision');
+    else if (!kind.startsWith('results:') && kind !== 'creator') this.sfx('open');
     this.modal = h(`div.backdrop${opts.cls ? '.' + opts.cls : ''}`, {
       onpointerdown: (ev: Event) => {
         if (ev.target === this.modal && kind !== 'decision' && kind !== 'creator') this.closeModal(true);
@@ -549,6 +573,7 @@ export class GameUI {
     this.logModal(`close ${this.modalKind}${replacing ? ' (replaced)' : ''}`);
     // The reviews step counts once the player has seen (and closed) the results — not when something replaced them.
     if (this.modalKind.startsWith('results:') && !replacing) this.tutorial.mark('reviews');
+    if (!replacing) this.sfx('close');
     this.modal.remove();
     this.modal = null;
     this.modalKind = '';
@@ -1417,11 +1442,29 @@ export class GameUI {
         h('button.big-btn.ghost', { id: 'menu-language', onclick: () => { const next: Locale = getLocale() === 'es' ? 'en' : 'es'; this.services.setLocale(next); setLocale(next); this.renderHud(true); this.showMenu(); } }, t('menu.language', { lang: LOCALE_NAMES[getLocale()] })),
         h('button.big-btn.coral', { onclick: () => { if (confirm(t('menu.new_game_confirm'))) this.services.newGame(); } }, t('menu.new_game')),
       ),
+      this.soundSection(),
       h('p.hint.version', { id: 'menu-version' }, t('menu.version', { version: this.build.version, commit: this.build.commit, date: this.build.date })),
       h('p.hint.shortcuts', null, t('menu.shortcuts')),
       this.debug ? h('p.hint.version', null, t('menu.debug_sandbox')) : null,
     );
     this.openModal('menu', card);
+  }
+
+  /** Sound settings (0.18.0): general, effects, ambience and mute. Saved in this browser. */
+  private soundSection(): HTMLElement | null {
+    const snd = this.services.sound;
+    if (!snd) return null;
+    const p = snd.prefs;
+    const slider = (vol: keyof Omit<AudioPrefs, 'muted'>) =>
+      h('div.sound-row', null, h('span', null, t(`sound.${vol}`)),
+        h('input', { type: 'range', min: '0', max: '100', step: '5', value: String(Math.round(p[vol] * 100)), id: `sound-${vol}`, 'aria-label': t(`sound.${vol}`),
+          oninput: (ev: Event) => snd.setPrefs({ [vol]: Number((ev.target as HTMLInputElement).value) / 100 }),
+          onchange: () => this.sfx('confirm') }));
+    return h('div.section.sound', { id: 'menu-sound' }, h('label', null, t('sound.title')),
+      slider('master'), slider('effects'), slider('ambience'),
+      h('div.sound-row', null, h('span', null, t('sound.mute')),
+        h('input', { type: 'checkbox', id: 'sound-mute', checked: p.muted, onchange: (ev: Event) => { snd.setPrefs({ muted: (ev.target as HTMLInputElement).checked }); if (!snd.prefs.muted) this.sfx('confirm'); } })),
+      snd.ready || !('AudioContext' in window) ? null : h('p.hint', null, t('sound.tap_to_start')));
   }
 
   /** A bigger studio (AW.E.1): what it gives, what it costs. */

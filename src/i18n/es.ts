@@ -1138,4 +1138,10 @@ export const es: Record<string, string> = {
   "unlock.products.name": "Tus juegos",
   "unlock.products.text": "Tus juegos siguen vivos: puedes parchearlos o darles contenido nuevo (botón de la caja).",
   "memory.unlock.products": "Los primeros juegos ya tienen su propia vida, y alguien tiene que cuidarlos.",
+  "sound.title": "Sonido",
+  "sound.master": "Volumen general",
+  "sound.effects": "Efectos",
+  "sound.ambience": "Ambiente de la oficina",
+  "sound.mute": "Silenciar",
+  "sound.tap_to_start": "El sonido empieza con tu primer toque o tecla (norma de los navegadores).",
 };

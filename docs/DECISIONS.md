@@ -470,7 +470,20 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Progresión (D-062):** nuevo desbloqueo *Tus juegos* con dos juegos publicados y uno con su campaña de lanzamiento completa.
 - **Medido (12 semillas, simulador de carreras, estrategia «M» = juegos + cuidar productos):** primer año +3,3 % de dinero frente a solo juegos, gana en 8/12 semillas; segundo año, abusar de ello (~14 mantenimientos) −2,5 %, gana en 4/12. Un parche típico cuesta ~1 semana con el fundador solo (20 + 3 puntos por bug). Una actualización da ventas extra positivas pero menores que media campaña de lanzamiento en todas las semillas probadas (grupo de control). Guardado v12 con migración.
 
-> **Pendientes de confirmar por el propietario tras jugar:** D-053, D-054 y D-055 (provisionales). D-056 (relaciones), D-057 (deuda técnica), D-058 (alcance; corrige D-054), D-059 (reputación), D-060 (tipos de proyecto), D-061 (conexiones), D-062 (progresión), D-063 (objetivo, lanzamientos, pantallas) y D-064 (productos) también son provisionales.
+### D-065 — Empirians y oficina vivos (gestos con personalidad, detalles ambientales)
+- **Fecha:** 2026-11-26 · **Estado:** Aplicada (provisional hasta que el propietario juegue)
+- **Gestos** (`src/render/gestures.ts`): estirarse, bostezar, inspiración, concentración, rascarse la cabeza, frustración, puño arriba, saludo, asentir, hombros caídos y mirar. Envolvente suave sobre la pose; sentado o recostado solo se mueven brazos y cabeza (sin nuevas colisiones con sillas y sofás; probado con geometría real orientada).
+- **Personalidad:** ritmo propio por Empirian (hash de su id, sin `Math.random`), pesos según rasgo (perfeccionista: más concentración y frustración ante bugs; curioso: más inspiración; sociable: más saludos y reacciones; noctámbulo: bosteza por la mañana, se anima en las últimas horas), energía y ánimo. Hay momentos sin gesto.
+- **Reacciones:** a ideas, lanzamientos, fama, logros, contrataciones, decisiones y decoración nueva, cada uno con su retraso y su estilo (antes todos a la vez). Saludos al cruzarse (por pareja, como mucho cada 45 s de mundo).
+- **Oficina:** objeto personal en cada escritorio según el rasgo de su dueño, vapor de la taza por la mañana mientras se trabaja, luz del ordenador que parpadea al trabajar. Solo visual: sin efectos en la simulación.
+- Todo en tiempo de mundo: la pausa lo congela.
+
+### D-066 — Primera identidad sonora (Web Audio procedural)
+- **Fecha:** 2026-11-26 · **Estado:** Aplicada (provisional hasta que el propietario la escuche)
+- **Decisión:** sonidos sintetizados en tiempo real (`src/audio/sound.ts`), sin archivos ni dependencias: clic suave, abrir/cerrar, confirmar, error, compra, colocar, desbloqueo, publicación, celebración, decisión, monedas, bug, idea, bug arreglado, teclados y un tono de sala muy bajo.
+- **Reglas:** el audio empieza con el primer gesto (norma de los navegadores); volumen general, efectos y ambiente, y silencio, guardados solo en este navegador (no en la partida); intervalo mínimo por sonido, máximo de voces y ±3 % de variación de tono; la pausa silencia los sonidos del mundo (teclados, ambiente, bugs, ideas) pero no los de la interfaz; sin Web Audio (o con `?mute`) el juego funciona igual.
+
+> **Pendientes de confirmar por el propietario tras jugar:** D-053, D-054 y D-055 (provisionales). D-056 (relaciones), D-057 (deuda técnica), D-058 (alcance; corrige D-054), D-059 (reputación), D-060 (tipos de proyecto), D-061 (conexiones), D-062 (progresión), D-063 (objetivo, lanzamientos, pantallas), D-064 (productos), D-065 (Empirians y oficina vivos) y D-066 (sonido) también son provisionales.
 
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 
