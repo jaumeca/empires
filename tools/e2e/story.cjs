@@ -24,7 +24,8 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.keyboard.press('h');
   await page.waitForTimeout(300);
   check('H opens the studio story with the founding memory', await page.isVisible('.card.story') && (await page.locator('[data-memory="founded"]').count()) === 1);
-  check('six achievements to discover', (await page.locator('.achievement').count()) === 6 && (await page.locator('.achievement.on').count()) === 0);
+  // 0.19.0: nine (first release, ten games and first update added as physical memories).
+  check('nine achievements to discover', (await page.locator('.achievement').count()) === 9 && (await page.locator('.achievement.on').count()) === 0);
   await page.keyboard.press('Escape');
 
   // Ship a game (fast-forward), then the memory appears.
@@ -68,7 +69,8 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.keyboard.press('d');
   await page.click('[data-cat="awards"]');
   await page.waitForTimeout(200);
-  check('locked trophies show how to earn them', (await page.locator('.decor-item.unearned').count()) === 5);
+  // Earned so far: first release and 100.000 € → 7 still locked.
+  check('locked trophies show how to earn them', (await page.locator('.decor-item.unearned').count()) === 7, String(await page.locator('.decor-item.unearned').count()));
   await page.screenshot({ path: path.join(out, 'awards-tab.png') });
   await page.click('[data-buy="neon_sign"]');
   let placed = false;

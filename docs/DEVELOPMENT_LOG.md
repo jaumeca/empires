@@ -21,6 +21,12 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 - **Ideas dominantes:** la primera versión daba ventaja gratis (+7–8 % de dinero, gana 11–12/12 semillas). Con +12 % de trabajo: −0,7 %/+2 % según el horizonte (5/12 y 8/12).
 - **Tamaño de guardado:** los aniversarios de todos los juegos cada año superaban el presupuesto por producto (5126 > 5120 bytes) y llenaban de avisos. Medido: limitado a juegos destacados y años 1, 5 y 10 (4,85 KB).
 - La vitrina quedaba vacía porque se llenaba antes la estantería: ahora las vitrinas van primero.
+- e2e `story` contaba 6 logros y 5 trofeos bloqueados: ahora 9 y 7 (los tres recuerdos nuevos). Actualizada.
+
+### Pruebas ejecutadas (0.19.0)
+- `npx vitest run`: **331 pruebas** (nuevas: identidad y huella de catálogo, inspiración, aniversarios, recuerdos de hitos, no-dominancia de ideas).
+- E2E en serie, sin nada más ejecutándose: 26 suites en verde (nueva collection 10/10; story 10/10 tras actualizar sus cuentas) + auditoría de primeros minutos sin errores.
+- Galería 56 (nuevas g55 vitrina, g56 ideas). Actualización real 0.18.0 → 0.19.0 sin errores.
 
 ---
 
