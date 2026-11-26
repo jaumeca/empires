@@ -1029,9 +1029,11 @@ export class OfficeScene {
     const office = this.lastState?.office;
     if (!office) return;
     const slots: { inner: Object3D; at: [number, number, number] }[] = [];
-    for (const it of office.items) {
+    // Game cabinets first (they are made for it), then bookshelves; each in placement order.
+    const shows = office.items.filter((it) => getItemDef(it.defId).showcase).sort((a, b) => Number(b.defId === 'game_cabinet') - Number(a.defId === 'game_cabinet'));
+    for (const it of shows) {
       const def = getItemDef(it.defId);
-      const inner = def.showcase ? this.itemGroups.get(it.uid)?.group.children[0] : undefined;
+      const inner = this.itemGroups.get(it.uid)?.group.children[0];
       if (inner) for (const at of SHOWCASE_SLOTS[def.model] ?? []) slots.push({ inner, at });
     }
     const released = projects.filter((p) => p.phase === 'released' && p.result).sort((a, b) => a.result!.releasedDay - b.result!.releasedDay);

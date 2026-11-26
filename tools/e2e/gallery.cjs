@@ -427,6 +427,19 @@ const VARIANTS = [
   await page.evaluate(() => document.getElementById('menu-sound')?.scrollIntoView());
   await shot('g54-sound-menu', 300);
 
+  // 55–56 (0.19.0): the game cabinet with the studio's games, and the team's ideas when planning.
+  await ev(() => { const E = window.__empires, g = E.game, s = g.state; E.ui.closeModal(); s.company.money += 5000; for (let z = 0; z < s.office.d; z++) for (let x = 0; x < s.office.w; x++) if (g.dispatch({ type: 'buy_item', defId: 'game_cabinet', x, z, rot: 0 }).ok) return; });
+  await page.waitForTimeout(800);
+  for (let i = 0; i < 4 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(250); }
+  await ev(() => window.__empires.ui.setSpeed(0));
+  await shot('g55-game-cabinet', 600);
+  await ev(() => { const E = window.__empires, s = E.game.state; if (s.activeProjectId) E.game.dispatch({ type: 'release' }); });
+  await ev(() => window.__empires.play(8 * 3));
+  for (let i = 0; i < 6 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(250); }
+  await ev(() => { const s = window.__empires.game.state; s.company.inspirations = [{ id: 'I-g1', day: s.day, kind: 'combo', source: 'chat', topicId: 'cooking', featureId: 'customization', by: s.empirians[1]?.id ?? s.founderId }, { id: 'I-g2', day: s.day, kind: 'polish', source: 'lesson', by: s.founderId, project: s.projects[0]?.name }]; window.__empires.ui.setSpeed(0); window.__empires.ui.showNewProject(); });
+  await page.waitForTimeout(400);
+  if (await page.isVisible('#np-ideas')) { await page.evaluate(() => document.getElementById('np-ideas').scrollIntoView()); await shot('g56-team-ideas', 300); }
+
 
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });
