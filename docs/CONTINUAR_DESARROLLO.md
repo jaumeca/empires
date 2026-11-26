@@ -1,21 +1,20 @@
 # Continuar el desarrollo de EMPIRES
 
-Actualizado: 2026-11-24 tras publicar 0.17.0 («Make the Game Come Alive», 1.ª tanda). Todo confirmado y subido.
+Actualizado: 2026-11-26 tras publicar 0.18.0. **Hay trabajo de 0.19.0 guardado en `git stash`** (ver abajo) si esta sesión se corta antes de confirmarlo.
 
 ## Estado
 - **Rama de desarrollo:** `claude/friendly-ptolemy-klybh8`.
-- **production-web:** 0.17.0 (`e992610`), estable y verificada (ver `docs/WEB_RELEASES.md`). `main` sin tocar.
-- **Guardado:** esquema v12 (carga v0–v12). v12 añade `support` (trabajo de mantenimiento, GT.6).
-- **Verificación al cerrar:** `npx vitest run` → 260 pruebas OK; 26 suites e2e en serie OK; galería 53.
+- **production-web:** 0.18.0 (`e3e9ebb`), estable y verificada. `main` sin tocar.
+- **Guardado:** esquema v12 (carga v0–v12).
+- **Verificación al cerrar 0.18.0:** 286 pruebas; 25 suites e2e en serie; galería 54.
 
 ## Hecho en la última sesión
-- Bloque 0: cabeza/silla (`tests/render/seating.test.ts`), salón (`tests/render/lounge.test.ts`), tutorial intermitente con 4 causas medidas (iconos `toDataURL` 4 s, cola de modales, resaltado tras reconstruir el HUD, capturas de Playwright que retrasan frames en la prueba). Detalle en `docs/DEVELOPMENT_LOG.md`.
-- Objetivo cercano (`src/sim/systems/goals.ts`), niveles de lanzamiento (`src/sim/systems/launch.ts`), pantallas (`src/render/screens.ts`) — D-063.
-- GT.6 productos persistentes (`src/sim/systems/products.ts`, `docs/PRODUCTS.md`) — D-064. Estrategia «M» en `tools/sim-runner/careers.ts`.
-- Ayuda de depuración nueva: `__empires.ui.modalLog` (últimos movimientos de ventanas).
+- 0.18.0: gestos y personalidad (`src/render/gestures.ts`, D-065), oficina viva (`src/render/models/personal.ts`, vapor y luces en `officeScene.deskLife`), sonido (`src/audio/sound.ts`, D-066), shaders validados.
+- En curso para 0.19.0 (D-067, D-068): identidad de cada juego (`src/render/productArt.ts`), vitrina y cajas en todas las vitrinas, recuerdos de hitos (portada enmarcada, cartucho de oro, tablón de fans), catálogo nuevo (`src/render/models/collection.ts`), versión/aniversarios/ventas en el catálogo, ideas del equipo (`src/sim/systems/inspiration.ts`).
 
 ## Tareas pendientes (orden recomendado)
-0. **Siguientes bloques de «Make the Game Come Alive»:** 2 (animaciones y personalidad: estirarse, celebrar, frustración, saludar, café, cansancio), 3.2/3.3 (objetos nuevos y recuerdos físicos de hitos; registrar en `ASSET_REGISTRY.md`), 6 (decisiones contextuales), 7 (sonido procedural con volumen y silencio), 8 (revisar ritmos de progresión con `tools/sim-runner`), 10 (rendimiento: los tirones de compilación de shaders ya están corregidos en desarrollo, sin publicar; falta medir en dispositivos reales).
+0. **Terminar 0.19.0** (si sigue en `git stash`: `git stash pop`), probar y publicar. Luego bloque 6 (acontecimientos contextuales), 9 (ritmo de progresión) y 10 (calidad de vida).
+0b. **Pendientes antiguos de «Make the Game Come Alive»:** 2 (animaciones y personalidad: estirarse, celebrar, frustración, saludar, café, cansancio), 3.2/3.3 (objetos nuevos y recuerdos físicos de hitos; registrar en `ASSET_REGISTRY.md`), 6 (decisiones contextuales), 7 (sonido procedural con volumen y silencio), 8 (revisar ritmos de progresión con `tools/sim-runner`), 10 (rendimiento: los tirones de compilación de shaders ya están corregidos en desarrollo, sin publicar; falta medir en dispositivos reales).
 1. ~~E.3 Relaciones~~ hecho en 0.11.0 (D-056, `src/sim/systems/relations.ts`). F3.4 deuda técnica hecha (D-057, `src/sim/systems/debt.ts`). Idea de alcance (D-058) y reputación con memoria (D-059) hechas. D.4 (D-060), conexiones (D-061) y progresión por desbloqueos (D-062, `docs/PROGRESSION.md`, `src/sim/systems/progress.ts`) hechos. Las suites e2e de mecánicas llaman a `__empires.unlockAll()`; `progression.cjs` y `firstminutes.cjs` prueban el comienzo real. Siguiente paso exacto: revisar con el propietario la sensación de los primeros 30 minutos; después **GT.6 productos persistentes** (mantenimiento y parches tras el lanzamiento; con él, el evento aplazado "un juego antiguo vuelve a estar de moda") o **F3.8 (2.ª parte)**: promesas explícitas al anunciar un juego y lecciones aprendidas visibles al planear el siguiente.
 2. **D.3/D.4:** decisiones de alcance, deuda técnica y comentarios de usuarios; diferenciar juego indie, ambicioso y por encargo (F3).
 3. **GT.6 productos persistentes** (y el evento aplazado "un juego antiguo vuelve a estar de moda"); **GT.7** reequilibrio económico; **AW.F** pequeñas satisfacciones.
