@@ -420,6 +420,13 @@ const VARIANTS = [
     await shot('g53-patching', 1200);
   }
 
+  // 54 (0.18.0): sound settings in the menu.
+  for (let i = 0; i < 4 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(200); }
+  await ev(() => { window.__empires.ui.setSpeed(0); window.__empires.ui.showMenu(); });
+  await page.waitForTimeout(300);
+  await page.evaluate(() => document.getElementById('menu-sound')?.scrollIntoView());
+  await shot('g54-sound-menu', 300);
+
 
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });

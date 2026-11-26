@@ -88,9 +88,16 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
     game.state.projects = [fake];
     scene.handleEvents([{ type: 'project_released', projectId: p.id, severity: 'decisive' }], window.__empires.world.time);
     game.state.projects = prev;
-    return [...scene.actors.values()].map((x) => x.view.flashExpr?.expr);
+    return true;
   });
-  check('a flop makes the whole team look disappointed', flash.every((x) => x === 'frustrated'), flash.join(','));
+  // 0.18.0: each one reacts in their own moment (personal delays), on world time: resume and wait.
+  await page.evaluate(() => window.__empires.ui.setSpeed(1));
+  const t0 = await page.evaluate(() => window.__empires.world.time);
+  await page.waitForFunction((t0) => window.__empires.world.time > t0 + 1.3, t0, { timeout: 30000 });
+  await page.evaluate(() => window.__empires.ui.setSpeed(0));
+  const faces = await page.evaluate(() => [...window.__empires.scene.actors.values()].map((x) => ({ e: x.view.flashExpr?.expr, until: x.view.flashExpr?.until })));
+  check('a flop makes the whole team look disappointed', flash && faces.every((x) => x.e === 'frustrated'), faces.map((x) => x.e).join(','));
+  check('...each in their own moment (not all at once)', new Set(faces.map((x) => x.until?.toFixed(3))).size === faces.length, faces.map((x) => x.until?.toFixed(2)).join(','));
   check('no page errors', errors.length === 0, errors.join(' | '));
   console.log(`\n${checks.filter(Boolean).length}/${checks.length} checks passed`);
   await browser.close();

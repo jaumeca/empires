@@ -21,6 +21,13 @@ Coincide: `production-web` = 0.17.0 (`e992610`), desarrollo `b1df2f6`, 260 prueb
 - Brazos levantados invisibles: con el brazo arriba, la rotación que lo separa del cuerpo lo llevaba **hacia dentro**, detrás de la cabeza. Afectaba también a la celebración existente. Corregido.
 - En las capturas, el tiempo del mundo avanza más despacio que el real (pocos frames y delta limitado a 250 ms): las sondas visuales esperan en tiempo de mundo.
 - El detector de claves de traducción confundió `key: 'master'` (un tipo) con una clave: renombrado.
+- **e2e `routines`:** «un fracaso decepciona al equipo» miraba las caras en el mismo instante; con reacciones escalonadas (y con el mundo en pausa, que las retiene) ya no tenía sentido. La prueba ahora deja correr 1,3 s de mundo y comprueba además que **no** reaccionan todos a la vez (9/9).
+- **e2e `play`:** una vez falló «la partida corrupta se recupera de una copia»: la recuperación fue correcta (tick esperado), pero el aviso no había aparecido a los 2,5 s fijos. Coincidió con pruebas unitarias pesadas que lancé en paralelo (error mío de método). En solitario pasó 3/3; la prueba espera ahora al aviso (hasta 6 s). Causa probable, no demostrada.
+
+### Pruebas ejecutadas (0.18.0)
+- `npx vitest run`: **286 pruebas**.
+- E2E en serie sobre el build: 25 suites con comprobaciones en verde (nuevas: sound 11/11; routines 9/9 con la comprobación nueva) + auditoría de primeros minutos sin errores.
+- Galería: 54 capturas (nueva g54, menú de sonido). Actualización real 0.17.0 → 0.18.0 sin errores.
 
 ---
 

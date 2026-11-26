@@ -160,7 +160,8 @@ const check = (name, ok, detail = '') => { checks.push({ name, ok, detail }); co
   await page.goto(`${base}/assets/${cssAsset}`); // a static file of the same origin (no game code)
   await page.evaluate(() => { const k = 'empires.debug.save.auto'; localStorage.setItem(k, localStorage.getItem(k).replace('"money":', '"money":7')); });
   await page.goto(`${base}/?debug`);
-  await page.waitForTimeout(2500);
+  // Wait for the notice (shown 0.6 s after start) instead of a fixed 2.5 s: under CPU load it came later (0.18.0).
+  await page.waitForFunction(() => [...document.querySelectorAll('.toast')].some((t) => /copia de seguridad|backup/.test(t.textContent)), null, { timeout: 6000 }).catch(() => {});
   const recovered = await st();
   const toastText = await page.locator('.toast').allInnerTexts();
   check('corrupted autosave is recovered from a backup', recovered.tick > 0 && recovered.tick <= beforeCorrupt.tick && toastText.some((x) => x.includes('copia de seguridad')), `tick ${recovered.tick} / ${beforeCorrupt.tick}`);
