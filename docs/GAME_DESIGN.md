@@ -307,6 +307,10 @@ La empresa desarrolla una **cultura propia** según las decisiones del jugador. 
 
 Los productos no desaparecen tras el lanzamiento. Generan: ventas, suscripciones, usuarios, críticas, reputación, gastos de mantenimiento, necesidades de soporte, actualizaciones y oportunidades comerciales.
 
+`[IMPLEMENTADO]` (0.19.0, D-067) **Juegos con identidad y recuerdos físicos:** caja y portada propias de cada juego (temática, nota, tamaño, actualizaciones), expuestas solas en estanterías y vitrinas en orden de lanzamiento; portada enmarcada del primer juego, cartucho de oro (diez juegos) y tablón de fans (primera actualización); versión, ventas y aniversarios en «Tus juegos».
+
+`[IMPLEMENTADO]` (0.19.0, D-068) **Ideas del equipo:** surgen de lanzamientos, charlas entre amigos, curiosidad y comunidad; opcionales al planear (+techo, +trabajo; no dominante).
+
 `[IMPLEMENTADO]` (0.17.0, D-064, `docs/PRODUCTS.md`) **Productos persistentes para videojuegos:** catálogo «Tus juegos», parches (arreglan bugs sin cambiar la nota), actualizaciones de contenido (pequeño relanzamiento con rendimientos decrecientes, máx. 2) y vida posterior contada con notas tranquilas (crítica tardía, comunidad, pocos pero fieles, despedida, abandonado). Suscripciones, usuarios, expansiones y secuelas siguen como `[FUTURO]`.
 
 | Tipo | Factores propios |

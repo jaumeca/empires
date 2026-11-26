@@ -29,6 +29,8 @@ Todo recurso que entre en el repositorio (modelos, texturas, animaciones, fuente
 | A-021 | Vapor de taza y luz del ordenador | `src/render/officeScene.ts` (`deskLife`) | Claude Code | Código | Todos los derechos reservados | Original (0.18.0) | 2026-11-26 |
 | A-022 | Identidad sonora: clics, confirmaciones, compras, colocar, desbloqueo, publicación, celebración, avisos, teclados, ambiente | `src/audio/sound.ts` | Claude Code | Código (síntesis Web Audio en tiempo real; sin archivos de audio) | Todos los derechos reservados | Original por construcción: notas y ruido generados por código (0.18.0) | 2026-11-26 |
 | A-023 | Gestos de los Empirians (estirarse, bostezar, inspiración, saludo…) | `src/render/gestures.ts` | Claude Code | Código (animación procedural) | Todos los derechos reservados | Original (0.18.0) | 2026-11-26 |
+| A-024 | Identidad de cada juego: caja voxel y portada 2D por temática (bandera, calavera, olla, robot), sellos y pegatinas | `src/render/productArt.ts` | Claude Code | Código | Todos los derechos reservados | Original (0.19.0) | 2026-11-26 |
+| A-025 | Vitrina de juegos, consola retro, estante de figuras, pila de libros, monstera, portada enmarcada, cartucho de oro, tablón de los fans | `src/render/models/collection.ts` | Claude Code | Código (definición voxel) | Todos los derechos reservados | Original (0.19.0) | 2026-11-26 |
 
 Tipografía: la interfaz usa la fuente del sistema (`system-ui`/`ui-rounded`); no se incluye ningún archivo de fuente. Sin sonidos ni música todavía.
 

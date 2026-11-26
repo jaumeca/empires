@@ -4,6 +4,26 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-26 — Decimotercera sesión (2.ª parte): recuerdos físicos, identidad e ideas (0.19.0)
+
+### Resumen
+- **Identidad de cada juego** (D-067): caja voxel y portada 2D derivadas del juego (temática, nota, tamaño, actualizaciones), en resultados y en «Tus juegos».
+- **Cajas físicas:** todos los juegos, solos y en orden, en vitrinas (primero) y estanterías; partidas antiguas incluidas. Vitrina de juegos nueva.
+- **Recuerdos de hitos reales:** portada enmarcada del primer juego, cartucho de oro (10 juegos), tablón de fans (primera actualización).
+- **Catálogo nuevo:** consola retro (punto de ocio de los Empirians), estante de figuras, pila de libros, monstera.
+- **Historia del producto:** versión, ventas en miniatura, aniversarios de juegos destacados.
+- **Ideas del equipo** (D-068).
+
+### Problemas encontrados
+- **Escala:** diseñé los modelos nuevos con celdas de 10 vóxeles; son de 6. Una prueba nueva de huella para **todo** el catálogo lo detectó y destapó dos fallos antiguos: las cajas de la estantería atravesaban su lateral y una se apoyaba dentro de una balda (corregidos); el sillón y la planta pequeña sobresalen hasta 1 vóxel (documentado en la prueba).
+- La balda central de la estantería tiene adornos: las cajas van en la balda superior y encima; las cajas de juegos medianos son más anchas, no más altas, para caber en cualquier balda.
+- Primera versión de la prueba de cajas: con medio vóxel en dos ejes la comprobación de choque no comprobaba nada. Corregida.
+- **Ideas dominantes:** la primera versión daba ventaja gratis (+7–8 % de dinero, gana 11–12/12 semillas). Con +12 % de trabajo: −0,7 %/+2 % según el horizonte (5/12 y 8/12).
+- **Tamaño de guardado:** los aniversarios de todos los juegos cada año superaban el presupuesto por producto (5126 > 5120 bytes) y llenaban de avisos. Medido: limitado a juegos destacados y años 1, 5 y 10 (4,85 KB).
+- La vitrina quedaba vacía porque se llenaba antes la estantería: ahora las vitrinas van primero.
+
+---
+
 ## 2026-11-26 — Decimotercera sesión: A Living Little World — 1.ª parte (0.18.0)
 
 ### Estado verificado al empezar
