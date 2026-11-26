@@ -90,6 +90,8 @@ Resumen (detalle completo en `ART_DIRECTION.md`):
 
 Programar, diseñar, investigar, caminar, reunirse, tomar café, descansar, probar productos, hablar con compañeros, frustrarse ante problemas, celebrar éxitos, recibir nuevos empleados y reaccionar a las decisiones del jugador.
 
+`[IMPLEMENTADO]` (0.18.0, D-065) **Gestos con personalidad:** estirarse, bostezar, inspiración, concentración, rascarse la cabeza, frustración, puño arriba, saludo, asentir, hombros caídos y mirar, con ritmo propio de cada Empirian y pesos según rasgo, energía y ánimo; reacciones escalonadas a los compañeros; objeto personal en cada escritorio, vapor de la taza por la mañana y luz del ordenador. Respeta la regla de oro: todo sale del estado real (actividad, energía, rasgo, hora, acontecimientos).
+
 ### 3.2 Burbujas, partículas e iconos
 
 Sobre sus cabezas: código, diseño, creatividad, investigación, ideas, bugs, pruebas, calidad, problemas, motivación, cansancio y progreso.
@@ -621,6 +623,8 @@ Más decisiones durante el desarrollo (funcionalidades, prototipo, alcance, deud
 
 ### 26.6 Pequeñas satisfacciones `[CONFIRMADO]`
 Animaciones discretas para los hitos; audio opcional y silenciable.
+
+`[IMPLEMENTADO]` (0.18.0, D-066) Primera identidad sonora procedural (Web Audio, sin archivos): interfaz, compras, colocación, desbloqueos, publicaciones, celebraciones, teclados y ambiente; volumen general, efectos, ambiente y silencio.
 
 ## 22. Contradicciones y tensiones identificadas
 

@@ -4,12 +4,32 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-26 — Decimotercera sesión: A Living Little World — 1.ª parte (0.18.0)
+
+### Estado verificado al empezar
+Coincide: `production-web` = 0.17.0 (`e992610`), desarrollo `b1df2f6`, 260 pruebas.
+
+### Resumen
+- **Shaders (validación):** arranque 0.17.0 frente a desarrollo, navegador en frío, 3 ejecuciones cada uno: hasta dos frames tras empezar, 89–106 ms frente a 67–72 ms; memoria JS 15–16 MB igual; 6 → 9 programas de shader y 12 → 13 texturas; durante 15 s de juego, 0.17.0 tiene congelaciones de 0,56–1,09 s y desarrollo ninguna. No hay espera inicial añadida ni problema de memoria apreciable.
+- **Empirians vivos (D-065):** gestos con personalidad y ritmo propio, reacciones escalonadas, saludos al cruzarse, miradas al que levanta la mano o a la decoración nueva.
+- **Oficina viva:** objetos personales por rasgo, vapor de taza por la mañana, luz del ordenador que parpadea al trabajar.
+- **Sonido (D-066):** identidad sonora procedural con volúmenes y silencio.
+
+### Problemas encontrados
+- Un gesto programado para el futuro se descartaba en el primer frame; por eso la primera prueba de geometría de gestos pasaba **sin comprobar nada**. Al corregirlo, la prueba detectó un fallo real: sentado en la silla ergonómica, echar la cabeza atrás (estirarse, bostezar) la metía en el respaldo. Ahora, sentado, la cabeza apenas se inclina hacia atrás.
+- La comprobación con cajas alineadas a los ejes exageraba los choques de una cabeza girada (casi todos los gestos «chocaban»): se cambió a una comprobación orientada (vóxeles del mueble en el espacio local de la cabeza).
+- Brazos levantados invisibles: con el brazo arriba, la rotación que lo separa del cuerpo lo llevaba **hacia dentro**, detrás de la cabeza. Afectaba también a la celebración existente. Corregido.
+- En las capturas, el tiempo del mundo avanza más despacio que el real (pocos frames y delta limitado a 250 ms): las sondas visuales esperan en tiempo de mundo.
+- El detector de claves de traducción confundió `key: 'master'` (un tipo) con una clave: renombrado.
+
+---
+
 ## 2026-11-24 — Después de 0.17.0: rendimiento (bloque 10), en desarrollo
 
 - **Tirones por compilación de shaders en mitad de la partida.** Perfil de CPU de un primer juego completo: dos tareas largas de 1,3–1,6 s (`WebGLProgram.getUniforms` → `getProgramInfoLog`) en el primer bocadillo (material `Sprite`) y en otro material diferido. Con GL por software es extremo; en GPU real son decenas de ms, pero sigue siendo un tirón visible.
 - **Corrección:** `OfficeScene.warmUpShaders()` tras la primera sincronización de la oficina (mismas luces que la escena real): compila con `renderer.compileAsync` los materiales que se usan más tarde (bocadillos, confeti, fantasma y rejilla de Decorar, casilla de colocación). Los objetos temporales son microscópicos y los materiales se mantienen vivos (si se liberan, three.js libera también el programa).
 - **Medido (3 ejecuciones):** antes, 2 tareas > 1,3 s durante el primer juego; después, ninguna por encima de 60 ms (la carga inicial de la página sigue en ~430 ms). e2e launch 10/10, pause 19/19, routines 8/8.
-- **No publicado todavía** en `production-web` (pendiente del ciclo completo de la próxima versión).
+- Publicado en 0.18.0.
 
 ---
 

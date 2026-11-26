@@ -137,7 +137,12 @@ Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, of
 | CA.3.1 | Pantallas expresivas por actividad | ✅ `render/screens.ts` |
 | CA.5 | Lanzamientos memorables (niveles, banner, lección) | ✅ `systems/launch.ts`, e2e `launch.cjs` 10/10 |
 | CA.GT6 | Productos persistentes: catálogo, parches, actualizaciones, vida posterior | ✅ 0.17.0 `systems/products.ts`, `tests/sim/products.test.ts`, no-dominancia en `economy.test.ts`, e2e `products.cjs` (D-064) |
-| CA.2/3.2/7 | Más animaciones y personalidad, objetos nuevos y recuerdos físicos, sonido | ⬜ |
+| CA.2 | Animaciones y personalidad (gestos, reacciones escalonadas, saludos) | ✅ 0.18.0 `render/gestures.ts`, `tests/render/gestures.test.ts`, geometría con sillas y sofás (D-065) |
+| CA.3 | Oficina viva: objetos personales, vapor, luces, reacción a la decoración | ✅ 0.18.0 `models/personal.ts`, `tests/render/deskItems.test.ts` |
+| CA.7 | Sonido procedural con volúmenes y silencio | ✅ 0.18.0 `audio/sound.ts`, `tests/audio`, e2e `sound.cjs` (D-066) |
+| CA.10 | Rendimiento: precompilar shaders diferidos | ✅ 0.18.0 (sin tirones de 0,6–1,6 s; arranque no más lento) |
+| CA.3.2/3.3 | Catálogo ampliado, cajas físicas de juegos coleccionables, trofeos y recuerdos | ⬜ siguiente |
+| CA.6/8 | Acontecimientos contextuales, ideas e inspiración | ⬜ |
 
 ---
 
