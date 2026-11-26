@@ -1,3 +1,4 @@
+import { bookStack, fanBoard, figureShelf, framedCover, gameCabinet, goldCartridge, monstera, retroConsole } from './collection';
 import { P } from '../palette';
 import { VoxelGrid } from '../voxel';
 import {
@@ -165,6 +166,14 @@ function lampFloor(): VoxelGrid {
   g.box(0, 26, 0, 6, 27, 6, P.wallShade);
   return g;
 }
+
+/** Where the collectible game boxes stand on each showcase model (item-local voxels, rot 0, front +z). */
+export const SHOWCASE_SLOTS: Record<string, [number, number, number][]> = {
+  // 0.19.0: the old slots let boxes poke through the side and one sat inside a board; now big boxes fit too.
+  bookshelf: [[7, 25, 1.5], [13, 25, 1.5], [7, 32, 1.5], [12, 32, 1.5], [17, 32, 1.5]],
+  // 4 boxes on each of 3 shelves (the model sits at x+1; a box spans [x − width, x], z ∈ [z+2, z+4]).
+  game_cabinet: [21, 11, 1].flatMap((y) => [7, 12, 17, 22].map((x) => [x, y, -1] as [number, number, number])),
+};
 
 function arcade(): VoxelGrid {
   const g = new VoxelGrid(12, 28, 12);
@@ -379,6 +388,22 @@ export function itemModel(model: string): ItemModel {
       return { parts: [{ grid: beanbag(), at: [0, 0, 0] }] };
     case 'rug_round':
       return { parts: [{ grid: rugRound(), at: [0, 0, 0] }] };
+    case 'retro_console':
+      return { parts: [{ grid: retroConsole(), at: [0, 0, 0] }] };
+    case 'figure_shelf':
+      return { parts: [{ grid: figureShelf(), at: [0, 0, 1] }] };
+    case 'book_stack':
+      return { parts: [{ grid: bookStack(), at: [0, 0, 1] }] };
+    case 'monstera':
+      return { parts: [{ grid: monstera(), at: [0, 0, 0] }] };
+    case 'framed_cover':
+      return { parts: [{ grid: framedCover(null), at: [0, 0, 1] }] };
+    case 'gold_cartridge':
+      return { parts: [{ grid: goldCartridge(), at: [0, 0, 1] }] };
+    case 'fan_board':
+      return { parts: [{ grid: fanBoard(), at: [0, 0, 2] }] };
+    case 'game_cabinet':
+      return { parts: [{ grid: gameCabinet(), at: [1, 0, 0] }] };
     case 'side_table':
       return { parts: [{ grid: sideTable(), at: [0, 0, 0] }] };
     case 'water_cooler':

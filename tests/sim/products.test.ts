@@ -157,3 +157,31 @@ describe('progression and saves (GT.6)', () => {
     expect(s.support).toBeNull();
   });
 });
+
+describe('product history (0.19.0)', () => {
+  it('a version number that tells its story: 1.0, then +0.1 per patch, +1 per update', async () => {
+    const { productVersion } = await import('../../src/sim/systems/products');
+    const { p } = released(71);
+    expect(productVersion(p)).toBe('1.0');
+    p.result!.support = { patches: 2, updates: 1 };
+    expect(productVersion(p)).toBe('2.2');
+  });
+
+  it('anniversaries: one quiet memory per year on sale, never twice, no chance involved', () => {
+    const { g, p } = released(72);
+    const s = g.state;
+    const mems = () => s.story.memories.filter((m) => m.text.key.startsWith('ledger.product.anniversary')).length;
+    p.result!.averageScore = 7.5; // a notable game (ordinary ones don't get a yearly memory)
+    p.result!.releasedDay = s.day - 366;
+    productsWeek(s, () => {});
+    productsWeek(s, () => {});
+    expect(mems()).toBe(1);
+    expect(p.result!.anniversaries).toBe(1);
+    p.result!.releasedDay = s.day - 365 * 2 - 3;
+    productsWeek(s, () => {});
+    expect(mems()).toBe(1); // year 2: not a round one
+    p.result!.releasedDay = s.day - 365 * 5 - 3;
+    productsWeek(s, () => {});
+    expect(mems()).toBe(2); // year 5
+  });
+});

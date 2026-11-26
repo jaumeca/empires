@@ -74,6 +74,21 @@ export type Role = 'auto' | 'design' | 'code' | 'test';
 export type BreakKind = 'drink' | 'rest' | 'chat';
 
 /** Professional relationship between two Empirians (E.3 / D-056). `a` < `b`. */
+/** An idea for a future game (0.19.0, D-068). */
+export interface Inspiration {
+  id: string;
+  day: number;
+  kind: 'topic' | 'combo' | 'polish';
+  source: 'sequel' | 'lesson' | 'chat' | 'curious' | 'community';
+  topicId?: string;
+  featureId?: string;
+  /** Who had it (and with whom, for a chat). */
+  by?: string;
+  with?: string;
+  /** The game it comes from (sequel, lesson, community). */
+  project?: string;
+}
+
 export interface Relation {
   a: string;
   b: string;
@@ -227,6 +242,8 @@ export interface ProjectResult {
   updateWave?: { startDay: number; strength: number };
   /** GT.6: the one later-life happening this product had (late critic, community…). */
   happening?: string;
+  /** 0.19.0: years on sale already celebrated (anniversaries). */
+  anniversaries?: number;
 }
 
 /** GT.6: the studio's maintenance job on a released product (like a contract, one at a time). */
@@ -299,6 +316,8 @@ export interface Project {
   rivalAnnounced?: boolean;
   ideaOffered?: boolean;
   bugReported?: boolean;
+  /** 0.19.0: its launch already inspired an idea (lesson or sequel). */
+  inspired?: boolean;
   /** Set once its routine history has been archived (systems/history.ts). */
   historyCompacted?: boolean;
   result?: ProjectResult;
@@ -428,6 +447,9 @@ export interface GameState {
     reputation: number; // 0-100
     /** Ideas saved for later (ledger ids), used by the next projects. */
     savedIdeas?: string[];
+    /** 0.19.0 (D-068): ideas from the team for the next games (at most 3), and when the last one came. */
+    inspirations?: Inspiration[];
+    lastIdeaDay?: number;
     /** Technical debt left in the studio's code for the next game (F3.4). */
     techDebt?: number;
     /** A solid base built in a past project (ledger id): the next game needs less work. */

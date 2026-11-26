@@ -141,6 +141,29 @@ function boost(state: GameState, p: Project, factor: number, weeks: number): voi
 
 // ------------------------------------------------------------- after launch
 
+/** The version players have now: 1.0 at launch, +0.1 per patch, +1 per content update (0.19.0). */
+export function productVersion(p: Project): string {
+  const s = supportOf(p);
+  return `${1 + s.updates}.${s.patches}`;
+}
+
+/** Anniversaries (0.19.0): 1, 5 and 10 years of a notable game — a quiet memory, no chance involved. */
+function anniversaries(state: GameState, emit: EventSink): void {
+  for (const p of state.projects) {
+    const r = p.result;
+    if (!r) continue;
+    const years = Math.floor((state.day - r.releasedDay) / 365);
+    if (years < 1 || (r.anniversaries ?? 0) >= years) continue;
+    r.anniversaries = years;
+    // Only games that left a mark, and only round years: a memory, not a yearly notice for everything.
+    const notable = r.averageScore >= 7 || r.totalUnits >= K().farewellUnits;
+    if (!notable || ![1, 5, 10].includes(years)) continue;
+    const text = { key: years === 1 ? 'ledger.product.anniversary_one' : 'ledger.product.anniversary', params: { project: p.name, years, units: r.totalUnits } };
+    remember(state, `product:${p.id}:anniversary:${years}`, 'decision', text, { tone: 1, projectId: p.id }, emit);
+    emit({ type: 'product_happening', projectId: p.id, kind: 'anniversary', severity: 'important' });
+  }
+}
+
 /** Weekly: the extra sales of recent content updates (a small relaunch that fades). */
 function updateWaves(state: GameState, emit: EventSink): void {
   const k = K();
@@ -168,6 +191,7 @@ function updateWaves(state: GameState, emit: EventSink): void {
  */
 export function productsWeek(state: GameState, emit: EventSink): void {
   updateWaves(state, emit);
+  anniversaries(state, emit);
   const k = K();
   const last = state.productsLog?.lastDay;
   if (last !== undefined && state.day - last < k.happeningGapDays) return;

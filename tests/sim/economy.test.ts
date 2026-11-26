@@ -52,6 +52,16 @@ describe('economy review (LS.9)', () => {
     expect(wins).toBeLessThan(seeds.length);
   });
 
+  it('following the team\'s ideas (D-068) is a bet, not a dominant strategy', () => {
+    const N = year('N');
+    const ratio = money(N) / money(A);
+    expect(ratio).toBeGreaterThan(0.93);
+    expect(ratio).toBeLessThan(1.06);
+    const wins = N.filter((m, i) => m.money > A[i]!.money).length;
+    expect(wins).toBeGreaterThan(1);
+    expect(wins).toBeLessThan(seeds.length - 1);
+  });
+
   it('growing to medium games pays more when the office keeps the founder rested', () => {
     expect(money(I)).toBeGreaterThan(money(B));
   });

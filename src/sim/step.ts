@@ -15,6 +15,7 @@ import { onBreak, routinesTick } from './systems/routines';
 import { harmony, relationsDay } from './systems/relations';
 import { progressTick } from './systems/progress';
 import { productsWeek, supportTick } from './systems/products';
+import { inspirationDay } from './systems/inspiration';
 import { coordinationFactor, hiringDay, payroll, teamMoraleBonus, traitDrain, workstationEffects } from './systems/team';
 
 const C = SIM_CONFIG;
@@ -107,6 +108,7 @@ function dayBoundary(state: GameState, emit: EventSink): void {
   // Relationships (E.3): a working day together, mentoring, tension fading.
   relationsDay(state, (!!project && !resting && project.phase !== 'released') || (!project && (!!state.contracts.active || !!state.support)), emit, project?.pace === 'crunch' && !resting);
   storyDay(state, emit);
+  inspirationDay(state, emit);
   if (state.contracts.active) gainXp(state, founder, 'management', C.progression.managementPerProjectDay, emit);
   applyScheduled(state, emit);
   maybeTriggerEvent(state, emit);

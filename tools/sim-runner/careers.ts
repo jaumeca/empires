@@ -18,7 +18,7 @@ import { SIM_CONFIG } from '../../src/sim/config';
 export const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 export const pct = (xs: number[], p: number) => [...xs].sort((a, b) => a - b)[Math.floor((xs.length - 1) * p)]!;
 
-type Next = { kind: 'game'; topicId: string; size: 'small' | 'medium'; budget: number; days: number } | { kind: 'contract' } | { kind: 'wait' } | { kind: 'support'; projectId: string; job: 'patch' | 'update' };
+type Next = { kind: 'game'; topicId: string; size: 'small' | 'medium'; budget: number; days: number; features?: string[]; ideaId?: string } | { kind: 'contract' } | { kind: 'wait' } | { kind: 'support'; projectId: string; job: 'patch' | 'update' };
 export interface Strategy {
   name: string;
   next: (s: GameState, ctx: Ctx) => Next;
@@ -59,6 +59,8 @@ export const STRATEGIES: Strategy[] = [
   { name: 'L small games + hire 1', hire: 1, next: () => kart() },
   // GT.6: between games, patch a buggy hit and give good games new content when they can.
   { name: 'M games + look after products', next: (s) => careFor(s) ?? kart() },
+  // D-068: always follow the team's oldest idea when there is one (its topic and feature).
+  { name: 'N games following the team\'s ideas', next: (s) => { const i = (s.company.inspirations ?? [])[0]; return i ? { ...game(i.topicId ?? 'kart'), features: i.featureId ? [i.featureId] : undefined, ideaId: i.id } : kart(); } },
   { name: 'G early trends + growth', next: (s, c) => (c.games >= 2 && s.company.money > 14000 ? game(trendTopic(s), 'medium', 3000, 98) : game(trendTopic(s))) },
 ];
 
@@ -135,7 +137,7 @@ export function career(seed: number, st: Strategy, horizon = 365) {
         g.dispatch({ type: 'accept_contract', offerId: best.id });
         ctx.justContracted = true;
       } else if (n.kind === 'game') {
-        const r = g.dispatch({ type: 'start_project', name: `P${ctx.games}`, topicId: n.topicId, size: n.size, focus: getTopic(n.topicId).idealFocus, budget: Math.min(n.budget, Math.max(0, s.company.money - 1000)), days: n.days, price: n.size === 'medium' ? 14.99 : 9.99 });
+        const r = g.dispatch({ type: 'start_project', name: `P${ctx.games}`, topicId: n.topicId, features: n.features, ideaId: n.ideaId, size: n.size, focus: getTopic(n.topicId).idealFocus, budget: Math.min(n.budget, Math.max(0, s.company.money - 1000)), days: n.days, price: n.size === 'medium' ? 14.99 : 9.99 });
         if (r.ok) { pid = g.state.activeProjectId; ctx.justContracted = false; }
       }
     }

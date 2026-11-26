@@ -1,5 +1,7 @@
 import { ScreenDeck, type ScreenMode } from './screens';
 import { personalItem } from './models/personal';
+import { productArt, productBox, type ProductArt } from './productArt';
+import { framedCover } from './models/collection';
 import { gestureGap, hash01, idleGesture, reactionTo, type Gesture, type Persona } from './gestures';
 import type { Expression } from './face';
 import type { IconName } from './icons';
@@ -13,10 +15,10 @@ import type { SimEvent } from '../sim/core/events';
 import type { Activity, Appearance, Empirian, GameState, Office, PlacedItem, Project, Rot } from '../sim/model/state';
 import { blockedCells, founderDesk, getItemDef, rotatedSize, useSpot } from '../sim/systems/office';
 import { OFFICE_GRID } from '../content/officeItems';
-import { chairModel, computerModel, itemModel } from './models/catalogModels';
+import { chairModel, computerModel, itemModel, SHOWCASE_SLOTS } from './models/catalogModels';
 import { EmpirianView, VOXEL_MATERIAL, type Pose } from './empirianView';
 import { BubbleSystem } from './bubbles';
-import { buildCorkBoard, buildPoster, buildProductBox, buildRoomShell, ROOM } from './models/furniture';
+import { buildCorkBoard, buildPoster, buildRoomShell, ROOM } from './models/furniture';
 import { CLOTH_COLORS, P, PALETTE_HEX } from './palette';
 import { meshVoxels, VOXEL, type VoxelGrid } from './voxel';
 
@@ -211,7 +213,7 @@ export class OfficeScene {
   private screenMode: ScreenMode = 'off';
   private screenTimer = 0;
   private screenLine = 0;
-  private productBoxes = new Map<string, Mesh>();
+  private productBoxes = new Map<string, { mesh: Mesh; key: string }>();
   private confetti: InstancedMesh;
   private confettiState: { p: Vector3; v: Vector3; r: Vector3; life: number }[] = [];
   private camMode: CameraMode;
@@ -226,7 +228,6 @@ export class OfficeScene {
   private itemGroups = new Map<string, { key: string; group: Group; pick: Object3D[] }>();
   private screenMesh!: Mesh;
   private screenAnchor: Group | null = null;
-  private showcase: Group | null = null;
   private rugRects: [number, number, number, number][] = [];
   private decorGrid: LineSegments | null = null;
   private ghost: Group | null = null;
@@ -424,7 +425,9 @@ export class OfficeScene {
       parent.add(m);
       pick.push(m);
     };
-    for (const part of model.parts) addPart(part.grid, part.at, inner);
+    // The framed cover shows the studio's real first game (0.19.0).
+    const parts = def.id === 'framed_cover' ? [{ grid: framedCover(this.firstGameArt()), at: model.parts[0]!.at }] : model.parts;
+    for (const part of parts) addPart(part.grid, part.at, inner);
     let screenAnchor: Group | undefined;
     let led: Mesh | undefined;
     let mugLocal: Vector3 | undefined;
@@ -480,14 +483,15 @@ export class OfficeScene {
       const ownerId = desk?.uid === item.uid ? this.lastState?.founderId : item.assignedTo;
       const owner = ownerId ? this.lastState?.empirians.find((x) => x.id === ownerId) : undefined;
       const k = JSON.stringify(item) + (desk?.uid === item.uid ? '*' : '') + (owner?.trait ?? (owner ? '-' : ''));
+      const kk = item.defId === 'framed_cover' ? k + JSON.stringify(this.firstGameArt()) : k;
       const old = this.itemGroups.get(item.uid);
-      if (old && old.key === k) continue;
+      if (old && old.key === kk) continue;
       if (old) this.removeItemGroup(item.uid);
       const built = this.buildItemGroup(item, { owner });
       if (built.mug || built.led) this.deskFx.set(item.uid, { mug: built.mug, led: built.led, phase: hash01(item.uid, 3) * 10 });
       this.scene.add(built.group);
       this.pickables.push(...built.pick);
-      this.itemGroups.set(item.uid, { key: k, group: built.group, pick: built.pick });
+      this.itemGroups.set(item.uid, { key: kk, group: built.group, pick: built.pick });
       if (desk?.uid === item.uid && built.screenAnchor) {
         this.screenAnchor = built.screenAnchor;
         built.screenAnchor.add(this.screenMesh);
@@ -500,14 +504,11 @@ export class OfficeScene {
       }
     }
     for (const uid of [...this.itemGroups.keys()]) if (!seen.has(uid)) this.removeItemGroup(uid);
-    const showcaseItem = office.items.find((i) => getItemDef(i.defId).showcase);
-    const showcaseGroup = showcaseItem ? this.itemGroups.get(showcaseItem.uid)?.group ?? null : null;
-    if (showcaseGroup !== this.showcase) {
-      this.showcase = showcaseGroup;
-      for (const m of this.productBoxes.values()) m.removeFromParent();
-      this.productBoxes.clear();
-      if (this.lastState) this.syncProducts(this.lastState.projects);
-    }
+    // Showcases changed (added, moved, removed): put every box back in its place.
+    for (const b of this.productBoxes.values()) { b.mesh.removeFromParent(); b.mesh.geometry.dispose(); }
+    this.pickables = this.pickables.filter((p) => p.userData.kind !== 'product');
+    this.productBoxes.clear();
+    if (this.lastState) this.syncProducts(this.lastState.projects);
     // Walkability, rug areas and points of interest for the Empirians.
     this.blocked = blockedCells(office);
     this.rugRects = office.items
@@ -576,7 +577,7 @@ export class OfficeScene {
       if (sp && e.drink && e.drink > bestDrink) { bestDrink = e.drink; pois.drink = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'stand' }; }
       if (sp && e.inspiration && e.inspiration > 1) pois.whiteboard = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'think' };
       if (sp && def.showcase) pois.shelf = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'think' };
-      if (sp && def.id === 'arcade') pois.arcade = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'stand' };
+      if (sp && (def.id === 'arcade' || def.id === 'retro_console')) pois.arcade = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'stand' };
       if (def.category === 'plant' && !pois.plant) {
         const rs = rotatedSize(def, it.rot);
         const c = this.nearestFreeCell((it.x + rs.w / 2) * CELL, (it.z + rs.d + 0.5) * CELL);
@@ -841,7 +842,7 @@ export class OfficeScene {
     // Relationship moments go last so routine work bubbles never push them out (E.3).
     const ordered = [...events.filter((e) => e.type !== 'relation'), ...events.filter((e) => e.type === 'relation')];
     for (const e of ordered) {
-      const actor = 'empirianId' in e ? this.actors.get(e.empirianId) : this.actors.values().next().value;
+      const actor = 'empirianId' in e ? (e.empirianId ? this.actors.get(e.empirianId) : this.actors.values().next().value) : this.actors.values().next().value;
       if (!actor) continue;
       const head = actor.view.head;
       const off = 1.05;
@@ -869,6 +870,11 @@ export class OfficeScene {
           this.bubbles.spawn(head, off, 'check', now, { cooldown: 0.9 });
           actor.view.flash('happy', 0.8, now);
           if (hash01(e.empirianId, Math.floor(now * 10)) < 0.3 && !actor.view.currentGesture(now)) actor.view.playGesture('fistpump', now);
+          break;
+        case 'inspiration':
+          // An idea for a future game (D-068): a eureka and a light bulb.
+          this.bubbles.spawn(head, off + 0.4, 'idea', now, { cooldown: 0.2, life: 2.6 });
+          if (!actor.view.currentGesture(now)) actor.view.playGesture('eureka', now);
           break;
         case 'idea':
           this.bubbles.spawn(head, off, 'idea', now, { cooldown: 1.5 });
@@ -1014,32 +1020,52 @@ export class OfficeScene {
   }
 
   // ---------------------------------------------------------------- products
+  /**
+   * Every released game has its physical box (0.19.0): on the bookshelf and in the game cabinets,
+   * in release order, with its own look (productArt). Derived from the state: old saves get theirs too.
+   * A box is rebuilt only when its look changes (score seal, an update sticker).
+   */
   private syncProducts(projects: Project[]): void {
-    if (!this.showcase) return;
-    // Slots on the showcase shelf, item-local voxels (rot 0, front +z).
-    const slots: [number, number, number][] = [[2.5, 25, 1.5], [7, 25, 1.5], [11.5, 25, 1.5], [11, 16, 1.5], [3, 32, 2.5], [8, 32, 2.5]];
-    const inner = this.showcase.children[0];
-    if (!inner) return;
-    const released = projects.filter((p) => p.phase === 'released');
+    const office = this.lastState?.office;
+    if (!office) return;
+    const slots: { inner: Object3D; at: [number, number, number] }[] = [];
+    for (const it of office.items) {
+      const def = getItemDef(it.defId);
+      const inner = def.showcase ? this.itemGroups.get(it.uid)?.group.children[0] : undefined;
+      if (inner) for (const at of SHOWCASE_SLOTS[def.model] ?? []) slots.push({ inner, at });
+    }
+    const released = projects.filter((p) => p.phase === 'released' && p.result).sort((a, b) => a.result!.releasedDay - b.result!.releasedDay);
     released.forEach((p, i) => {
-      if (this.productBoxes.has(p.id) || i >= slots.length) return;
-      let h = 0;
-      for (const ch of p.name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-      const cover = CLOTH_COLORS[h % CLOTH_COLORS.length]!;
-      const accent = h % 2 ? P.white : P.ink;
-      const box = buildProductBox(cover, accent, h);
-      const m = new Mesh(meshVoxels(box, { jitter: 0.02 }), VOXEL_MATERIAL);
-      const [x, y, z] = slots[i]!;
+      const slot = slots[i];
+      const art = productArt(p);
+      const key = `${i}|${JSON.stringify(art)}`;
+      const old = this.productBoxes.get(p.id);
+      if (old && old.key === key && old.mesh.parent === slot?.inner) return;
+      if (old) { old.mesh.removeFromParent(); old.mesh.geometry.dispose(); this.pickables = this.pickables.filter((x) => x !== old.mesh); this.productBoxes.delete(p.id); }
+      if (!slot) return; // more games than places: they wait for another cabinet
+      const m = new Mesh(meshVoxels(productBox(art), { jitter: 0.02 }), VOXEL_MATERIAL);
+      const [x, y, z] = slot.at;
       // The box model faces +x: turn it to face the shelf front (+z).
       m.rotation.y = -Math.PI / 2;
       m.position.set(x * VOXEL, y * VOXEL, (z + 2) * VOXEL);
       m.castShadow = true;
       m.userData.kind = 'product';
       m.userData.productId = p.id;
-      inner.add(m);
+      slot.inner.add(m);
       this.pickables.push(m);
-      this.productBoxes.set(p.id, m);
+      this.productBoxes.set(p.id, { mesh: m, key });
     });
+  }
+
+  private firstGameArt(): ProductArt | null {
+    const first = this.lastState?.projects.filter((p) => p.result).sort((a, b) => a.result!.releasedDay - b.result!.releasedDay)[0];
+    return first ? productArt(first) : null;
+  }
+
+  /** Games with a box on display / waiting for a free place (for the UI). */
+  showcaseCapacity(): number {
+    const office = this.lastState?.office;
+    return office ? office.items.reduce((n, it) => n + (getItemDef(it.defId).showcase ? (SHOWCASE_SLOTS[getItemDef(it.defId).model]?.length ?? 0) : 0), 0) : 0;
   }
 
   // ----------------------------------------------------------------- screen

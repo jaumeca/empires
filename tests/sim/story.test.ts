@@ -137,3 +137,22 @@ describe('studio story (ML.2, ML.3)', () => {
     expect(kinds(g2.state)).toContain('first_release');
   });
 });
+
+describe('physical memories of real milestones (0.19.0)', () => {
+  it('first game out, ten games and the first content update unlock their keepsakes (and only then)', async () => {
+    const { ACHIEVEMENTS } = await import('../../src/sim/systems/story');
+    const { createNewGame } = await import('../../src/sim/state');
+    const s = createNewGame(5);
+    const by = (id: string) => ACHIEVEMENTS.find((a) => a.id === id)!;
+    expect(by('first_release').done(s)).toBe(false);
+    const rel = (i: number, updates = 0) => ({ id: `P-${i}`, phase: 'released', result: { averageScore: 6, support: { patches: 0, updates } } });
+    s.projects.push(rel(1) as never);
+    expect(by('first_release').done(s)).toBe(true);
+    expect(by('ten_games').done(s)).toBe(false);
+    expect(by('first_update').done(s)).toBe(false);
+    for (let i = 2; i <= 10; i++) s.projects.push(rel(i, i === 10 ? 1 : 0) as never);
+    expect(by('ten_games').done(s)).toBe(true);
+    expect(by('first_update').done(s)).toBe(true);
+    expect(by('first_release').item).toBe('framed_cover');
+  });
+});

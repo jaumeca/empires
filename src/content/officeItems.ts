@@ -82,12 +82,23 @@ export const ITEMS: readonly ItemDef[] = [
   { id: 'rug_checker', category: 'decor', price: 90, size: { w: 4, d: 3 }, layer: 'floor', rotatable: true, model: 'rug_checker', effects: { ambiance: 1 } },
   { id: 'arcade', category: 'decor', price: 1100, size: { w: 2, d: 2 }, layer: 'solid', reserve: { w: 2, d: 1 }, spot: { x: 6, z: 15, pose: 'stand' }, rotatable: true, model: 'arcade', effects: { ambiance: 2 } },
   { id: 'bookshelf', category: 'storage', price: 200, size: { w: 3, d: 1 }, layer: 'solid', reserve: { w: 3, d: 1 }, spot: { x: 9, z: 10, pose: 'stand' }, rotatable: true, model: 'bookshelf', showcase: true, effects: { ambiance: 1 } },
+  // 0.19.0: a display cabinet for the studio's own games (every released game gets its box here).
+  { id: 'game_cabinet', category: 'storage', price: 450, size: { w: 4, d: 1 }, layer: 'solid', reserve: { w: 4, d: 1 }, spot: { x: 12, z: 10, pose: 'stand' }, rotatable: true, model: 'game_cabinet', showcase: true, effects: { ambiance: 1.2 } },
+  // 0.19.0: more to make the office yours.
+  { id: 'retro_console', category: 'decor', price: 700, size: { w: 2, d: 1 }, layer: 'solid', reserve: { w: 2, d: 1 }, spot: { x: 6, z: 10, pose: 'stand' }, rotatable: true, model: 'retro_console', effects: { ambiance: 1.5 } },
+  { id: 'figure_shelf', category: 'decor', price: 180, size: { w: 1, d: 1 }, layer: 'solid', rotatable: true, model: 'figure_shelf', effects: { ambiance: 0.8 } },
+  { id: 'book_stack', category: 'decor', price: 40, size: { w: 1, d: 1 }, layer: 'solid', rotatable: true, model: 'book_stack', effects: { ambiance: 0.4 } },
+  { id: 'monstera', category: 'plant', price: 240, size: { w: 2, d: 2 }, layer: 'solid', rotatable: false, model: 'monstera', effects: { ambiance: 1.8 } },
   // --- Awards (ML.3): unlocked by achievements (systems/story.ts), purely decorative.
   { id: 'trophy_gold', category: 'awards', price: 120, size: { w: 1, d: 1 }, layer: 'solid', rotatable: false, model: 'trophy_gold', effects: { ambiance: 0.8 } },
   { id: 'plaque_five', category: 'awards', price: 150, size: { w: 1, d: 1 }, layer: 'solid', rotatable: true, model: 'plaque_five', effects: { ambiance: 0.8 } },
   { id: 'team_photo', category: 'awards', price: 80, size: { w: 1, d: 1 }, layer: 'solid', rotatable: true, model: 'team_photo', effects: { ambiance: 0.8 } },
   { id: 'bonsai', category: 'awards', price: 140, size: { w: 1, d: 1 }, layer: 'solid', rotatable: false, model: 'bonsai', effects: { ambiance: 1 } },
   { id: 'neon_sign', category: 'awards', price: 600, upkeep: 2, size: { w: 2, d: 1 }, layer: 'solid', rotatable: true, model: 'neon_sign', effects: { ambiance: 1.6 } },
+  // 0.19.0: physical memories of real milestones (first game out, ten games, first content update).
+  { id: 'framed_cover', category: 'awards', price: 60, size: { w: 1, d: 1 }, layer: 'solid', rotatable: true, model: 'framed_cover', effects: { ambiance: 0.8 } },
+  { id: 'gold_cartridge', category: 'awards', price: 300, size: { w: 1, d: 1 }, layer: 'solid', rotatable: true, model: 'gold_cartridge', effects: { ambiance: 1 } },
+  { id: 'fan_board', category: 'awards', price: 90, size: { w: 2, d: 1 }, layer: 'solid', rotatable: true, model: 'fan_board', effects: { ambiance: 0.8 } },
   { id: 'lucky_cactus', category: 'awards', price: 50, size: { w: 1, d: 1 }, layer: 'solid', rotatable: false, model: 'lucky_cactus', effects: { ambiance: 0.6 } },
   // --- Later
   { id: 'server_rack', category: 'tech', price: 6000, upkeep: 20, size: { w: 2, d: 1 }, layer: 'solid', rotatable: true, model: 'server_rack', locked: 'later', effects: {} },

@@ -1,3 +1,4 @@
+import { drawCover, productArt } from '../render/productArt';
 import type { AudioPrefs, Sfx, SoundEngine } from '../audio/sound';
 import type { Speed } from '../sim/config';
 import type { SimEvent } from '../sim/core/events';
@@ -15,7 +16,8 @@ import { profileFor } from '../sim/systems/ambition';
 import { isFresh, unlocked } from '../sim/systems/progress';
 import { nextGoal } from '../sim/systems/goals';
 import { launchTier } from '../sim/systems/launch';
-import { patchBlock, productStatus, supportDays, supportOf, updateBlock } from '../sim/systems/products';
+import { ideaFits, ideaText } from '../sim/systems/inspiration';
+import { patchBlock, productStatus, productVersion, supportDays, supportOf, updateBlock } from '../sim/systems/products';
 import { effectiveRisk, FEATURE_CFG, featureLock } from '../sim/systems/features';
 import { FEATURE_SLOTS, FEATURES, getFeature } from '../content/features';
 import type { Game } from '../sim/game';
@@ -381,6 +383,12 @@ export class GameUI {
           this.launchBanner(e.projectId);
           setTimeout(() => this.showResults(e.projectId), 1800);
           break;
+        case 'inspiration': {
+          // D-068: a quiet note (no window); the idea waits in the new-game dialog.
+          const i = (this.state.company.inspirations ?? []).find((x) => x.id === e.inspirationId);
+          if (i) { this.sfx('idea'); this.toast(tr(ideaText(this.state, i)), 'idea'); }
+          break;
+        }
         case 'bug_created': case 'bug_found': this.sfx('bug'); break;
         case 'bug_fixed': this.sfx('fixed'); break;
         case 'idea': this.sfx('idea'); break;
@@ -394,7 +402,8 @@ export class GameUI {
         case 'product_happening': {
           // GT.6: a quiet note about a product's later life (never a window).
           const hp = getProject(this.state, e.projectId);
-          this.toast(t(`ledger.product.${e.kind}`, { project: hp?.name ?? '' }), e.kind === 'abandoned' ? 'alert' : 'box');
+          const yrs = hp?.result?.anniversaries ?? 1;
+          this.toast(e.kind === 'anniversary' ? t(yrs === 1 ? 'ledger.product.anniversary_one' : 'ledger.product.anniversary', { project: hp?.name ?? '', years: yrs, units: hp?.result?.totalUnits ?? 0 }) : t(`ledger.product.${e.kind}`, { project: hp?.name ?? '' }), e.kind === 'abandoned' ? 'alert' : e.kind === 'anniversary' ? 'star' : 'box');
           break;
         }
         case 'phase_changed':
@@ -496,6 +505,15 @@ export class GameUI {
     this.toastBox.append(note);
     setTimeout(() => note.remove(), 6500);
     setTimeout(() => { this.unlockQueue.shift(); this.nextUnlockNote(); }, 1600);
+  }
+
+  /** A game's cover (0.19.0): the same design as its box on the shelf. */
+  private cover(p: Project, w: number): HTMLCanvasElement {
+    const hgt = Math.round(w * 1.4);
+    const c = h('canvas.cover', { width: w * 2, height: hgt * 2, style: { width: `${w}px`, height: `${hgt}px` }, dataset: { cover: p.id } });
+    const ctx = c.getContext('2d');
+    if (ctx) drawCover(ctx, productArt(p), p.name || t('project.unnamed'), w * 2, hgt * 2);
+    return c;
   }
 
   /** Plays a sound if there is sound (0.18.0). */
@@ -731,6 +749,7 @@ export class GameUI {
       price: 9.99,
       features: [] as string[],
       prototype: false,
+      ideaId: undefined as string | undefined,
     };
     const est = h('div.row');
     const budgetLbl = h('span');
@@ -765,7 +784,7 @@ export class GameUI {
     const drawTopics = () => {
       clear(topicTiles);
       for (const topic of TOPICS) {
-        topicTiles.append(h('button.tile', { class: plan.topicId === topic.id ? 'on' : '', dataset: { topic: topic.id }, onclick: () => { plan.topicId = topic.id; drawTopics(); drawFeatures(); } },
+        topicTiles.append(h('button.tile', { class: plan.topicId === topic.id ? 'on' : '', dataset: { topic: topic.id }, onclick: () => { plan.topicId = topic.id; drawTopics(); drawFeatures(); drawIdeas(); } },
           h('div.t', null, t(`topic.${topic.id}.name`)),
           (() => { const m = topicMood(s, topic.id); return m === 'calm' ? null : h(`span.mood.${m}`, null, t(`mood.${m}`)); })(),
           h('div.d', null, t(`topic.${topic.id}.blurb`))));
@@ -797,6 +816,7 @@ export class GameUI {
           plan.features = on ? plan.features.filter((x) => x !== f.id) : [...plan.features, f.id];
           drawFeatures();
           refresh();
+          drawIdeas();
         } },
           h('div.t', null, t(`feature.${f.id}`)),
           lock ? h('div.d', null, t(`flock.${lock}`)) : h('div.chips', null, ...chips.map((c) => h(`span.chip${c === t('fchip.fit_bad') || c === t('fchip.risk_high') ? '.bad' : c === t('fchip.fit_good') || c === t('fchip.reach') ? '.good' : ''}`, null, c))),
@@ -810,6 +830,27 @@ export class GameUI {
         studio ? h('div.hint', null, t('np.prototype_hint')) : null].filter((x): x is HTMLDivElement | HTMLLabelElement => !!x));
     };
     drawFeatures();
+    // Ideas from the team (0.19.0, D-068): tapping one sets the plan to follow it; optional.
+    const ideaBox = h('div.ideas', { id: 'np-ideas' });
+    const drawIdeas = () => {
+      clear(ideaBox);
+      const ideas = s.company.inspirations ?? [];
+      if (!ideas.length) return;
+      if (plan.ideaId) { const cur = ideas.find((i) => i.id === plan.ideaId); if (!cur || !ideaFits(cur, plan)) plan.ideaId = undefined; }
+      ideaBox.append(h('label', null, t('np.ideas')));
+      for (const i of ideas) {
+        const on = plan.ideaId === i.id;
+        ideaBox.append(h(`button.idea${on ? '.on' : ''}`, { dataset: { idea: i.id }, onclick: () => {
+          if (on) { plan.ideaId = undefined; drawIdeas(); return; }
+          if (i.topicId) plan.topicId = i.topicId;
+          if (i.featureId && !plan.features.includes(i.featureId)) plan.features = [...plan.features, i.featureId].slice(-(FEATURE_SLOTS[plan.size] ?? 2));
+          plan.ideaId = i.id;
+          drawTopics(); drawFeatures(); refresh(); drawIdeas();
+        } }, icon('idea', 18), h('span', null, tr(ideaText(s, i))), h('span.chip', null, t(on ? 'np.idea_on' : 'np.idea_use'))));
+      }
+      ideaBox.append(h('div.hint', null, t('np.ideas_hint')));
+    };
+    drawIdeas();
     const seg = (options: [string, string][], get: () => string, set: (v: string) => void) => {
       const el = h('div.seg');
       const draw = () => {
@@ -845,6 +886,7 @@ export class GameUI {
             h('input', { type: 'range', min: PROJECT_LIMITS.minDays, max: PROJECT_LIMITS.maxDays, step: 7, value: plan.days, 'aria-label': t('np.deadline'), oninput: (e: Event) => { plan.days = Number((e.target as HTMLInputElement).value); refresh(); } }),
             h('div.hint', null, daysLbl)),
           est,
+          planning && (s.company.inspirations ?? []).length ? h('div.section', null, ideaBox) : null,
           planning ? h('div.section', null, featureBox) : h('p.hint.next-unlock', { id: 'np-next' }, icon('star', 16), ` ${t('np.next_planning')}`),
         ),
       ),
@@ -1005,7 +1047,7 @@ export class GameUI {
     const scoreEl = h('div.score-big', { id: 'res-score' }, fmtNum1(r.averageScore));
     const card = h(`div.card.wide.results.tier-${tier}`, null, this.closeBtn(),
       h('div.tier-banner', { dataset: { tier } }, icon(tier === 'flop' ? 'sweat' : tier === 'ok' ? 'check' : 'star', 22), h('span', null, t(`res.tier.${tier}`))),
-      h('h2', null, projectName(p)),
+      h('div.res-head', null, this.cover(p, 64), h('h2', null, projectName(p))),
       h('p.sub', null, t('res.sub', { verdict, day: r.releasedDay, price: r.price })),
       h('div.row', null,
         scoreEl,
@@ -1355,9 +1397,12 @@ export class GameUI {
           },
         }, t(`support.${kind}.button`, { days: supportDays(s, p, kind) }));
       };
+      const weeks = r.weeklySales;
+      const maxW = Math.max(1, ...weeks);
+      const spark = weeks.length > 1 ? h('div.sales.mini', { title: t('res.sales_chart') }, ...weeks.map((u) => h('i', { style: { height: `${(u / maxW) * 100}%` } }))) : null;
       return h('li.product', { dataset: { product: p.id, status: st } },
         h('div.row', { style: { justifyContent: 'space-between', flexWrap: 'nowrap' } },
-          h('div', null, h('div.name', null, projectName(p)), h('div.hint', null, t('products.line', { topic: t(`topic.${p.topicId}.name`), day: r.releasedDay }))),
+          h('div.row', { style: { flexWrap: 'nowrap', gap: '10px' } }, this.cover(p, 40), h('div', null, h('div.name', null, projectName(p)), h('div.hint', null, t('products.line', { topic: t(`topic.${p.topicId}.name`), day: r.releasedDay })))),
           h('div.score-mini', null, fmtNum1(r.averageScore)),
         ),
         h('div.row', null,
@@ -1365,9 +1410,11 @@ export class GameUI {
           h('span.chip', null, icon('box', 16), t('res.units', { n: r.totalUnits })),
           h('span.chip.good', null, icon('coin', 16), t('res.revenue', { n: r.revenue })),
           bugs ? h('span.chip.bad', null, icon('bug', 16), t('products.bugs', { count: bugs })) : null,
+          h('span.chip', { dataset: { version: productVersion(p) } }, t('products.version', { version: productVersion(p) })),
           sup.patches ? h('span.chip', null, t('products.patches', { count: sup.patches })) : null,
           sup.updates ? h('span.chip', null, t('products.updates', { count: sup.updates })) : null,
         ),
+        spark,
         working ? h('p.hint', null, icon('code', 16), ` ${t(`support.working.${job!.kind}`, { pct: Math.min(1, job!.done / job!.work) })}`) : h('div.actions.left', null, btn('patch', patchErr), btn('update', updErr)),
       );
     };

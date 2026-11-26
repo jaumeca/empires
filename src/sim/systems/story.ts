@@ -34,6 +34,10 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
   { id: 'first_hire', item: 'team_photo', done: (s) => s.hiring.hired >= 1 },
   { id: 'five_contracts', item: 'bonsai', done: (s) => s.contracts.completed >= 5 },
   { id: 'rich', item: 'neon_sign', done: (s) => s.company.money >= 100_000 },
+  // 0.19.0: physical memories of real milestones.
+  { id: 'first_release', item: 'framed_cover', done: (s) => released(s).length >= 1 },
+  { id: 'ten_games', item: 'gold_cartridge', done: (s) => released(s).length >= 10 },
+  { id: 'first_update', item: 'fan_board', done: (s) => s.projects.some((p) => (p.result?.support?.updates ?? 0) > 0) },
   { id: 'comeback', item: 'lucky_cactus', done: (s) => s.story.memories.some((m) => m.kind === 'comeback') },
 ];
 

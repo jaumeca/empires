@@ -17,6 +17,7 @@ import { NEXT_SIZE, OFFICE_SIZES } from '../content/officeSizes';
 import { acceptContract, cancelContract } from './systems/contracts';
 import { cancelSupport, startSupport } from './systems/products';
 import { unlocked } from './systems/progress';
+import { ideaFits, useIdea } from './systems/inspiration';
 import { getActiveProject, getFounder } from './state';
 import { getTopic } from '../content/topics';
 import { resolveDecision } from './systems/decisions';
@@ -33,6 +34,8 @@ export type Command =
       /** AW.D: chosen features and whether to prototype first. */
       features?: string[];
       prototype?: boolean;
+      /** 0.19.0: an idea of the team this game follows (D-068). */
+      ideaId?: string;
       size: ProjectSize;
       focus: number;
       budget: number;
@@ -130,6 +133,12 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
         const err = setupFeatures(state, p, cmd.features ?? [], !!cmd.prototype, '');
         if (err) return fail(err);
       }
+      // An idea from the team (0.19.0): only if the plan really follows it; checked before anything changes.
+      if (cmd.ideaId) {
+        const idea = (state.company.inspirations ?? []).find((i) => i.id === cmd.ideaId);
+        if (!idea) return fail('idea_gone');
+        if (!ideaFits(idea, { topicId: p.topicId, features: p.features })) return fail('idea_not_fit');
+      }
       state.projects.push(p);
       state.activeProjectId = p.id;
       useSavedIdeas(state, p);
@@ -143,6 +152,7 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       });
       for (const m of p.bugRateMods) if (!m.causeId) m.causeId = startedId;
       emit({ type: 'project_started', projectId: p.id, severity: 'important' });
+      if (cmd.ideaId) useIdea(state, p, cmd.ideaId);
       return { ok: true };
     }
 
