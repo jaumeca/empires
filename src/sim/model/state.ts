@@ -147,7 +147,7 @@ export interface Candidate {
 /** Studio memories (ML.2): meaningful moments, derived from real facts. */
 export type MemoryKind =
   | 'founded' | 'first_release' | 'first_hit' | 'first_flop' | 'hit' | 'record' | 'comeback'
-  | 'first_hire' | 'hire' | 'farewell' | 'first_contract' | 'skill_master' | 'money' | 'decision' | 'first_decor' | 'achievement' | 'office_moved' | 'relation' | 'reputation' | 'unlock';
+  | 'first_hire' | 'hire' | 'farewell' | 'first_contract' | 'skill_master' | 'money' | 'decision' | 'first_decor' | 'achievement' | 'office_moved' | 'relation' | 'reputation' | 'unlock' | 'saga';
 
 export interface Memory {
   id: string;
@@ -320,6 +320,9 @@ export interface Project {
   bugReported?: boolean;
   /** 0.19.0: its launch already inspired an idea (lesson or sequel). */
   inspired?: boolean;
+  /** 0.23.0 (D-073): the game this one is a sequel of, and the share of its fans waiting (0..1, fixed at the start). */
+  sequelOf?: string;
+  sequelFans?: number;
   /** Set once its routine history has been archived (systems/history.ts). */
   historyCompacted?: boolean;
   result?: ProjectResult;

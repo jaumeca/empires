@@ -12,6 +12,7 @@ import { getTopic, TOPICS } from '../../content/topics';
 import { compactHistory } from './history';
 import { demandFactor, worldWeek } from './world';
 import { gainXp } from './progression';
+import { rememberSequel, sequelReach, sequelVerdict } from './sequels';
 import { fitModifier, investmentRatio, productionProgress, qualityCeiling, trueQuality } from './project';
 
 const C = SIM_CONFIG;
@@ -44,7 +45,10 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
   const incompletePenalty = (1 - prog) * 6;
   const repMod = (state.company.reputation - 50) / 100;
   const previewPenalty = p.previewGiven === 'give_build' && shippedBugs >= C.events.previewBugThreshold ? C.events.previewBugPenalty : 0;
-  const base = quality - bugPenalty - incompletePenalty - previewPenalty + repMod;
+  const raw = quality - bugPenalty - incompletePenalty - previewPenalty + repMod;
+  // 0.23.0: a sequel is judged against its original.
+  const verdict = sequelVerdict(state, p, raw);
+  const base = raw + verdict.amount;
 
   const reviews: Review[] = OUTLETS.map((outlet) => {
     const s = Math.max(1, Math.min(10, base + nextRange(state.rng.market, -0.7, 0.7)));
@@ -113,6 +117,10 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
     const crunch = entriesFor(state, p.id, ['pace_changed']).filter((e) => e.text.key === 'ledger.pace.crunch').map((e) => e.id);
     factors.push({ amount: -dc, text: { key: 'factor.debt', params: { level: debtLevel(debtOf(p)) } }, causes: [...new Set([...(p.debtCauses ?? []), ...crunch])] });
   }
+  if (verdict.key) {
+    const started0 = entriesFor(state, p.id, ['project_started']).map((e) => e.id);
+    factors.push({ amount: verdict.amount, text: { key: verdict.key, params: { game: state.projects.find((q) => q.id === p.sequelOf)?.name ?? '' } }, causes: started0 });
+  }
   const promise = entriesFor(state, p.id, ['promise'])[0];
   if (promise) factors.push({ amount: 0.05, text: { key: 'factor.promise' }, causes: [promise.id] });
 
@@ -130,6 +138,7 @@ export function releaseProject(state: GameState, p: Project, founder: Empirian, 
   carryDebt(state, p);
   fameRelease(state, p, emit);
   ambitionVerdict(state, p, emit);
+  rememberSequel(state, p);
   state.activeProjectId = null;
   record(state, { kind: 'released', text: { key: 'ledger.released', params: { project: p.name, score: averageScore } }, causes: explanation, tone: averageScore >= 6 ? 1 : -1, projectId: p.id });
   compactHistory(state);
@@ -161,7 +170,7 @@ export function marketWeek(state: GameState, emit: EventSink): void {
     // Players accept higher prices for better games: optimum price ~ expected / 1.1.
     const expectedPrice = 4 + r.averageScore * 1.2 + (C.market.sizePriceBonus[p.size] ?? 0);
     const priceFactor = Math.min(2.2, Math.exp(-1.1 * (r.price / expectedPrice - 1)));
-    const noise = nextRange(state.rng.market, 0.9, 1.1) * salesBoost(state, p) * featureReach(p);
+    const noise = nextRange(state.rng.market, 0.9, 1.1) * salesBoost(state, p) * featureReach(p) * sequelReach(p);
     const units = Math.round(
       C.market.baseAudience * (C.market.sizeAudience[p.size] ?? 1) * topic.interest * demandFactor(state, topic.id) * appeal * visibility * priceFactor * Math.pow(C.market.weeklySalesDecay, w) * noise,
     );

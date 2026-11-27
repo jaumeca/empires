@@ -401,6 +401,29 @@ export const SIM_CONFIG = {
     sizePriceBonus: { small: 0, medium: 3 } as Record<string, number>,
   },
   /** GT.6 (D-064): products after launch. See docs/PRODUCTS.md. */
+  /** Sequels and sagas (0.23.0, D-073). Measured with tools/sim-runner/careers.ts (strategy S). */
+  sequels: {
+    /** The original needs fans: at least this average score. */
+    minScore: 6.5,
+    /** Units sold by an original whose fans are all there (sales part of the fans). */
+    fullFansUnits: 8000,
+    /** Extra starting interest with all the fans waiting. */
+    hype: 1.2,
+    /** Work reused from the original (engine, world, characters). */
+    reuse: 0.1,
+    /** Reviewers compare with the original: within ±margin it is "as good". */
+    margin: 0.3,
+    /** Letdown per point below the original (capped). */
+    letdown: 0.5,
+    letdownMax: 0.8,
+    /** Surpassing the original. */
+    surpass: 0.2,
+    /** Extra reach in the launch weeks with all the fans. */
+    audience: 0.25,
+    /** From the third entry on, each one brings this share of the previous one's fans. */
+    fatigue: 0.65,
+  },
+
   products: {
     /** A patch is a short job: ~1 week for a typical bug count with a solo founder. */
     patchBase: 20,

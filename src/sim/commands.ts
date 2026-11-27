@@ -19,6 +19,7 @@ import { cancelSupport, startSupport } from './systems/products';
 import { unlocked } from './systems/progress';
 import { ideaFits, useIdea } from './systems/inspiration';
 import { undoDecor } from './systems/decorUndo';
+import { sequelBlock, startSequel } from './systems/sequels';
 import { getActiveProject, getFounder } from './state';
 import { getTopic } from '../content/topics';
 import { resolveDecision } from './systems/decisions';
@@ -37,6 +38,8 @@ export type Command =
       prototype?: boolean;
       /** 0.19.0: an idea of the team this game follows (D-068). */
       ideaId?: string;
+      /** 0.23.0: a sequel of this released game (same topic; D-073). */
+      sequelOf?: string;
       size: ProjectSize;
       focus: number;
       budget: number;
@@ -135,6 +138,13 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
         const err = setupFeatures(state, p, cmd.features ?? [], !!cmd.prototype, '');
         if (err) return fail(err);
       }
+      // A sequel (0.23.0): of a released game people liked, in its world (same topic).
+      const orig = cmd.sequelOf ? state.projects.find((q) => q.id === cmd.sequelOf) : undefined;
+      if (cmd.sequelOf) {
+        const block = sequelBlock(state, orig);
+        if (block) return fail(block);
+        if (orig!.topicId !== cmd.topicId) return fail('sequel_topic');
+      }
       // An idea from the team (0.19.0): only if the plan really follows it; checked before anything changes.
       if (cmd.ideaId) {
         const idea = (state.company.inspirations ?? []).find((i) => i.id === cmd.ideaId);
@@ -143,6 +153,7 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       }
       state.projects.push(p);
       state.activeProjectId = p.id;
+      if (orig) startSequel(state, p, orig);
       useSavedIdeas(state, p);
       inheritDebt(state, p, emit);
       // 0.21.0: money set aside for the next launch (office-or-project decision) goes to its marketing.

@@ -17,6 +17,7 @@ import { isFresh, unlocked } from '../sim/systems/progress';
 import { nextGoal } from '../sim/systems/goals';
 import { launchTier } from '../sim/systems/launch';
 import { ideaFits, ideaText } from '../sim/systems/inspiration';
+import { fansOf, sagaFatigue, sagaOf, sequelBlock } from '../sim/systems/sequels';
 import { patchBlock, productStatus, productVersion, supportDays, supportOf, updateBlock } from '../sim/systems/products';
 import { effectiveRisk, FEATURE_CFG, featureLock } from '../sim/systems/features';
 import { FEATURE_SLOTS, FEATURES, getFeature } from '../content/features';
@@ -802,6 +803,7 @@ export class GameUI {
       features: [] as string[],
       prototype: false,
       ideaId: undefined as string | undefined,
+      sequelOf: undefined as string | undefined,
     };
     const est = h('div.row');
     const budgetLbl = h('span');
@@ -809,7 +811,7 @@ export class GameUI {
     const focusLbl = h('span');
     const refresh = () => {
       // Features and a prototype add work (AW.D): the estimate includes them.
-      const extra = plan.features.reduce((a, id) => a + (getFeature(id)?.work ?? 0), 0) + (plan.prototype ? FEATURE_CFG.prototypeWork : 0) - (s.company.solidBase ? SIM_CONFIG.debt.solidBaseSaving : 0);
+      const extra = plan.features.reduce((a, id) => a + (getFeature(id)?.work ?? 0), 0) + (plan.prototype ? FEATURE_CFG.prototypeWork : 0) - (s.company.solidBase ? SIM_CONFIG.debt.solidBaseSaving : 0) - (plan.sequelOf ? SIM_CONFIG.sequels.reuse : 0);
       const e = estimatePlan(founder, plan.size, plan.focus, plan.budget, plan.days, teamSpeedFactor(s, plan.focus) / (1 + extra));
       clear(est);
       const verdict = { too_short: 'bad', tight: 'warn', ok: 'good', generous: 'warn' }[e.verdict];
@@ -836,7 +838,7 @@ export class GameUI {
     const drawTopics = () => {
       clear(topicTiles);
       for (const topic of TOPICS) {
-        topicTiles.append(h('button.tile', { class: plan.topicId === topic.id ? 'on' : '', dataset: { topic: topic.id }, onclick: () => { plan.topicId = topic.id; drawTopics(); drawFeatures(); drawIdeas(); } },
+        topicTiles.append(h('button.tile', { class: plan.topicId === topic.id ? 'on' : '', dataset: { topic: topic.id }, onclick: () => { plan.topicId = topic.id; drawTopics(); drawFeatures(); drawIdeas(); drawSequels(); } },
           h('div.t', null, t(`topic.${topic.id}.name`)),
           (() => { const m = topicMood(s, topic.id); return m === 'calm' ? null : h(`span.mood.${m}`, null, t(`mood.${m}`)); })(),
           h('div.d', null, t(`topic.${topic.id}.blurb`))));
@@ -903,6 +905,30 @@ export class GameUI {
       ideaBox.append(h('div.hint', null, t('np.ideas_hint')));
     };
     drawIdeas();
+    // Sequels (0.23.0, D-073): continue a game people liked, in its world. Optional.
+    const sequelBox = h('div.sequels', { id: 'np-sequels' });
+    const sequelable = s.projects.filter((q) => !sequelBlock(s, q)).sort((a, b) => b.result!.averageScore - a.result!.averageScore).slice(0, 4);
+    const drawSequels = () => {
+      clear(sequelBox);
+      if (!sequelable.length) return;
+      if (plan.sequelOf && sequelable.find((q) => q.id === plan.sequelOf)?.topicId !== plan.topicId) plan.sequelOf = undefined;
+      sequelBox.append(h('label', null, t('np.sequel')));
+      for (const q of sequelable) {
+        const on = plan.sequelOf === q.id;
+        const fans = fansOf(q) * sagaFatigue(sagaOf(s, q).length + 1);
+        sequelBox.append(h(`button.idea${on ? '.on' : ''}`, { dataset: { sequel: q.id }, onclick: () => {
+          if (on) { plan.sequelOf = undefined; drawSequels(); refresh(); return; }
+          plan.sequelOf = q.id;
+          plan.topicId = q.topicId;
+          plan.name = t('np.sequel_name', { game: q.name, n: sagaOf(s, q).length + 1 });
+          (nameInput as HTMLInputElement).value = plan.name;
+          drawTopics(); drawFeatures(); drawIdeas(); drawSequels(); refresh();
+        } }, icon('box', 18), h('span', null, t('np.sequel_of', { game: q.name, score: q.result!.averageScore })),
+          h(`span.chip${fans >= 0.5 ? '.good' : ''}`, null, t(fans >= 0.5 ? 'np.sequel_fans_many' : fans >= 0.2 ? 'np.sequel_fans_some' : 'np.sequel_fans_few')),
+          h('span.chip', null, t(on ? 'np.idea_on' : 'np.idea_use'))));
+      }
+      sequelBox.append(h('div.hint', null, t('np.sequel_hint')));
+    };
     const seg = (options: [string, string][], get: () => string, set: (v: string) => void) => {
       const el = h('div.seg');
       const draw = () => {
@@ -939,6 +965,7 @@ export class GameUI {
             h('div.hint', null, daysLbl)),
           est,
           planning && (s.company.inspirations ?? []).length ? h('div.section', null, ideaBox) : null,
+          planning && sequelable.length ? h('div.section', null, sequelBox) : null,
           planning ? h('div.section', null, featureBox) : h('p.hint.next-unlock', { id: 'np-next' }, icon('star', 16), ` ${t('np.next_planning')}`),
         ),
       ),
@@ -952,6 +979,7 @@ export class GameUI {
         } }, t('np.start')),
       ),
     );
+    drawSequels();
     refresh();
     this.openModal('new-project', card);
   }
@@ -1179,7 +1207,7 @@ export class GameUI {
   private memoryIcon(kind: MemoryKind): IconName {
     switch (kind) {
       case 'founded': return 'rocket';
-      case 'first_release': case 'record': return 'box';
+      case 'first_release': case 'record': case 'saga': return 'box';
       case 'first_hit': case 'hit': case 'achievement': return 'star';
       case 'first_flop': case 'farewell': return 'sweat';
       case 'comeback': return 'heart';

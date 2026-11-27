@@ -4,6 +4,7 @@
  * Shared by tools/sim-runner/economy.report.ts and tests/sim/economy.test.ts.
  */
 import { Game } from '../../src/sim/game';
+import { sequelBlock } from '../../src/sim/systems/sequels';
 import { createNewGame, DEFAULT_APPEARANCE, getProject } from '../../src/sim/state';
 import { getTopic } from '../../src/content/topics';
 import { estimateDays } from '../../src/sim/systems/contracts';
@@ -18,7 +19,7 @@ import { SIM_CONFIG } from '../../src/sim/config';
 export const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 export const pct = (xs: number[], p: number) => [...xs].sort((a, b) => a - b)[Math.floor((xs.length - 1) * p)]!;
 
-type Next = { kind: 'game'; topicId: string; size: 'small' | 'medium'; budget: number; days: number; features?: string[]; ideaId?: string } | { kind: 'contract' } | { kind: 'wait' } | { kind: 'support'; projectId: string; job: 'patch' | 'update' };
+type Next = { kind: 'game'; topicId: string; size: 'small' | 'medium'; budget: number; days: number; features?: string[]; ideaId?: string; sequelOf?: string } | { kind: 'contract' } | { kind: 'wait' } | { kind: 'support'; projectId: string; job: 'patch' | 'update' };
 export interface Strategy {
   name: string;
   next: (s: GameState, ctx: Ctx) => Next;
@@ -61,6 +62,7 @@ export const STRATEGIES: Strategy[] = [
   { name: 'M games + look after products', next: (s) => careFor(s) ?? kart() },
   // D-068: always follow the team's oldest idea when there is one (its topic and feature).
   { name: 'N games following the team\'s ideas', next: (s) => { const i = (s.company.inspirations ?? [])[0]; return i ? { ...game(i.topicId ?? 'kart', 'small', 1500, 47), features: i.featureId ? [i.featureId] : undefined, ideaId: i.id } : kart(); } }, // +12 % work → ~+5 days, as a player would plan
+  { name: 'S sequels of the games people liked', next: (s) => { const q = s.projects.filter((p) => !sequelBlock(s, p)).sort((a, b) => b.result!.averageScore - a.result!.averageScore)[0]; return q ? { ...game(q.topicId), sequelOf: q.id } : kart(); } },
   { name: 'G early trends + growth', next: (s, c) => (c.games >= 2 && s.company.money > 14000 ? game(trendTopic(s), 'medium', 3000, 98) : game(trendTopic(s))) },
 ];
 
@@ -141,7 +143,7 @@ export function career(seed: number, st: Strategy, horizon = 365) {
         g.dispatch({ type: 'accept_contract', offerId: best.id });
         ctx.justContracted = true;
       } else if (n.kind === 'game') {
-        const r = g.dispatch({ type: 'start_project', name: `P${ctx.games}`, topicId: n.topicId, features: n.features, ideaId: n.ideaId, size: n.size, focus: getTopic(n.topicId).idealFocus, budget: Math.min(n.budget, Math.max(0, s.company.money - 1000)), days: n.days, price: n.size === 'medium' ? 14.99 : 9.99 });
+        const r = g.dispatch({ type: 'start_project', name: `P${ctx.games}`, topicId: n.topicId, features: n.features, ideaId: n.ideaId, sequelOf: n.sequelOf, size: n.size, focus: getTopic(n.topicId).idealFocus, budget: Math.min(n.budget, Math.max(0, s.company.money - 1000)), days: n.days, price: n.size === 'medium' ? 14.99 : 9.99 });
         if (r.ok) { pid = g.state.activeProjectId; ctx.justContracted = false; }
       }
     }
