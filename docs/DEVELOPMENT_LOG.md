@@ -20,6 +20,11 @@ Bloques 2 y 3 de «Build Your Own Empire» (D-072).
 - La capa de etiquetas de zonas tapaba los botones del panel (regla `#ui > *` con `pointer-events: auto`): ahora va debajo del panel y sin eventos. Lo detectó la verificación visual, no las pruebas: añadido a la e2e.
 - Faltaban textos de los objetos nuevos y ninguna prueba lo detectaba: `i18n.test.ts` comprueba ahora nombre y descripción de **todos** los objetos del catálogo.
 - La e2e de reservas se comprobó **contra código defectuoso** (reservas desactivadas): falla (28 muestras compartidas) y pasa con el código correcto.
+- La e2e `style` contaba exactamente los 5+4 acabados antiguos: actualizada a 10+9.
+
+### Pruebas ejecutadas (0.22.0)
+- `npx vitest run`: **368 pruebas** (nuevas: interacciones con geometría real, zonas y estilo, textos de todos los objetos).
+- E2E en serie: **28 suites** en verde (nueva `interactions` 10/10; `style` tras actualizar la cuenta de acabados) + auditoría de primeros minutos sin errores. Galería 57 (nueva g58). Actualización real 0.21.0 → 0.22.0 sin errores.
 
 ---
 
