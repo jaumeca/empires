@@ -387,7 +387,10 @@ const VARIANTS = [
   await ev(() => { const g = window.__empires.game; g.dispatch({ type: 'release' }); window.__empires.ui.setSpeed(0); });
   await ev(() => { window.__empires.play(8 * 3); window.__empires.ui.setSpeed(0); });
   for (let i = 0; i < 6 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(200); }
-  await ev(() => window.__empires.ui.showNewProject());
+  // Answer anything still pending (new decisions can arrive here since 0.21.0), then plan.
+  await ev(() => { const E = window.__empires, g = E.game; for (let i = 0; i < 5 && g.state.pendingDecision; i++) { const d = g.state.pendingDecision; g.dispatch({ type: 'choose_option', decisionId: d.id, optionId: d.options[d.options.length - 1].id }); } E.ui.closeModal(); E.ui.setSpeed(0); });
+  await page.waitForTimeout(800);
+  await ev(() => { window.__empires.ui.closeModal(); window.__empires.ui.showNewProject(); });
   await page.waitForTimeout(300);
   // Only when the new-game dialog is really open (with an active project the game offers other cards).
   if ((await page.isVisible('#start-project')) && (await page.locator('.seg button', { hasText: /^(Mediano|Medium)/ }).count())) {

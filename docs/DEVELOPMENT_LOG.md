@@ -20,6 +20,11 @@ Coincide: `production-web` = 0.20.0 (`91533a8`), desarrollo `f1ca28e`, 335 prueb
 - El umbral de «oficina sencilla» estaba por debajo de la oficina inicial (0,71): el evento nunca salía. Ahora es relativo al tamaño del equipo.
 - Las nuevas decisiones rompían el simulador automático (sin respuesta por defecto) y la prueba de textos (las forzaba en un estado donde no aplican): adaptados; la prueba del juego antiguo exige que el evento aparezca.
 - Móvil vertical: la velocidad 1x quedaba fuera de la pantalla.
+- La galería falló porque una decisión nueva aparecía justo al abrir el diálogo de nuevo juego: ahora contesta lo pendiente antes.
+
+### Pruebas ejecutadas (0.21.0)
+- `npx vitest run`: **350 pruebas** (nuevas: cámara, deshacer, decisiones nuevas).
+- E2E en serie: **27 suites** en verde a la primera (nueva camera 16/16) + auditoría de primeros minutos. Galería 57 (nueva g57). Actualización real 0.20.0 → 0.21.0 sin errores.
 
 ---
 
