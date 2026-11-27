@@ -4,6 +4,25 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-27 — Decimocuarta sesión: Build Your Own Empire — 1.ª parte (0.21.0)
+
+### Estado verificado al empezar
+Coincide: `production-web` = 0.20.0 (`91533a8`), desarrollo `f1ca28e`, 335 pruebas, 26 suites e2e.
+
+### Resumen
+- **Cámara nueva** (D-071): zoom suave, desplazar, órbita suave, ver de cerca, seguir, vista general; en pausa también.
+- **Deshacer en decoración** (D-071), **avisos agrupados**, **HUD vertical en móvil** corregido.
+- **Decisiones pendientes** (D-070): oficina o proyecto; un juego antiguo vuelve a estar de moda.
+
+### Problemas encontrados
+- El botón «Vista general» no aparecía: la hoja de estilos lo oculta y el código restauraba el estilo vacío (encontrado por la e2e nueva).
+- «Mejorar la oficina» era una mejora momentánea que nunca compensaba (−4 % de dinero en la referencia): ahora es una renovación duradera; medido, ninguna opción domina.
+- El umbral de «oficina sencilla» estaba por debajo de la oficina inicial (0,71): el evento nunca salía. Ahora es relativo al tamaño del equipo.
+- Las nuevas decisiones rompían el simulador automático (sin respuesta por defecto) y la prueba de textos (las forzaba en un estado donde no aplican): adaptados; la prueba del juego antiguo exige que el evento aparezca.
+- Móvil vertical: la velocidad 1x quedaba fuera de la pantalla.
+
+---
+
 ## 2026-11-26 — Decimotercera sesión (3.ª parte): acontecimientos contextuales y ritmo (0.20.0)
 
 ### Resumen

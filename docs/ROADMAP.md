@@ -145,7 +145,20 @@ Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, of
 | CA.8 | Ideas e inspiración | ✅ 0.19.0 `systems/inspiration.ts`, no-dominancia en `economy.test.ts` (D-068) |
 | CA.6 | Acontecimientos contextuales | 🟦 1.ª parte 0.20.0 (D-069): recomendación de clientes, personalidad en el debate; faltan más decisiones nuevas (oficina frente a proyecto, juego antiguo de moda como evento propio) |
 | CA.9 | Ritmo de progresión: periodos tranquilos medidos y acortados | 🟦 0.20.0 (ideas de «ensoñación»; simulador registra días notables) |
-| CA.10 | Calidad de vida (clics, paneles, cámara, móvil, atajos) | ⬜ |
+| CA.10 | Calidad de vida: cámara, deshacer, avisos, móvil | ✅ 0.21.0 (D-071) `render/cameraRig.ts`, `sim/systems/decorUndo.ts`, e2e `camera.cjs` |
+
+## BYE — "Build Your Own Empire" (14.ª sesión)
+
+| ID | Bloque | Estado |
+|---|---|---|
+| BYE.1 | Calidad de vida, cámara, mobiliario (deshacer) | ✅ 0.21.0 |
+| BYE.9 | Decisiones pendientes: oficina o proyecto; juego antiguo de moda | ✅ 0.21.0 (D-070) |
+| BYE.11 | Móvil (emulación): HUD vertical corregido; menús y diálogos revisados | 🟦 0.21.0 — falta dispositivo real |
+| BYE.2/3 | Oficina funcional, muebles con uso, estilos, interacciones físicas | ⬜ |
+| BYE.4/5 | Identidad creativa, géneros, momentos, portadas, mercado y tendencias | ⬜ |
+| BYE.6/7 | Competidores, secuelas, sagas, identidad del estudio | ⬜ |
+| BYE.8/10 | Trayectorias, especializaciones, mentoría, hitos, sueño del fundador | ⬜ |
+| BYE.12/13 | Auditoría de diversión, pulido visual y sonoro | ⬜ |
 
 ---
 

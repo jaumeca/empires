@@ -440,6 +440,13 @@ const VARIANTS = [
   await page.waitForTimeout(400);
   if (await page.isVisible('#np-ideas')) { await page.evaluate(() => document.getElementById('np-ideas').scrollIntoView()); await shot('g56-team-ideas', 300); }
 
+  // 57 (0.21.0): the camera closer, gently turned, on the team at work.
+  for (let i = 0; i < 6 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(250); }
+  await ev(() => { const E = window.__empires; E.ui.setSpeed(1); E.scene.lookAtEmpirian(E.game.state.founderId); E.scene.rig.rotateBy(0.25); });
+  await page.waitForTimeout(2500);
+  await ev(() => window.__empires.ui.setSpeed(0));
+  await shot('g57-camera-closer', 400);
+
 
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });

@@ -458,3 +458,14 @@ canvas.cover { border-radius: 6px; box-shadow: 0 2px 0 rgba(46, 36, 32, 0.25); i
 
 /* 0.21.0: back to the whole office */
 .cam-overview { position: fixed; left: 50%; transform: translateX(-50%); bottom: 92px; z-index: 6; font: inherit; font-weight: 800; font-size: 13px; cursor: pointer; border: 0; display: none; gap: 6px; box-shadow: 0 4px 0 rgba(46, 36, 32, 0.15); }
+.toast { cursor: pointer; } .toast-count { margin-left: 6px; font-weight: 900; color: var(--mint-dark); }
+
+/* 0.21.0: portrait phones — the top-right row (speeds + 4–5 buttons) did not fit: speeds go
+   on their own line, aligned right, with slightly smaller buttons (still ≥ 34 px). */
+@media (max-width: 480px) {
+  .hud-tr { flex-wrap: wrap-reverse; justify-content: flex-end; max-width: calc(100vw - 24px); row-gap: 6px; }
+  .hud-tr .speeds { order: 2; }
+  .speeds button { min-width: 34px; padding: 0 6px; }
+  .hud-tl { top: calc(118px + var(--safe-top)); }
+  .cam-overview { bottom: 150px; }
+}

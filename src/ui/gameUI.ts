@@ -346,7 +346,7 @@ export class GameUI {
       const key = show ? (rig.followId ? `f:${rig.followId}` : 'm') : '';
       if (key !== this.camKey) {
         this.camKey = key;
-        this.camBtn.style.display = show ? '' : 'none';
+        this.camBtn.style.display = show ? 'inline-flex' : 'none';
         clear(this.camBtn);
         if (show) {
           const who = rig.followId ? this.state.empirians.find((x) => x.id === rig.followId)?.name : null;
@@ -563,12 +563,23 @@ export class GameUI {
   }
 
   toast(text: string, ic: IconName = 'alert'): void {
-    const t = h('div.toast', null, icon(ic, 18), text);
+    // 0.21.0: the same notice twice is one notice with a count, not a pile; a tap dismisses it.
+    const same = [...this.toastBox.children].find((c) => (c as HTMLElement).dataset.text === text) as HTMLElement | undefined;
+    if (same) {
+      const n = Number(same.dataset.count ?? '1') + 1;
+      same.dataset.count = String(n);
+      const badge = same.querySelector('.toast-count') ?? same.appendChild(h('span.toast-count'));
+      badge.textContent = `×${n}`;
+      clearTimeout(Number(same.dataset.timer));
+      same.dataset.timer = String(setTimeout(() => same.remove(), 3800));
+      return;
+    }
+    const t = h('div.toast', { dataset: { text }, onclick: () => t.remove() }, icon(ic, 18), text);
+    t.dataset.timer = String(setTimeout(() => t.remove(), 3800));
     this.toastBox.append(t);
     // Short (phone landscape) screens show fewer toasts so they never cover the office.
     const max = window.innerHeight < 500 ? 1 : 3;
     while (this.toastBox.children.length > max) this.toastBox.firstChild?.remove();
-    setTimeout(() => t.remove(), 3800);
   }
 
   private onTap(target: TapTarget): void {
