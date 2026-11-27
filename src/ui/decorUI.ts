@@ -174,9 +174,20 @@ export class DecorUI {
       else this.close();
       return true;
     }
+    if ((key === 'z' || key === 'Z') && !this.placement) { this.undo(); return true; }
     if ((key === 'r' || key === 'R') && this.placement) { this.rotatePlacement(); return true; }
     if (key === 'Enter' && this.placement && this.placementError() === null) { this.confirmPlacement(); return true; }
     return false;
+  }
+
+  /** Undo the last decoration change (exact money back, see sim/systems/decorUndo.ts). */
+  private undo(): void {
+    const res = this.host.dispatch({ type: 'undo_decor' });
+    if (!res.ok) { this.host.sfx?.('error'); this.host.toast(t(`error.${res.error}`), 'alert'); return; }
+    this.host.sfx?.('place');
+    this.selected = null;
+    this.host.toast(t('decor.undone'), 'rotate');
+    this.render();
   }
 
   private placementError(): string | null {
@@ -281,6 +292,8 @@ export class DecorUI {
         h('div.pill', null, icon('coin'), h('span', null, t('decor.money', { money: s.company.money }))),
         fx.upkeep > 0 ? h('div.pill.small', null, t('decor.upkeep_total', { upkeep: fx.upkeep })) : null,
         NEXT_SIZE[s.office.size ?? 'room'] && unlocked(s, 'expansion') ? h('button.big-btn.ghost', { id: 'decor-expand', onclick: () => { this.close(); this.host.expand(); } }, t('expand.button')) : null,
+        // 0.21.0: undo the last change (only while no game time has passed).
+        s.office.lastChange && s.office.lastChange.tick === s.tick ? h('button.big-btn.ghost', { id: 'decor-undo', title: t('decor.undo_hint'), onclick: () => this.undo() }, icon('rotate', 18), t('decor.undo')) : null,
         h('button.big-btn.mint', { id: 'decor-done', onclick: () => this.close() }, t('decor.done')),
       ),
     );

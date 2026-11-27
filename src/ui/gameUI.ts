@@ -92,6 +92,9 @@ export class GameUI {
       toast: (text, ic) => this.toast(text, ic),
     });
     window.addEventListener('keydown', (ev) => this.onKey(ev));
+    // 0.21.0: back to the whole office (only shown when the camera moved or follows someone).
+    this.camBtn = h('button.pill.cam-overview', { id: 'cam-overview', onclick: () => this.scene.rig.overview() });
+    root.append(this.camBtn);
     // A soft click on every button (0.18.0); specific moments add their own sound.
     root.addEventListener('pointerdown', (ev) => { if ((ev.target as Element | null)?.closest?.('button:not([disabled])')) this.sfx('click'); });
     this.decor = new DecorUI(root, scene, {
@@ -166,6 +169,19 @@ export class GameUI {
       return;
     }
     const speeds: Record<string, Speed> = { '1': 1, '2': 2, '3': 4, '4': 8 };
+    // Camera (0.21.0): arrows pan, Q/E orbit, +/- zoom, 0 overview; Esc first stops following.
+    const rig = this.scene.rig;
+    if (k === 'ArrowLeft' || k === 'ArrowRight' || k === 'ArrowUp' || k === 'ArrowDown') {
+      const step = 40;
+      this.scene.panByPixels(k === 'ArrowLeft' ? step : k === 'ArrowRight' ? -step : 0, k === 'ArrowUp' ? step : k === 'ArrowDown' ? -step : 0);
+      used(); return;
+    }
+    if (k === 'q' || k === 'Q') { rig.rotateBy(0.12); used(); return; }
+    if (k === 'e' || k === 'E') { rig.rotateBy(-0.12); used(); return; }
+    if (k === '+' || k === '=') { rig.zoomBy(1.15); used(); return; }
+    if (k === '-' || k === '_') { rig.zoomBy(1 / 1.15); used(); return; }
+    if (k === '0' || k === 'Home') { rig.overview(); used(); return; }
+    if (k === 'Escape' && rig.followId) { rig.follow(null); used(); return; }
     if (k === ' ') { this.playerSpeed(this.game.clock.speed === 0 ? this.lastPlaySpeed : 0); used(); }
     else if (speeds[k]) { this.playerSpeed(speeds[k]); used(); }
     else if ((k === 'n' || k === 'N') && unlocked(s, 'newspaper')) { this.showDaily(); used(); }
@@ -319,8 +335,25 @@ export class GameUI {
   }
 
   /** Per-frame: speech bubble position + diagnostics. */
+  private camBtn!: HTMLButtonElement;
+  private camKey = '';
+
   frame(fps: number): void {
     this.tutorial.frame();
+    {
+      const rig = this.scene.rig;
+      const show = this.state.setupComplete && rig.moved && !this.modal && !this.decor.active;
+      const key = show ? (rig.followId ? `f:${rig.followId}` : 'm') : '';
+      if (key !== this.camKey) {
+        this.camKey = key;
+        this.camBtn.style.display = show ? '' : 'none';
+        clear(this.camBtn);
+        if (show) {
+          const who = rig.followId ? this.state.empirians.find((x) => x.id === rig.followId)?.name : null;
+          this.camBtn.append(icon('rotate', 16), h('span', null, who ? t('cam.stop_follow', { name: who }) : t('cam.overview')));
+        }
+      }
+    }
     const s = this.state;
     const founder = s.setupComplete ? getFounder(s) : null;
     const want = founder && !this.modal && !this.decor.active && !this.tutorial.visible && !getActiveProject(s) && !s.contracts.active && !s.support && founder.activity !== 'celebrating' ? (!s.projects.length ? t('speech.first') : s.contracts.offers.length ? t('speech.idle_options') : t('speech.again')) : null;
@@ -1232,6 +1265,9 @@ export class GameUI {
       h('div.row.between', null,
         e.salary !== undefined ? h('span.chip', null, icon('coin', 16), t('team.salary_week', { salary: e.salary })) : h('span'),
         h('div.row', null,
+          // 0.21.0: look at them closely, or follow them around the office.
+          h('button.big-btn.ghost.small', { id: 'cam-look', onclick: () => { this.closeModal(true); this.scene.lookAtEmpirian(e.id); } }, t('cam.look')),
+          h('button.big-btn.ghost.small', { id: 'cam-follow', onclick: () => { this.closeModal(true); this.scene.lookAtEmpirian(e.id, true); this.toast(t('cam.following', { name: e.name }), 'heart'); } }, t('cam.follow')),
           h('button.big-btn.ghost.small', { id: 'edit-empirian', onclick: () => this.showEditor(e.id) }, t('emp.edit')),
           e.salary !== undefined ? h('button.big-btn.coral.small', { id: 'fire-btn', onclick: () => {
             if (!confirm(t('team.fire_confirm', { name: e.name, severance: e.salary! * SIM_CONFIG.team.severanceWeeks }))) return;

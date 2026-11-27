@@ -18,6 +18,7 @@ import { acceptContract, cancelContract } from './systems/contracts';
 import { cancelSupport, startSupport } from './systems/products';
 import { unlocked } from './systems/progress';
 import { ideaFits, useIdea } from './systems/inspiration';
+import { undoDecor } from './systems/decorUndo';
 import { getActiveProject, getFounder } from './state';
 import { getTopic } from '../content/topics';
 import { resolveDecision } from './systems/decisions';
@@ -52,6 +53,7 @@ export type Command =
   | { type: 'mark_news_read' }
   | { type: 'accept_contract'; offerId: string }
   | { type: 'cancel_contract' }
+  | { type: 'undo_decor' }
   | { type: 'start_support'; projectId: string; kind: 'patch' | 'update' }
   | { type: 'cancel_support' }
   | { type: 'hire'; candidateId: string }
@@ -143,6 +145,12 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       state.activeProjectId = p.id;
       useSavedIdeas(state, p);
       inheritDebt(state, p, emit);
+      // 0.21.0: money set aside for the next launch (office-or-project decision) goes to its marketing.
+      if (state.company.launchFund) {
+        const C = SIM_CONFIG;
+        p.hype += (state.company.launchFund * C.work.marketingShare * C.market.hypePerMarketingMoney) / (1 + p.hype / C.market.hypeSaturation);
+        delete state.company.launchFund;
+      }
       const startedId = record(state, {
         kind: 'project_started',
         text: { key: 'ledger.project_started', params: { project: p.name, topic: p.topicId, size: p.size, budget: cmd.budget, days: cmd.days } },
@@ -211,7 +219,9 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       const uid = newId(state, 'I');
       state.office.items.push({ uid, defId: def.id, x: cmd.x, z: cmd.z, rot: cmd.rot, ...(def.category === 'desk' ? { mounts: { computer: 'pc_basic', chair: 'chair_basic' } } : {}) });
       // A new desk comes with the basic computer and chair (their price is included).
-      state.company.money -= def.price + (def.category === 'desk' ? getItemDef('pc_basic').price + getItemDef('chair_basic').price : 0);
+      const paid = def.price + (def.category === 'desk' ? getItemDef('pc_basic').price + getItemDef('chair_basic').price : 0);
+      state.company.money -= paid;
+      state.office.lastChange = { kind: 'buy', tick: state.tick, uid, paid };
       record(state, { kind: 'office', text: { key: 'ledger.office.bought', params: { item: def.id, price: def.price } }, causes: [], tone: 0 });
       emit({ type: 'office_changed', severity: 'info' });
       return { ok: true };
@@ -230,6 +240,7 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       const refund = old ? Math.round(getItemDef(old).price * SELL_REFUND) : 0;
       desk.mounts = { ...desk.mounts, [slot]: def.id };
       state.company.money += refund - def.price;
+      state.office.lastChange = { kind: 'mount', tick: state.tick, deskUid: desk.uid, slot, old, paid: def.price, refund };
       record(state, { kind: 'office', text: { key: 'ledger.office.mounted', params: { item: def.id, price: def.price, refund } }, causes: [], tone: 0 });
       emit({ type: 'office_changed', severity: 'info' });
       return { ok: true };
@@ -242,6 +253,7 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       if (!def.rotatable && cmd.rot !== 0) return fail('place_not_rotatable');
       const err = canPlace(state.office, def.id, cmd.x, cmd.z, cmd.rot, it.uid);
       if (err) return fail(`place_${err}`);
+      state.office.lastChange = { kind: 'move', tick: state.tick, uid: it.uid, from: { x: it.x, z: it.z, rot: it.rot } };
       it.x = cmd.x;
       it.z = cmd.z;
       it.rot = cmd.rot;
@@ -262,7 +274,15 @@ export function applyCommand(state: GameState, cmd: Command, emit: EventSink): C
       for (const m of [it.mounts?.computer, it.mounts?.chair]) if (m) refund += Math.round(getItemDef(m).price * SELL_REFUND);
       state.office.items.splice(idx, 1);
       state.company.money += refund;
+      state.office.lastChange = { kind: 'sell', tick: state.tick, item: JSON.parse(JSON.stringify(it)), refund, index: idx };
       record(state, { kind: 'office', text: { key: 'ledger.office.sold', params: { item: def.id, refund } }, causes: [], tone: 0 });
+      emit({ type: 'office_changed', severity: 'info' });
+      return { ok: true };
+    }
+
+    case 'undo_decor': {
+      const err = undoDecor(state);
+      if (err) return fail(err);
       emit({ type: 'office_changed', severity: 'info' });
       return { ok: true };
     }

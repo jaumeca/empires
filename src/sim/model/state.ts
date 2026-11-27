@@ -202,7 +202,7 @@ export interface PendingDecision {
   id: string;
   kind: 'big_idea' | 'deadline' | 'exhausted' | 'running_late' | 'polish_plan' | 'feature_trouble' | 'prototype_result' | 'streamer_preview' | 'rival_similar' | 'critical_bug' | 'unexpected_idea'
     | 'tech_shortcut' | 'debt_review' | 'scope_idea'
-    | 'team_idea' | 'contract_change' | 'game_fair' | 'influential_review' | 'team_debate' | 'training_request';
+    | 'team_idea' | 'contract_change' | 'game_fair' | 'influential_review' | 'team_debate' | 'training_request' | 'office_or_project' | 'old_game_revival';
   speakerId: string;
   text: TextRef;
   options: DecisionOption[];
@@ -242,6 +242,8 @@ export interface ProjectResult {
   updateWave?: { startDay: number; strength: number };
   /** GT.6: the one later-life happening this product had (late critic, community…). */
   happening?: string;
+  /** 0.21.0: it already came back into fashion once (event). */
+  revived?: boolean;
   /** 0.19.0: years on sale already celebrated (anniversaries). */
   anniversaries?: number;
 }
@@ -434,7 +436,17 @@ export interface Office {
   style?: { wall: string; floor: string };
   /** Office size (AW.E.1). Missing = the starting room. */
   size?: 'room' | 'studio';
+  /** 0.21.0: renovations done (office-or-project decision), at most 2: lasting ambiance. */
+  renovated?: number;
+  /** 0.21.0: the last decoration change, undoable while no game time has passed. */
+  lastChange?: DecorChange;
 }
+
+export type DecorChange =
+  | { kind: 'buy'; tick: number; uid: string; paid: number }
+  | { kind: 'move'; tick: number; uid: string; from: { x: number; z: number; rot: Rot } }
+  | { kind: 'sell'; tick: number; item: PlacedItem; refund: number; index: number }
+  | { kind: 'mount'; tick: number; deskUid: string; slot: 'computer' | 'chair'; old?: string; paid: number; refund: number };
 
 export interface GameState {
   schemaVersion: number;
@@ -452,6 +464,8 @@ export interface GameState {
     /** 0.19.0 (D-068): ideas from the team for the next games (at most 3), and when the last one came. */
     inspirations?: Inspiration[];
     lastIdeaDay?: number;
+    /** 0.21.0: money set aside for the next launch (marketing), from the office-or-project decision. */
+    launchFund?: number;
     /** Technical debt left in the studio's code for the next game (F3.4). */
     techDebt?: number;
     /** A solid base built in a past project (ledger id): the next game needs less work. */

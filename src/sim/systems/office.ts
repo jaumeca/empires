@@ -193,6 +193,9 @@ export function founderDesk(office: Office): PlacedItem | null {
   return best;
 }
 
+/** Ambiance a renovation adds (like a couple of good pieces of furniture). */
+export const RENOVATION_AMBIANCE = 2.5;
+
 export function officeEffects(office: Office): OfficeEffects {
   const fx: OfficeEffects = { techSpeed: 1, designSpeed: 1, fatigue: 1, inspiration: 1, rest: 0, coffee: 0, drink: 0, cozy: false, ambiance: 0, upkeep: 0 };
   const desk = founderDesk(office);
@@ -219,7 +222,8 @@ export function officeEffects(office: Office): OfficeEffects {
     fx.upkeep += def.upkeep ?? 0;
     for (const m of [it.mounts?.computer, it.mounts?.chair]) if (m) fx.upkeep += getItemDef(m).upkeep ?? 0;
   }
-  fx.ambiance = ambianceRaw;
+  // 0.21.0: a renovation (office-or-project decision) makes the whole room nicer, for good.
+  fx.ambiance = ambianceRaw + (office.renovated ?? 0) * RENOVATION_AMBIANCE;
   fx.cozy = cozyCorner(office);
   if (fx.cozy) fx.rest += 1;
   return fx;

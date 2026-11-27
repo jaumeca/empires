@@ -80,3 +80,74 @@ describe('personality in decisions', () => {
     }
   });
 });
+
+describe('office or project (0.21.0, D-070)', () => {
+  const ev = () => STORY_EVENTS.find((e) => e.kind === 'office_or_project')!;
+  function rich() {
+    const g = studio(12);
+    const s = g.state;
+    s.company.money = 40000;
+    s.projects.push({ id: 'P-1', name: 'A', topicId: 'kart', phase: 'released', result: { releasedDay: 1, averageScore: 6 } } as never, { id: 'P-2', name: 'B', topicId: 'kart', phase: 'released', result: { releasedDay: 30, averageScore: 6 } } as never);
+    return g;
+  }
+  it('only for a studio with money, a couple of games and a plain office', () => {
+    const g = studio(12);
+    expect(ev().trigger(g.state)).toBeNull();
+    expect(ev().trigger(rich().state)).not.toBeNull();
+  });
+  it('each option has a real, different effect (none is free)', () => {
+    const office = rich(); const c1 = ev().trigger(office.state)!;
+    const m0 = office.state.empirians[0]!.morale;
+    ev().resolve(office.state, c1, 'office', () => {});
+    expect(office.state.company.money).toBe(40000 - Number(c1.cost));
+    expect(office.state.empirians[0]!.morale).toBeGreaterThan(m0);
+
+    const proj = rich(); const c2 = ev().trigger(proj.state)!;
+    ev().resolve(proj.state, c2, 'project', () => {});
+    expect(proj.state.company.launchFund).toBe(Number(c2.cost));
+    proj.dispatch({ type: 'start_project', name: 'X', topicId: 'kart', size: 'small', focus: 0.6, budget: 0, days: 35, price: 9.99 });
+    const p = proj.state.projects.find((q) => q.id === proj.state.activeProjectId)!;
+    expect(p.hype).toBeGreaterThan(0); // the fund became interest
+    expect(proj.state.company.launchFund).toBeUndefined();
+
+    const none = rich(); const c3 = ev().trigger(none.state)!;
+    ev().resolve(none.state, c3, 'neither', () => {});
+    expect(none.state.company.money).toBe(40000);
+  });
+});
+
+describe('an old game back in fashion (0.21.0, D-070)', () => {
+  const ev = () => STORY_EVENTS.find((e) => e.kind === 'old_game_revival')!;
+  function withOldHit() {
+    const g = studio(14);
+    const s = g.state;
+    s.day = 400;
+    s.projects.push({ id: 'P-old', name: 'Faro', topicId: 'kart', phase: 'released', bugs: { hidden: 0, known: 0, fixed: 0 }, size: 'small', focus: 0.6, result: { releasedDay: 100, averageScore: 7.4, weeklySales: Array(10).fill(500), totalUnits: 5000, revenue: 30000, salesEnded: true, price: 9.99 } } as never);
+    s.topicTrends.kart = 1.5;
+    s.world.trends = [];
+    return g;
+  }
+  it('is about a real old game whose topic is in fashion; once per game', () => {
+    const g = withOldHit();
+    const c = ev().trigger(g.state);
+    expect(c, 'the event must trigger for a good old game in fashion').not.toBeNull();
+    if (!c) return;
+    expect(c.projectId).toBe('P-old');
+    ev().resolve(g.state, c, 'carry_on', () => {});
+    expect(ev().trigger(g.state)).toBeNull();
+  });
+  it('promoting costs money and brings back a limited wave of sales; a sequel idea goes to the ideas', () => {
+    const g = withOldHit();
+    const s = g.state;
+    const c = { projectId: 'P-old' };
+    const money = s.company.money;
+    ev().resolve(s, c, 'promote', () => {});
+    const p = s.projects.find((q) => q.id === 'P-old')!;
+    expect(s.company.money).toBe(money - SIM_CONFIG.storyEvents.revivalPromoCost);
+    expect(p.result!.salesEnded).toBe(false);
+    expect(p.result!.updateWave!.strength).toBeLessThan(1);
+    const g2 = withOldHit();
+    ev().resolve(g2.state, { projectId: 'P-old' }, 'sequel', () => {});
+    expect(g2.state.company.inspirations!.some((i) => i.source === 'sequel' && i.topicId === 'kart')).toBe(true);
+  });
+});

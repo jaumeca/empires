@@ -142,6 +142,8 @@ function loop(now: number): void {
     ui.handleEvents(evs);
   }
   scene.update(world.dt, world.time, game.clock.speed);
+  // Camera eases on real time: it can be moved while the world is paused (0.21.0).
+  scene.cameraTick(dtMs / 1000);
   // World sounds only while the world runs (the pause silences keyboards and the room, not the interface).
   {
     const s = game.state;

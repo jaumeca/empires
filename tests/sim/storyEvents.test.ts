@@ -168,13 +168,20 @@ describe('story events', () => {
     g.state.day = Math.max(g.state.day, 30);
     g.state.contracts.active = { id: 'C-1', clientId: 'Nubo', kind: 'website', focus: 0.6, work: 200, days: 20, payment: 4000, expiresDay: 999, startDay: 0, dueDay: g.state.day + 20, done: 100, causeId: 'x' };
     for (const def of STORY_EVENTS) {
-      if (def.kind === 'influential_review') continue; // covered below with a released game
+      if (def.kind === 'influential_review' || def.kind === 'office_or_project' || def.kind === 'old_game_revival') continue; // covered below / in context.test.ts
       const c = clone(g);
       expect(forceEvent(c.state, def.kind, noop), def.kind).toBe(true);
       for (const ref of texts(c)) { expect(es[ref.key], ref.key).toBeTruthy(); expect(en[ref.key], ref.key).toBeTruthy(); }
       for (const o of c.state.pendingDecision!.options) expect(es[`ledger.event.${def.kind}.${o.id}`] ?? es[`ledger.event.${def.kind}.${o.id}_good`], `${def.kind}.${o.id}`).toBeTruthy();
     }
     for (const v of ['send_copy_good', 'send_copy_mixed', 'send_copy_bad', 'interview', 'decline']) expect(en[`ledger.event.influential_review.${v}`]).toBeTruthy();
+    // 0.21.0 decisions: every option has its text and its story line in both languages.
+    for (const [kind, opts] of [['office_or_project', ['office', 'project', 'neither']], ['old_game_revival', ['promote', 'update', 'sequel', 'carry_on']]] as const) {
+      for (const lang of [es, en]) {
+        expect(lang[`event.${kind}.text`], kind).toBeTruthy();
+        for (const o of opts) { expect(lang[`event.${kind}.${o}`], `${kind}.${o}`).toBeTruthy(); expect(lang[`ledger.event.${kind}.${o}`], `ledger ${kind}.${o}`).toBeTruthy(); }
+      }
+    }
   });
 
   it('answering an event counts as a decision (tutorial) and trains the founder, not the speaker', () => {

@@ -34,6 +34,11 @@ export const IDEA_WORK = 0.12;
 const list = (s: GameState) => (s.company.inspirations ??= []);
 const released = (s: GameState) => s.projects.filter((p) => p.result).sort((a, b) => a.result!.releasedDay - b.result!.releasedDay);
 
+/** Adds an idea (also used by events, e.g. an old game back in fashion suggests a sequel). */
+export function suggestIdea(s: GameState, idea: Omit<Inspiration, 'id' | 'day'>, emit: EventSink): void {
+  add(s, idea, emit);
+}
+
 function add(s: GameState, idea: Omit<Inspiration, 'id' | 'day'>, emit: EventSink): void {
   const ideas = list(s);
   if (ideas.some((i) => i.topicId === idea.topicId && i.featureId === idea.featureId && i.kind === idea.kind)) return;

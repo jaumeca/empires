@@ -1,4 +1,5 @@
 import { ScreenDeck, type ScreenMode } from './screens';
+import { CameraRig } from './cameraRig';
 import { personalItem } from './models/personal';
 import { productArt, productBox, type ProductArt } from './productArt';
 import { framedCover } from './models/collection';
@@ -218,7 +219,9 @@ export class OfficeScene {
   private confettiState: { p: Vector3; v: Vector3; r: Vector3; life: number }[] = [];
   private camMode: CameraMode;
   private focus = false;
-  private zoomLevel = 1;
+  /** 0.21.0: smooth zoom, pan, gentle orbit, centring and following (real time). */
+  readonly rig = new CameraRig();
+  private get zoomLevel(): number { return this.rig.cur.zoom; }
   private lastState: GameState | null = null;
   private pois: Record<string, Poi> = { ...FIXED_POIS };
   private blocked: Uint8Array = new Uint8Array(OFFICE_GRID.w * OFFICE_GRID.d);
@@ -702,11 +705,13 @@ export class OfficeScene {
     // Room size relative to the starting room (10×8 cells): bigger studios are framed wider.
     const grow = Math.max(this.officeW / 10, this.officeD / 8);
     const roomCenter = fw(this.officeW * CELL / 2 - 2, 16, this.officeD * CELL / 2);
-    const target = this.shot ? fw(this.shot.x, this.shot.y, this.shot.z) : fs ? fw(fs.x, 11, fs.z) : this.focus ? fw(30, 11, 31) : roomCenter;
+    const free = !this.shot && !this.focus;
+    this.rig.setRoom(this.officeW * CELL * VOXEL / 2, this.officeD * CELL * VOXEL / 2);
+    const target = this.shot ? fw(this.shot.x, this.shot.y, this.shot.z) : fs ? fw(fs.x, 11, fs.z) : this.focus ? fw(30, 11, 31) : roomCenter.clone().add(new Vector3(this.rig.cur.panX, 0, this.rig.cur.panZ));
     // Fit the diorama: by height in landscape, by width in portrait.
     let viewH = this.shot ? this.shot.viewH : this.focus ? 2.2 : 6.1 * grow;
     if (!this.focus && !this.shot && aspect < 1.35) viewH = Math.max(viewH, (7.7 * grow) / aspect);
-    viewH /= this.zoomLevel;
+    if (free) viewH /= this.zoomLevel;
     const viewW = viewH * aspect;
     this.camera.left = -viewW / 2;
     this.camera.right = viewW / 2;
@@ -716,7 +721,8 @@ export class OfficeScene {
     const elev = this.camMode === 'iso' ? Math.atan(1 / Math.SQRT2) : Math.PI / 6;
     const dist = 20;
     const horiz = Math.cos(elev) * dist;
-    this.camera.position.set(target.x + horiz * Math.SQRT1_2, target.y + Math.sin(elev) * dist, target.z + horiz * Math.SQRT1_2);
+    const yawA = Math.PI / 4 + (free ? this.rig.cur.yaw : 0);
+    this.camera.position.set(target.x + horiz * Math.sin(yawA), target.y + Math.sin(elev) * dist, target.z + horiz * Math.cos(yawA));
     this.camera.lookAt(target);
     this.camera.updateProjectionMatrix();
   }
@@ -1346,6 +1352,14 @@ export class OfficeScene {
     const pointers = new Map<number, { x: number; y: number }>();
     let pinchStart = 0;
     let zoomStart = 1;
+    let dragging = false;
+    el.addEventListener('contextmenu', (ev) => ev.preventDefault());
+    el.addEventListener('dblclick', (ev) => {
+      // Double click/tap on an Empirian: centre the view on them (0.21.0).
+      this.raycaster.setFromCamera(new Vector2(((ev.clientX - el.getBoundingClientRect().left) / el.clientWidth) * 2 - 1, -((ev.clientY - el.getBoundingClientRect().top) / el.clientHeight) * 2 + 1), this.camera);
+      const hit = this.raycaster.intersectObjects(this.pickables, false).find((h) => h.object.userData.empirianId);
+      if (hit) this.lookAtEmpirian(hit.object.userData.empirianId as string);
+    });
     el.style.touchAction = 'none';
     el.addEventListener('pointerdown', (ev) => {
       pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
@@ -1353,7 +1367,7 @@ export class OfficeScene {
       if (pointers.size === 2) {
         const [a, b] = [...pointers.values()];
         pinchStart = Math.hypot(a!.x - b!.x, a!.y - b!.y);
-        zoomStart = this.zoomLevel;
+        zoomStart = this.rig.want.zoom;
         down = null;
       }
     });
@@ -1365,15 +1379,24 @@ export class OfficeScene {
         hoverQueued = ev;
       }
       if (!pointers.has(ev.pointerId)) return;
+      const prev = pointers.get(ev.pointerId)!;
       pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+      // One pointer dragging (past the tap threshold): pan; right button or Shift: orbit (0.21.0).
+      if (pointers.size === 1 && !this.focus && !this.shot && (dragging || (down && Math.hypot(ev.clientX - down.x, ev.clientY - down.y) >= 12))) {
+        dragging = true;
+        const dx = ev.clientX - prev.x, dy = ev.clientY - prev.y;
+        if (ev.buttons === 2 || ev.shiftKey) this.rig.rotateBy(-dx * 0.005);
+        else this.panByPixels(dx, dy);
+      }
       if (pointers.size === 2 && pinchStart > 0) {
         const [a, b] = [...pointers.values()];
-        this.setZoom(zoomStart * (Math.hypot(a!.x - b!.x, a!.y - b!.y) / pinchStart));
+        this.rig.setZoom(zoomStart * (Math.hypot(a!.x - b!.x, a!.y - b!.y) / pinchStart));
       }
     });
     const end = (ev: PointerEvent) => {
       pointers.delete(ev.pointerId);
       if (pointers.size < 2) pinchStart = 0;
+      if (dragging) { dragging = false; down = null; return; }
       if (!down) return;
       const moved = Math.hypot(ev.clientX - down.x, ev.clientY - down.y);
       if (moved < 12 && performance.now() - down.t < 600) {
@@ -1386,10 +1409,11 @@ export class OfficeScene {
     el.addEventListener('pointercancel', (ev) => {
       pointers.delete(ev.pointerId);
       down = null;
+      dragging = false;
     });
     el.addEventListener('wheel', (ev) => {
       ev.preventDefault();
-      this.setZoom(this.zoomLevel * (ev.deltaY < 0 ? 1.1 : 0.9));
+      this.rig.zoomBy(ev.deltaY < 0 ? 1.12 : 1 / 1.12);
     }, { passive: false });
   }
 
@@ -1422,8 +1446,38 @@ export class OfficeScene {
   }
 
   setZoom(z: number): void {
-    this.zoomLevel = Math.max(0.85, Math.min(2.2, z));
-    this.resize();
+    this.rig.setZoom(z);
+  }
+
+  /** Real-time camera easing (works while the world is paused). Call once per frame. */
+  cameraTick(realDt: number): void {
+    let follow: { x: number; z: number } | undefined;
+    if (this.rig.followId) {
+      const a = this.actors.get(this.rig.followId);
+      if (!a) this.rig.follow(null);
+      else follow = { x: (a.pos[0] - (this.officeW * CELL / 2 - 2)) * VOXEL, z: (a.pos[1] - this.officeD * CELL / 2) * VOXEL };
+    }
+    if (this.rig.tick(realDt, follow)) this.resize();
+  }
+
+  /** Centre the view on an Empirian (and follow them if asked). */
+  lookAtEmpirian(id: string, follow = false): void {
+    const a = this.actors.get(id);
+    if (!a) return;
+    this.rig.lookAt((a.pos[0] - (this.officeW * CELL / 2 - 2)) * VOXEL, (a.pos[1] - this.officeD * CELL / 2) * VOXEL);
+    this.rig.follow(follow ? id : null);
+  }
+
+  /** Screen drag (pixels) → pan on the floor, the content follows the finger. */
+  panByPixels(dx: number, dy: number): void {
+    const h = this.renderer.domElement.clientHeight || 1;
+    const perPx = (this.camera.top - this.camera.bottom) / h;
+    const yawA = Math.PI / 4 + this.rig.cur.yaw;
+    const fx = -Math.sin(yawA), fz = -Math.cos(yawA); // forward on the ground
+    const rx = -fz, rz = fx; // right
+    const elev = this.camMode === 'iso' ? Math.atan(1 / Math.SQRT2) : Math.PI / 6;
+    const up = 1 / Math.sin(elev);
+    this.rig.panBy(-(rx * dx) * perPx + fx * dy * perPx * up, -(rz * dx) * perPx + fz * dy * perPx * up);
   }
 
   private raycaster = new Raycaster();

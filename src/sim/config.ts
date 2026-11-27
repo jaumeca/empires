@@ -355,6 +355,16 @@ export const SIM_CONFIG = {
     courseXp: 330,
     booksCost: 150,
     booksXp: 120,
+    /** 0.21.0: improve the office or invest in the project (share of cash, clamped). */
+    investShare: 0.15,
+    investMin: 2500,
+    investMax: 8000,
+    investMorale: 10,
+    investEnergy: 15,
+    /** An old game back in fashion: promotion cost, size of the comeback (share of a launch week, weeks). */
+    revivalPromoCost: 1200,
+    revivalWave: 0.45,
+    revivalMinAge: 150,
   },
 
   /** Office atmosphere (LS.4): morale drifts towards base + fromAmbiance · ambianceLevel. */

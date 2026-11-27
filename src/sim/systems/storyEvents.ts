@@ -10,6 +10,20 @@ import { remember } from './story';
 import { employees } from './team';
 import type { EventDef } from './events';
 import { bond, changeBond } from './relations';
+import { officeEffects } from './office';
+import { demandFactor } from './world';
+import { startSupport, updateBlock } from './products';
+import { suggestIdea } from './inspiration';
+
+/** How much the office-or-project choice costs: a share of the cash, clamped. */
+function investCost(s: GameState): number {
+  return Math.round(Math.max(K().investMin, Math.min(K().investMax, s.company.money * K().investShare)) / 100) * 100;
+}
+/** Money into a game's marketing (same formula as the project's own budget). */
+function addHype(p: Project, money: number): void {
+  const C = SIM_CONFIG;
+  p.hype += (money * C.work.marketingShare * C.market.hypePerMarketingMoney) / (1 + p.hype / C.market.hypeSaturation);
+}
 
 /**
  * Story events (AW.D events, "The Next Chapter"): the studio's people and the
@@ -288,6 +302,83 @@ export const STORY_EVENTS: EventDef[] = [
         morale(e, 1);
       } else {
         morale(e, -K().moraleSmall - 3);
+      }
+    },
+  },
+
+  {
+    // 0.21.0 (D-070): the founder wonders — make the office nicer for the team, or put the money into the games?
+    kind: 'office_or_project',
+    cooldownDays: 150,
+    chance: 0.04,
+    trigger: (s) => {
+      const released = s.projects.filter((p) => p.result).length;
+      if (released < 2 || s.company.money < 15000) return null;
+      // Only when the office is still plain for the size of the team.
+      const plain = officeEffects(s.office).ambiance < 5 + 1.5 * (s.empirians.length - 1); // the starting room is 3.7
+      return plain && (s.office.renovated ?? 0) < 2 ? { cost: investCost(s) } : null;
+    },
+    build: (s, c) => ({
+      text: k('event.office_or_project.text', { cost: Number(c.cost) }),
+      options: [
+        opt('office_or_project', 'office', ['hint.morale_up', 'hint.energy_up', 'hint.costs_money']),
+        opt('office_or_project', 'project', [getActiveProject(s) ? 'hint.interest_up' : 'hint.interest_next', 'hint.costs_money']),
+        opt('office_or_project', 'neither', ['hint.no_changes']),
+      ],
+    }),
+    resolve: (s, c, o, emit: EventSink) => {
+      const cost = Number(c.cost);
+      story(s, 'office_or_project', o, { cost }, o === 'neither' ? 0 : 1, [getFounder(s).id]);
+      if (o === 'office') {
+        s.company.money -= cost;
+        s.office.renovated = (s.office.renovated ?? 0) + 1; // lasting: the room itself is nicer
+        for (const e of s.empirians) { morale(e, K().investMorale); e.energy = Math.min(SIM_CONFIG.energy.max, e.energy + K().investEnergy); }
+      } else if (o === 'project') {
+        s.company.money -= cost;
+        const p = getActiveProject(s);
+        if (p) addHype(p, cost);
+        else s.company.launchFund = (s.company.launchFund ?? 0) + cost;
+      }
+      void emit;
+    },
+  },
+  {
+    // 0.21.0 (D-070): an old game of the studio is suddenly back in fashion (its topic is trending).
+    kind: 'old_game_revival',
+    cooldownDays: 120,
+    chance: 0.06,
+    trigger: (s) => {
+      const old = s.projects.filter((p) => p.result && !p.result.revived && s.day - p.result.releasedDay >= K().revivalMinAge && p.result.averageScore >= 6.5 && (p.result.salesEnded || p.result.weeklySales.length >= SIM_CONFIG.market.salesWeeks) && demandFactor(s, p.topicId) >= 1.08);
+      if (!old.length) return null;
+      const p = old.sort((a, b) => b.result!.averageScore - a.result!.averageScore)[0]!;
+      return { projectId: p.id };
+    },
+    build: (s, c) => {
+      const p = proj(s, c.projectId)!;
+      const canUpdate = !updateBlock(s, p);
+      return {
+        text: k('event.old_game_revival.text', { project: p.name, topic: p.topicId }),
+        options: [
+          opt('old_game_revival', 'promote', ['hint.sales_up_some', 'hint.costs_money']),
+          { ...opt('old_game_revival', 'update', ['hint.sales_up', 'hint.takes_time']), disabledReason: canUpdate ? undefined : k('hint.studio_busy') },
+          opt('old_game_revival', 'sequel', ['hint.idea_for_later']),
+          opt('old_game_revival', 'carry_on', ['hint.no_changes']),
+        ],
+      };
+    },
+    resolve: (s, c, o, emit: EventSink) => {
+      const p = proj(s, c.projectId);
+      if (!p?.result) return;
+      p.result.revived = true;
+      story(s, 'old_game_revival', o, { project: p.name, topic: p.topicId }, 1, [], p.id);
+      if (o === 'promote') {
+        s.company.money -= K().revivalPromoCost;
+        p.result.salesEnded = false;
+        p.result.updateWave = { startDay: s.day, strength: K().revivalWave };
+      } else if (o === 'update') {
+        startSupport(s, p.id, 'update');
+      } else if (o === 'sequel') {
+        suggestIdea(s, { kind: 'topic', source: 'sequel', topicId: p.topicId, by: getFounder(s).id, project: p.name }, emit);
       }
     },
   },
