@@ -1,22 +1,24 @@
 # Continuar el desarrollo de EMPIRES
 
-Actualizado: 2026-11-27 tras publicar 0.21.0. Todo confirmado y subido.
+Actualizado: 2026-11-27 tras publicar 0.22.0. Todo confirmado y subido; 0.23.0 (secuelas) en curso, sin verificar.
 
 ## Estado
 - **Rama de desarrollo:** `claude/friendly-ptolemy-klybh8`.
-- **production-web:** 0.21.0 (`97a0420`), estable y verificada. `main` sin tocar.
+- **production-web:** 0.22.0 (`8b2b5a7`), estable y verificada. `main` sin tocar.
 - **Guardado:** esquema v12 (carga v0–v12); 0.19.0 añade campos opcionales (`company.inspirations`, `company.lastIdeaDay`, `result.anniversaries`, `project.inspired`).
-- **Verificación al cerrar:** 350 pruebas; 27 suites e2e en serie; galería 57.
+- **Verificación al cerrar:** 368 pruebas; 28 suites e2e en serie; galería 57.
 
 ## Hecho en la última sesión
 - 0.18.0: gestos y personalidad (D-065), oficina viva, sonido (D-066), shaders validados.
 - 0.19.0: identidad de cada juego y recuerdos físicos (D-067: `src/render/productArt.ts`, `src/render/models/collection.ts`), ideas del equipo (D-068: `src/sim/systems/inspiration.ts`; estrategia «N» en `tools/sim-runner/careers.ts`).
 - 0.20.0: recomendación de clientes y personalidad en el debate (D-069); ritmo medido con el simulador (`notable` en `tools/sim-runner/careers.ts`) y acortado con ideas de «ensoñación».
 - 0.21.0 («Build Your Own Empire», bloques 1 y 9): cámara (`src/render/cameraRig.ts`), deshacer en decoración (`src/sim/systems/decorUndo.ts`), avisos agrupados, HUD vertical, decisiones «oficina o proyecto» y «un juego antiguo vuelve» (D-070, D-071).
+- 0.22.0 (bloques 2 y 3): oficina funcional (D-072): acabados, muebles con uso, interacciones con reservas, zonas y estilo (`src/sim/systems/officeZones.ts`, e2e `interactions.cjs`).
+- Publicación desde un worktree (`git worktree add <dir> <candidata>`, con enlace a `node_modules`) cuando la rama de desarrollo ya lleva trabajo de la siguiente versión; después se fusiona el commit de publicación en la rama.
 - Lección de método: no ejecutar `vitest` (simulaciones de carrera) mientras corren las e2e: altera los tiempos.
 
 ## Tareas pendientes (orden recomendado)
-0. **Siguiente (0.22.0, en curso):** bloques 2 y 3 de «Build Your Own Empire»: acabados nuevos de pared y suelo, muebles funcionales (mesa de reuniones, rincón de TV, lámpara de arco, armario alto) e interacciones reales con objetos (jugar, leer, ver la tele, pizarra, charlas en la mesa) con reservas. Después: bloques 4–8, 10, 12, 13.
+0. **Siguiente (0.23.0, en curso):** secuelas y sagas (bloque 7, D-073 en preparación): `src/sim/systems/sequels.ts`, selector en el diálogo de nuevo juego, estrategia «S» en `tools/sim-runner/careers.ts`, pruebas `tests/sim/sequels.test.ts` y e2e `tools/e2e/sequels.cjs` escritas **sin ejecutar todavía**. Falta: ejecutar, medir no-dominancia, documentar. Después: bloques 4–6, 8, 10, 12, 13.
 0b. **Pendientes antiguos de «Make the Game Come Alive»:** 2 (animaciones y personalidad: estirarse, celebrar, frustración, saludar, café, cansancio), 3.2/3.3 (objetos nuevos y recuerdos físicos de hitos; registrar en `ASSET_REGISTRY.md`), 6 (decisiones contextuales), 7 (sonido procedural con volumen y silencio), 8 (revisar ritmos de progresión con `tools/sim-runner`), 10 (rendimiento: los tirones de compilación de shaders ya están corregidos en desarrollo, sin publicar; falta medir en dispositivos reales).
 1. ~~E.3 Relaciones~~ hecho en 0.11.0 (D-056, `src/sim/systems/relations.ts`). F3.4 deuda técnica hecha (D-057, `src/sim/systems/debt.ts`). Idea de alcance (D-058) y reputación con memoria (D-059) hechas. D.4 (D-060), conexiones (D-061) y progresión por desbloqueos (D-062, `docs/PROGRESSION.md`, `src/sim/systems/progress.ts`) hechos. Las suites e2e de mecánicas llaman a `__empires.unlockAll()`; `progression.cjs` y `firstminutes.cjs` prueban el comienzo real. Siguiente paso exacto: revisar con el propietario la sensación de los primeros 30 minutos; después **GT.6 productos persistentes** (mantenimiento y parches tras el lanzamiento; con él, el evento aplazado "un juego antiguo vuelve a estar de moda") o **F3.8 (2.ª parte)**: promesas explícitas al anunciar un juego y lecciones aprendidas visibles al planear el siguiente.
 2. **D.3/D.4:** decisiones de alcance, deuda técnica y comentarios de usuarios; diferenciar juego indie, ambicioso y por encargo (F3).
