@@ -18,6 +18,10 @@ Bloque 7 de «Build Your Own Empire» (D-073).
 - La e2e no encontraba el botón: la ventana de resultados pendiente sustituía al diálogo (comportamiento existente de la cola de ventanas); la prueba cierra antes los resultados.
 - El botón de secuela salía sin estilo (el CSS de las ideas cuelga de `.ideas`).
 
+### Pruebas ejecutadas (0.23.0)
+- `npx vitest run`: **376 pruebas** (nuevas: secuelas, sagas y no-dominancia con 10 carreras de dos años).
+- E2E en serie: **29 suites** (nueva `sequels` 7/7) + primeros minutos sin errores. `play` falló una vez en «la copia de seguridad recupera la partida» (el aviso tardó; era la primera suite, con el navegador en frío) y pasó 3 de 3 veces al repetirla sola: intermitente conocido, sin relación con 0.23. Galería 58 (nueva g59). Actualización real 0.22.0 → 0.23.0 sin errores.
+
 ---
 
 ## 2026-11-27 — Decimocuarta sesión (2.ª parte): la oficina funcional (0.22.0)
