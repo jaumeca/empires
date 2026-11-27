@@ -20,7 +20,7 @@ function partMesh(def: PartDef, name: string): Mesh {
 
 import { applyGesture, GESTURE_DUR, gestureExpression, type Gesture } from './gestures';
 
-export type Pose = 'stand' | 'walk' | 'sit' | 'cheer' | 'raise' | 'think' | 'lounge';
+export type Pose = 'stand' | 'walk' | 'sit' | 'cheer' | 'raise' | 'think' | 'lounge' | 'play' | 'read' | 'watch';
 
 /**
  * Three.js representation of one Empirian: a rigid skeleton of groups with
@@ -257,6 +257,33 @@ export class EmpirianView {
         target.armRz = 0.5 + j * 0.2;
         target.legL = target.legR = -j * 0.3;
         target.headX = -0.15;
+        break;
+      }
+      case 'play': {
+        // 0.22.0: a controller in both hands, thumbs busy, leaning in at the good moments.
+        const tense = Math.max(0, Math.sin(t * 0.9));
+        target.armLx = -1.25 + Math.sin(t * 13 * s) * 0.05;
+        target.armRx = -1.25 - Math.sin(t * 11 * s) * 0.05;
+        target.armLz = -0.28; target.armRz = 0.28;
+        target.headX = 0.05 + tense * 0.12;
+        target.torsoY = tense * 0.25 * VOXEL;
+        break;
+      }
+      case 'read': {
+        // A book held low, eyes down, a page turned now and then.
+        const turn = (t % 5) < 0.5;
+        target.armLx = -1.0; target.armRx = turn ? -1.5 : -1.0;
+        target.armLz = -0.3; target.armRz = turn ? 0.1 : 0.3;
+        target.headX = 0.32;
+        break;
+      }
+      case 'watch': {
+        // Arms crossed, relaxed, a little sway.
+        target.armLx = target.armRx = -0.75;
+        target.armLz = -0.75; target.armRz = 0.75;
+        target.headX = -0.05;
+        target.torsoY = Math.sin(t * 1.2) * 0.2 * VOXEL;
+        target.headZ = Math.sin(t * 0.4) * 0.06;
         break;
       }
       case 'think': {

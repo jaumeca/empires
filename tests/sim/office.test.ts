@@ -34,7 +34,7 @@ describe('office catalog data (LS.2)', () => {
     }
     expect(ITEMS.length).toBeGreaterThanOrEqual(10);
     // A curated catalog (ML.4: "a small, beautiful, complete set before dozens of items").
-    expect(ITEMS.length).toBeLessThanOrEqual(40);
+    expect(ITEMS.length).toBeLessThanOrEqual(48); // 0.22.0: functional furniture (D-072)
   });
   it('the starting office is a valid layout (same furniture as the v0.1 bedroom)', () => {
     const s = createNewGame(1);

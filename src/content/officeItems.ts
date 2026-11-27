@@ -51,6 +51,8 @@ export interface ItemDef {
   locked?: 'later';
   /** Holds the collectible product boxes. */
   showcase?: boolean;
+  /** 0.22.0: how Empirians use it in their free time (interaction point at `spot`). */
+  use?: 'play' | 'read' | 'browse' | 'board' | 'meet' | 'watch';
   rotatable: boolean;
   /** Visual model id (src/render/models). */
   model: string;
@@ -71,7 +73,7 @@ export const ITEMS: readonly ItemDef[] = [
   { id: 'sofa', category: 'comfort', price: 900, size: { w: 4, d: 2 }, layer: 'solid', reserve: { w: 4, d: 1 }, spot: { x: 12, z: 9, pose: 'lounge' }, rotatable: true, model: 'sofa', effects: { rest: 4, ambiance: 1 } },
   { id: 'coffee_machine', category: 'comfort', price: 350, upkeep: 5, size: { w: 2, d: 1 }, layer: 'solid', reserve: { w: 2, d: 1 }, spot: { x: 6, z: 9, pose: 'stand' }, rotatable: true, model: 'coffee_machine', effects: { coffee: 7, drink: 4 } },
   { id: 'water_cooler', category: 'comfort', price: 120, size: { w: 1, d: 1 }, layer: 'solid', reserve: { w: 1, d: 1 }, spot: { x: 3, z: 9, pose: 'stand' }, rotatable: true, model: 'water_cooler', effects: { drink: 2 } },
-  { id: 'whiteboard', category: 'creative', price: 400, size: { w: 3, d: 1 }, layer: 'solid', reserve: { w: 3, d: 1 }, spot: { x: 9, z: 9, pose: 'stand' }, rotatable: true, model: 'whiteboard', effects: { inspiration: 1.1 } },
+  { id: 'whiteboard', category: 'creative', price: 400, size: { w: 3, d: 1 }, layer: 'solid', reserve: { w: 3, d: 1 }, spot: { x: 9, z: 9, pose: 'stand' }, rotatable: true, model: 'whiteboard', use: 'board', effects: { inspiration: 1.1 } },
   // --- Decoration
   { id: 'plant_small', category: 'plant', price: 60, size: { w: 2, d: 2 }, layer: 'solid', rotatable: false, model: 'plant_small', effects: { ambiance: 1 } },
   { id: 'plant_tall', category: 'plant', price: 160, size: { w: 2, d: 2 }, layer: 'solid', rotatable: false, model: 'plant_tall', effects: { ambiance: 1.6 } },
@@ -80,15 +82,20 @@ export const ITEMS: readonly ItemDef[] = [
   { id: 'rug_round', category: 'decor', price: 120, size: { w: 3, d: 3 }, layer: 'floor', rotatable: false, model: 'rug_round', effects: { ambiance: 1 } },
   { id: 'side_table', category: 'decor', price: 70, size: { w: 1, d: 1 }, layer: 'solid', rotatable: false, model: 'side_table', effects: { ambiance: 0.4 } },
   { id: 'rug_checker', category: 'decor', price: 90, size: { w: 4, d: 3 }, layer: 'floor', rotatable: true, model: 'rug_checker', effects: { ambiance: 1 } },
-  { id: 'arcade', category: 'decor', price: 1100, size: { w: 2, d: 2 }, layer: 'solid', reserve: { w: 2, d: 1 }, spot: { x: 6, z: 15, pose: 'stand' }, rotatable: true, model: 'arcade', effects: { ambiance: 2 } },
-  { id: 'bookshelf', category: 'storage', price: 200, size: { w: 3, d: 1 }, layer: 'solid', reserve: { w: 3, d: 1 }, spot: { x: 9, z: 10, pose: 'stand' }, rotatable: true, model: 'bookshelf', showcase: true, effects: { ambiance: 1 } },
+  { id: 'arcade', category: 'decor', price: 1100, size: { w: 2, d: 2 }, layer: 'solid', reserve: { w: 2, d: 1 }, spot: { x: 6, z: 17, pose: 'stand' }, rotatable: true, model: 'arcade', use: 'play', effects: { ambiance: 2 } },
+  { id: 'bookshelf', category: 'storage', price: 200, size: { w: 3, d: 1 }, layer: 'solid', reserve: { w: 3, d: 1 }, spot: { x: 9, z: 11, pose: 'stand' }, rotatable: true, model: 'bookshelf', showcase: true, use: 'read', effects: { ambiance: 1 } },
   // 0.19.0: a display cabinet for the studio's own games (every released game gets its box here).
-  { id: 'game_cabinet', category: 'storage', price: 450, size: { w: 4, d: 1 }, layer: 'solid', reserve: { w: 4, d: 1 }, spot: { x: 12, z: 10, pose: 'stand' }, rotatable: true, model: 'game_cabinet', showcase: true, effects: { ambiance: 1.2 } },
+  { id: 'game_cabinet', category: 'storage', price: 450, size: { w: 4, d: 1 }, layer: 'solid', reserve: { w: 4, d: 1 }, spot: { x: 12, z: 10, pose: 'stand' }, rotatable: true, model: 'game_cabinet', showcase: true, use: 'browse', effects: { ambiance: 1.2 } },
   // 0.19.0: more to make the office yours.
-  { id: 'retro_console', category: 'decor', price: 700, size: { w: 2, d: 1 }, layer: 'solid', reserve: { w: 2, d: 1 }, spot: { x: 6, z: 10, pose: 'stand' }, rotatable: true, model: 'retro_console', effects: { ambiance: 1.5 } },
+  { id: 'retro_console', category: 'decor', price: 700, size: { w: 2, d: 1 }, layer: 'solid', reserve: { w: 2, d: 1 }, spot: { x: 6, z: 10, pose: 'stand' }, rotatable: true, model: 'retro_console', use: 'play', effects: { ambiance: 1.5 } },
   { id: 'figure_shelf', category: 'decor', price: 180, size: { w: 1, d: 1 }, layer: 'solid', rotatable: true, model: 'figure_shelf', effects: { ambiance: 0.8 } },
   { id: 'book_stack', category: 'decor', price: 40, size: { w: 1, d: 1 }, layer: 'solid', rotatable: true, model: 'book_stack', effects: { ambiance: 0.4 } },
   { id: 'monstera', category: 'plant', price: 240, size: { w: 2, d: 2 }, layer: 'solid', rotatable: false, model: 'monstera', effects: { ambiance: 1.8 } },
+  // 0.22.0: functional furniture (moderate effects; the best one counts, they never stack).
+  { id: 'meeting_table', category: 'creative', price: 650, size: { w: 3, d: 2 }, layer: 'solid', rotatable: true, model: 'meeting_table', use: 'meet', effects: { inspiration: 1.05, ambiance: 0.6 } },
+  { id: 'tv_corner', category: 'comfort', price: 420, size: { w: 2, d: 1 }, layer: 'solid', reserve: { w: 2, d: 1 }, spot: { x: 6, z: 12, pose: 'stand' }, rotatable: true, model: 'tv_corner', use: 'watch', effects: { rest: 1, ambiance: 0.5 } },
+  { id: 'lamp_arc', category: 'light', price: 180, size: { w: 1, d: 1 }, layer: 'solid', rotatable: true, model: 'lamp_arc', effects: { ambiance: 1 } },
+  { id: 'tall_cabinet', category: 'storage', price: 260, size: { w: 2, d: 1 }, layer: 'solid', rotatable: true, model: 'tall_cabinet', effects: { ambiance: 0.6 } },
   // --- Awards (ML.3): unlocked by achievements (systems/story.ts), purely decorative.
   { id: 'trophy_gold', category: 'awards', price: 120, size: { w: 1, d: 1 }, layer: 'solid', rotatable: false, model: 'trophy_gold', effects: { ambiance: 0.8 } },
   { id: 'plaque_five', category: 'awards', price: 150, size: { w: 1, d: 1 }, layer: 'solid', rotatable: true, model: 'plaque_five', effects: { ambiance: 0.8 } },

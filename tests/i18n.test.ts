@@ -6,6 +6,7 @@ import { en } from '../src/i18n/en';
 import { setLocale, t, tr } from '../src/i18n/i18n';
 import { autoplay } from '../src/sim/autoplay';
 import { TOPICS } from '../src/content/topics';
+import { ITEMS } from '../src/content/officeItems';
 import { OUTLETS } from '../src/sim/systems/market';
 import { Game } from '../src/sim/game';
 import { createNewGame, DEFAULT_APPEARANCE } from '../src/sim/state';
@@ -37,6 +38,7 @@ describe('i18n catalogs', () => {
   it('dynamic keys exist: topics, outlets, phases, appearance, activities, error codes', () => {
     const keys = [
       ...TOPICS.flatMap((x) => [`topic.${x.id}.name`, `topic.${x.id}.blurb`]),
+      ...ITEMS.flatMap((x) => [`item.${x.id}.name`, `item.${x.id}.desc`]),
       ...OUTLETS.map((o) => `outlet.${o}`),
       ...['concept', 'production', 'polish', 'released'].map((p) => `phase.${p}`),
       ...Array.from({ length: 8 }, (_, i) => `hair.${i}`), ...Array.from({ length: 5 }, (_, i) => `top.${i}`), ...Array.from({ length: 6 }, (_, i) => `acc.${i}`),

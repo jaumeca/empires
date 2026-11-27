@@ -11,6 +11,7 @@ import { DEFAULT_STYLE, FLOOR_STYLES, STYLE_PRICE, WALL_STYLES } from '../conten
 import { NEXT_SIZE } from '../content/officeSizes';
 import { FLOOR_FINISH, hexToCss, PALETTE_HEX, WALL_FINISH } from '../render/palette';
 import { clear, h } from './dom';
+import { officeVibes, officeZones } from '../sim/systems/officeZones';
 
 /**
  * Decoration mode (LS.3): catalog, buying, placing, moving, rotating and
@@ -64,6 +65,9 @@ export class DecorUI {
   /** Finish being tried in the office (not bought yet). */
   private styleDraft: { wall: string; floor: string } | null = null;
   private restore: (() => void) | null = null;
+  /** 0.22.0: labels of the zones that emerged from the furniture, floating over the office. */
+  private zoneLayer: HTMLElement | null = null;
+  private zoneRaf = 0;
 
   constructor(private root: HTMLElement, private scene: OfficeScene, private host: Host) {}
 
@@ -77,6 +81,10 @@ export class DecorUI {
     this.scene.setDecorMode(true);
     this.el = h('div.decor');
     this.root.append(this.el);
+    this.zoneLayer = h('div.zone-labels');
+    this.root.insertBefore(this.zoneLayer, this.el); // under the decoration panel, never in its way
+    const follow = () => { this.placeZoneLabels(); this.zoneRaf = requestAnimationFrame(follow); };
+    this.zoneRaf = requestAnimationFrame(follow);
     this.render();
   }
 
@@ -88,6 +96,9 @@ export class DecorUI {
     this.scene.setDecorMode(false);
     this.el.remove();
     this.el = null;
+    cancelAnimationFrame(this.zoneRaf);
+    this.zoneLayer?.remove();
+    this.zoneLayer = null;
     this.placement = null;
     this.selected = null;
     this.pickDeskFor = null;
@@ -286,6 +297,7 @@ export class DecorUI {
     if (!el) return;
     clear(el);
     const s = this.host.state();
+    this.renderZones(s);
     const fx = officeEffects(s.office);
     el.append(
       h('div.decor-top', null,
@@ -351,7 +363,7 @@ export class DecorUI {
       ...cats.map((c) => h('button', { class: c === this.category ? 'on' : '', dataset: { cat: c }, onclick: () => { this.category = c; this.render(); } }, t(`cat.${c}`))),
     );
     const cozy = officeEffects(s.office).cozy;
-    const cozyHint = h(`div.hint.cozy${cozy ? '.on' : ''}`, null, t(cozy ? 'decor.cozy_on' : 'decor.cozy_off'));
+    const cozyHint = h('div', null, this.identity(s), h(`div.hint.cozy${cozy ? '.on' : ''}`, null, t(cozy ? 'decor.cozy_on' : 'decor.cozy_off')));
     if (this.category === 'style') {
       el.append(h('div.decor-sheet.card', null, tabs, this.styleSheet(s), cozyHint));
       return;
@@ -379,6 +391,35 @@ export class DecorUI {
     ));
   }
 
+  /** 0.22.0 (D-072): the office described back — its style (combinable) and the zones its furniture makes. */
+  private identity(s: GameState): HTMLElement {
+    const vibes = officeVibes(s.office).map((v) => t(`vibe.${v}`));
+    const zones = officeZones(s.office).map((z) => t(`zone.${z.kind}`));
+    const style = vibes.length === 2 ? t('decor.identity2', { a: vibes[0]!, b: vibes[1]! }) : vibes.length === 1 ? t('decor.identity1', { a: vibes[0]! }) : t('decor.identity0');
+    return h('div.hint.office-identity', { id: 'office-identity', dataset: { vibes: officeVibes(s.office).join(','), zones: officeZones(s.office).map((z) => z.kind).join(',') } },
+      h('b', null, style),
+      zones.length ? h('span', null, ` · ${t('decor.zones', { list: zones.join(', ') })}`) : null,
+    );
+  }
+
+  private renderZones(s: GameState): void {
+    const layer = this.zoneLayer;
+    if (!layer) return;
+    clear(layer);
+    // While placing something the labels would only get in the way.
+    if (this.placement) return;
+    for (const z of officeZones(s.office)) layer.append(h('div.zone-label', { dataset: { zone: z.kind, x: String(z.x), z: String(z.z) } }, t(`zone.${z.kind}`)));
+    this.placeZoneLabels();
+  }
+
+  private placeZoneLabels(): void {
+    if (!this.zoneLayer) return;
+    for (const el of this.zoneLayer.children as HTMLCollectionOf<HTMLElement>) {
+      const p = this.scene.cellScreenPos(Number(el.dataset.x) - 0.5, Number(el.dataset.z) - 0.5);
+      el.style.transform = `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px) translate(-50%, -50%)`;
+    }
+  }
+
   /** Walls & floor (AW.C.3): pick a finish, see it in the office, pay only if you apply it. */
   private styleSheet(s: GameState): HTMLElement {
     const real = s.office.style ?? DEFAULT_STYLE;
@@ -389,7 +430,7 @@ export class DecorUI {
       this.render();
     };
     const swatch = (part: 'wall' | 'floor', id: string) => {
-      const color = part === 'wall' ? WALL_FINISH[id]![0] : (FLOOR_FINISH[id]!.planks?.[0] ?? FLOOR_FINISH[id]!.tiles?.[0] ?? FLOOR_FINISH[id]!.carpet?.[0])!;
+      const color = part === 'wall' ? WALL_FINISH[id]![0] : (FLOOR_FINISH[id]!.planks?.[0] ?? FLOOR_FINISH[id]!.tiles?.[0] ?? FLOOR_FINISH[id]!.carpet?.[0] ?? FLOOR_FINISH[id]!.speckle?.[0] ?? FLOOR_FINISH[id]!.diag?.[0])!;
       return h('button.finish', { class: draft[part] === id ? 'on' : '', dataset: { [part]: id }, onclick: () => pick(part, id) },
         h('i', { style: { background: hexToCss(PALETTE_HEX[color] ?? 0) } }), t(`style.${part}.${id}`), real[part] === id ? h('span.cur', null, ' ✓') : null);
     };

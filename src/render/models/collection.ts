@@ -116,3 +116,53 @@ export function gameCabinet(): VoxelGrid {
   g.box(0, 29, 0, 22, 30, 5, P.mustard); // top trim
   return g;
 }
+
+// ---------------------------------------------------------------- 0.22.0: functional furniture
+
+/** A round-cornered meeting table with two stools at the short ends. 3×2 cells (18×12). */
+export function meetingTable(): VoxelGrid {
+  const g = new VoxelGrid(18, 9, 12);
+  g.box(3, 7, 2, 15, 8, 10, P.woodMid); // top
+  g.box(4, 8, 3, 14, 9, 9, P.woodLight);
+  g.box(8, 0, 5, 10, 7, 7, P.woodDark); // central leg
+  g.box(6, 0, 4, 12, 1, 8, P.woodDark); // foot
+  // a laptop and some sticky notes on it
+  g.box(5, 9, 4, 8, 9 + 0, 6, P.metalDark);
+  g.set(11, 8, 6, P.mustard); g.set(12, 8, 4, P.coral);
+  // stools at both ends
+  for (const x of [0, 16]) { g.box(x, 0, 5, x + 2, 4, 7, P.metalDark); g.box(x, 4, 4, x + 2, 5, 8, P.fabricBlue); }
+  return g;
+}
+
+/** A corner TV on a low unit with a games console. 2×1 cells. */
+export function tvCorner(): VoxelGrid {
+  const g = new VoxelGrid(12, 13, 5);
+  g.box(0, 0, 0, 12, 4, 5, P.woodPale);
+  g.box(1, 1, 4, 11, 3, 5, P.woodMid);
+  g.box(1, 5, 1, 11, 12, 2, P.ink); // flat screen
+  g.box(2, 6, 1, 10, 11, 2, P.skyLight); g.box(3, 7, 1, 6, 9, 2, P.mint); // a nature documentary
+  g.box(5, 4, 1, 7, 5, 2, P.metalDark); // stand
+  g.box(8, 4, 2, 11, 5, 4, P.white); // console
+  return g;
+}
+
+/** A tall arc lamp. 1×1 cell. */
+export function arcLamp(): VoxelGrid {
+  const g = new VoxelGrid(6, 20, 6);
+  g.box(1, 0, 1, 5, 1, 5, P.metalDark);
+  g.box(2, 1, 2, 3, 16, 3, P.metal);
+  g.box(2, 16, 2, 5, 17, 3, P.metal);
+  g.box(3, 13, 2, 6, 16, 4, P.mustard); // shade
+  g.box(4, 12, 3, 5, 13, 4, P.amberGlow);
+  return g;
+}
+
+/** A tall cupboard with two doors and a plant on top. 2×1 cells. */
+export function tallCabinet(): VoxelGrid {
+  const g = new VoxelGrid(12, 24, 5);
+  g.box(0, 0, 0, 12, 20, 5, P.woodMid);
+  g.box(1, 1, 4, 6, 19, 5, P.woodLight); g.box(6, 1, 4, 11, 19, 5, P.woodLight);
+  g.set(5, 10, 4, P.metalDark); g.set(6, 10, 4, P.metalDark);
+  g.box(4, 20, 1, 8, 22, 4, P.terracotta); g.box(5, 22, 2, 7, 24, 3, P.leaf);
+  return g;
+}

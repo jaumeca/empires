@@ -1,4 +1,4 @@
-import { FLOOR_FINISH, P, WALL_FINISH } from '../palette';
+import { FLOOR_FINISH, P, WALL_FINISH, WALL_PATTERN } from '../palette';
 import { VoxelGrid } from '../voxel';
 
 /**
@@ -27,17 +27,21 @@ export function buildRoomShell(style: { wall: string; floor: string } = { wall: 
     const fx = x - wallT, fz = z - wallT;
     if (fl.tiles) return (Math.floor(fx / 6) + Math.floor(fz / 6)) % 2 === 0 ? fl.tiles[0] : fl.tiles[1];
     if (fl.carpet) return (fx * 7 + fz * 13) % 5 === 0 ? fl.carpet[1] : fl.carpet[0];
+    if (fl.speckle) return (fx * 11 + fz * 17) % 13 === 0 ? fl.speckle[1] : fl.speckle[0];
+    if (fl.diag) return Math.floor((fx + fz) / 3) % 2 === 0 ? fl.diag[0] : fl.diag[1];
     const plank = Math.floor(fz / 4);
     const seam = ((fx + plank * 7) % 20) === 0;
     if (seam) return fl.seam ?? P.woodMid;
     return fl.planks![plank % 4] ?? P.woodLight;
   });
-  // Back wall (z in [0, wallT)), spanning x.
-  g.box(0, floorT - 1, 0, w + wallT, floorT + wallH - 1, wallT, wallBack);
+  // Back wall (z in [0, wallT)), spanning x. Bricks (0.22.0): 2-voxel courses, staggered, mortar lines.
+  const brick = WALL_PATTERN[style.wall] === 'brick';
+  const bricks = (base: number, along: number, y: number) => ((y % 3 === 0) || ((along + (Math.floor(y / 3) % 2) * 3) % 6 === 0) ? wallShade : base);
+  g.box(0, floorT - 1, 0, w + wallT, floorT + wallH - 1, wallT, brick ? (x, y) => bricks(wallBack, x, y) : wallBack);
   // Left wall (x in [0, wallT)), spanning z.
-  g.box(0, floorT - 1, 0, wallT, floorT + wallH - 1, d + wallT, wallSide);
-  // Two-tone wainscot on the back wall + skirting boards.
-  g.box(wallT, floorT, wallT - 1, w + wallT, floorT + 12, wallT, wallShade);
+  g.box(0, floorT - 1, 0, wallT, floorT + wallH - 1, d + wallT, brick ? (_x, y, z) => bricks(wallSide, z, y) : wallSide);
+  // Two-tone wainscot on the back wall (not on bricks: they are the texture) + skirting boards.
+  if (!brick) g.box(wallT, floorT, wallT - 1, w + wallT, floorT + 12, wallT, wallShade);
   g.box(wallT, floorT, wallT - 1, w + wallT, floorT + 2, wallT, P.skirting);
   g.box(wallT - 1, floorT, wallT, wallT, floorT + 2, d + wallT, P.skirting);
   // Top trim on the wall edges (gives the cut-away diorama look).

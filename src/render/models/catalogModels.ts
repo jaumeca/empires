@@ -1,4 +1,4 @@
-import { bookStack, fanBoard, figureShelf, framedCover, gameCabinet, goldCartridge, monstera, retroConsole } from './collection';
+import { arcLamp, bookStack, fanBoard, figureShelf, framedCover, gameCabinet, goldCartridge, meetingTable, monstera, retroConsole, tallCabinet, tvCorner } from './collection';
 import { P } from '../palette';
 import { VoxelGrid } from '../voxel';
 import {
@@ -388,6 +388,14 @@ export function itemModel(model: string): ItemModel {
       return { parts: [{ grid: beanbag(), at: [0, 0, 0] }] };
     case 'rug_round':
       return { parts: [{ grid: rugRound(), at: [0, 0, 0] }] };
+    case 'meeting_table':
+      return { parts: [{ grid: meetingTable(), at: [0, 0, 0] }] };
+    case 'tv_corner':
+      return { parts: [{ grid: tvCorner(), at: [0, 0, 0] }] };
+    case 'lamp_arc':
+      return { parts: [{ grid: arcLamp(), at: [0, 0, 0] }] };
+    case 'tall_cabinet':
+      return { parts: [{ grid: tallCabinet(), at: [0, 0, 0] }] };
     case 'retro_console':
       return { parts: [{ grid: retroConsole(), at: [0, 0, 0] }] };
     case 'figure_shelf':

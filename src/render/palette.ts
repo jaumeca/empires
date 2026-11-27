@@ -64,12 +64,26 @@ export const WALL_FINISH: Record<string, [number, number, number]> = {
   sky: [add('wallSky', 0xe0eaf6), add('wallSkyShade', 0xccdcef), add('wallSkySide', 0xc4d6ee)],
   lavender: [add('wallLav', 0xece4f6), add('wallLavShade', 0xddd2ef), add('wallLavSide', 0xd6c9ee)],
   sand: [add('wallSand', 0xf2e2c6), add('wallSandShade', 0xe4d0ab), add('wallSandSide', 0xedcb9b)],
+  // 0.22.0: more finishes to combine (industrial, cosy, retro, modern, minimal, creative).
+  brick: [add('brick', 0xc9765a), add('brickMortar', 0xe6d2c0), add('brickSide', 0xb96a50)],
+  concrete: [add('concrete', 0xc9c6c0), add('concreteShade', 0xb7b3ad), add('concreteSide', 0xbdb9b3)],
+  white: [add('wallWhite', 0xf7f5f0), add('wallWhiteShade', 0xe9e5dc), add('wallWhiteSide', 0xeeebe4)],
+  forest: [add('wallForest', 0x6f8f72), add('wallForestShade', 0x5f7f63), add('wallForestSide', 0x66876a)],
+  coral: [add('wallCoral', 0xf5b8a6), add('wallCoralShade', 0xeaa08c), add('wallCoralSide', 0xf0ab97)],
 };
-export const FLOOR_FINISH: Record<string, { planks?: number[]; seam?: number; tiles?: [number, number]; carpet?: [number, number] }> = {
+/** Walls with a pattern (0.22.0): bricks with mortar lines (colour 2 of the finish). */
+export const WALL_PATTERN: Record<string, 'brick'> = { brick: 'brick' };
+export const FLOOR_FINISH: Record<string, { planks?: number[]; seam?: number; tiles?: [number, number]; carpet?: [number, number]; speckle?: [number, number]; diag?: [number, number] }> = {
   oak: { planks: [P.woodLight, P.woodPale, P.woodLight, P.woodMid], seam: P.woodMid },
   walnut: { planks: [add('walnutA', 0x9b6a45), add('walnutB', 0xa8784f), add('walnutA2', 0x96653f), add('walnutC', 0x875a39)], seam: add('walnutSeam', 0x7a5034) },
   tiles: { tiles: [add('tileA', 0xf4efe6), add('tileB', 0xdcd3c4)] },
   carpet: { carpet: [add('carpetA', 0x86a3d2), add('carpetB', 0x7a98c9)] },
+  // 0.22.0
+  concrete: { speckle: [add('floorConcrete', 0xb9b5ae), add('floorConcreteDot', 0xa8a39b)] },
+  parquet: { diag: [add('parquetA', 0xc58a52), add('parquetB', 0xa9713f)] },
+  whitetile: { tiles: [add('whiteTileA', 0xfbfaf6), add('whiteTileB', 0xe9e7e1)] },
+  dark: { planks: [add('darkWoodA', 0x5e3f2c), add('darkWoodB', 0x6a4732), add('darkWoodC', 0x573a28), add('darkWoodD', 0x664430)], seam: add('darkWoodSeam', 0x46301f) },
+  checker: { tiles: [add('checkerA', 0x3b3a40), add('checkerB', 0xf1ece2)] },
 };
 
 /** Empirian customization catalogs (indices into PALETTE_HEX). */

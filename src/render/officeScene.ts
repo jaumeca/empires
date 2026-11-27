@@ -571,7 +571,7 @@ export class OfficeScene {
       const def = getItemDef(it.defId);
       const sp = useSpot(it);
       const e = def.effects ?? {};
-      if (sp && e.rest !== undefined && e.rest > bestRest) {
+      if (sp && sp.pose === 'lounge' && e.rest !== undefined && e.rest > bestRest) {
         bestRest = e.rest;
         pois.beanbag = { x: sp.vx, z: sp.vz, heading: sp.heading + Math.PI, pose: 'lounge' };
       }
@@ -579,8 +579,21 @@ export class OfficeScene {
       // AW.B: the best drink source (coffee machine over water cooler).
       if (sp && e.drink && e.drink > bestDrink) { bestDrink = e.drink; pois.drink = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'stand' }; }
       if (sp && e.inspiration && e.inspiration > 1) pois.whiteboard = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'think' };
-      if (sp && def.showcase) pois.shelf = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'think' };
-      if (sp && (def.id === 'arcade' || def.id === 'retro_console')) pois.arcade = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'stand' };
+      // 0.22.0: interaction points by use — the pose says what they do there.
+      if (sp && def.use === 'read') pois.shelf = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'read' };
+      if (sp && def.use === 'browse') pois.cabinet = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'think' };
+      if (sp && def.use === 'play') pois.arcade = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'play' };
+      if (sp && def.use === 'watch') pois.tv = { x: sp.vx, z: sp.vz, heading: sp.heading, pose: 'watch' };
+      if (def.use === 'meet') {
+        // Two places at the ends of the table, facing each other (chats happen here when there is one).
+        const rs = rotatedSize(def, it.rot);
+        const cx = (it.x + rs.w / 2) * CELL, cz = (it.z + rs.d / 2) * CELL;
+        const alongX = rs.w >= rs.d;
+        const a = this.nearestFreeCell(alongX ? it.x * CELL - 2 : cx, alongX ? cz : it.z * CELL - 2);
+        const b = this.nearestFreeCell(alongX ? (it.x + rs.w) * CELL + 2 : cx, alongX ? cz : (it.z + rs.d) * CELL + 2, a);
+        pois['meet:a'] = { x: a[0], z: a[1], heading: Math.atan2(cx - a[0], cz - a[1]), pose: 'stand' };
+        pois['meet:b'] = { x: b[0], z: b[1], heading: Math.atan2(cx - b[0], cz - b[1]), pose: 'stand' };
+      }
       if (def.category === 'plant' && !pois.plant) {
         const rs = rotatedSize(def, it.rot);
         const c = this.nearestFreeCell((it.x + rs.w / 2) * CELL, (it.z + rs.d + 0.5) * CELL);
@@ -813,16 +826,19 @@ export class OfficeScene {
 
   /** Where to go in free time: tired → rest, thirsty → drink, curious → shelf/whiteboard, sociable → near others, low → plant/window. */
   private freeTimeSpot(e: GameState['empirians'][number] | undefined, id: string, t: number): string {
-    const has = (k: string) => !!this.pois[k];
+    // 0.22.0: an interaction point someone else is using (or walking to) is not free.
+    const taken = (k: string) => [...this.actors.entries()].some(([oid, a]) => oid !== id && a.targetName === k);
+    const has = (k: string) => !!this.pois[k] && (k === 'center' || k === 'window' || !taken(k));
     const energy = e?.energy ?? 100, morale = e?.morale ?? 70;
     const slot = Math.floor(t / 9 + (hashId(id) % 7));
     const pick = (list: string[]) => list.filter(has)[slot % Math.max(1, list.filter(has).length)] ?? 'center';
     if (energy < 50 && has('beanbag')) return 'beanbag';
+    if (energy < 60 && has('tv') && slot % 2 === 0) return 'tv';
     if (energy < 70 && has('drink') && slot % 3 === 0) return 'drink';
-    if (e?.trait === 'curious') return pick(['shelf', 'whiteboard', 'arcade', 'window']);
-    if (e?.trait === 'sociable') return pick(['center', 'drink', 'coffee']);
-    if (morale < 55) return pick(['plant', 'window']);
-    return pick(['window', 'plant', 'shelf', 'center', 'arcade']);
+    if (e?.trait === 'curious') return pick(['shelf', 'cabinet', 'whiteboard', 'arcade', 'window']);
+    if (e?.trait === 'sociable') return pick(['center', 'drink', 'coffee', 'arcade', 'tv']);
+    if (morale < 55) return pick(['plant', 'window', 'tv']);
+    return pick(['window', 'plant', 'shelf', 'cabinet', 'center', 'arcade']);
   }
 
   private behaviourFor(activity: Activity): string | null {
@@ -905,7 +921,11 @@ export class OfficeScene {
         }
         case 'routine': {
           actor.breakVisual = { kind: e.kind, until: now + 4.5 };
-          if (e.kind === 'chat' && e.partnerId && e.empirianId < e.partnerId) {
+          if (e.kind === 'chat' && e.partnerId && e.empirianId < e.partnerId && this.pois['meet:a'] && this.pois['meet:b']) {
+            // 0.22.0: with a meeting table, chats happen around it.
+            this.pois[`chat:${e.empirianId}`] = this.pois['meet:a']!;
+            this.pois[`chat:${e.partnerId}`] = this.pois['meet:b']!;
+          } else if (e.kind === 'chat' && e.partnerId && e.empirianId < e.partnerId) {
             const c = this.pois.center ?? FIXED_POIS.center!;
             const a = this.nearestFreeCell(c.x - 4, c.z);
             const b = this.nearestFreeCell(a[0] + 7, a[1], a);
