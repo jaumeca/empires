@@ -25,7 +25,9 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
   await page.waitForTimeout(300);
   await page.click('[data-cat="style"]');
   await page.waitForTimeout(200);
-  check('walls & floor tab with finishes', (await page.locator('[data-wall]').count()) === 5 && (await page.locator('[data-floor]').count()) === 4);
+  const nW = await page.locator('[data-wall]').count(), nF = await page.locator('[data-floor]').count();
+  // 0.22.0: 10 walls (brick, concrete, white, forest, coral added) and 9 floors.
+  check('walls & floor tab with finishes', nW === 10 && nF === 9, `${nW} walls, ${nF} floors`);
   await page.click('[data-wall="mint"]');
   await page.click('[data-floor="tiles"]');
   await page.waitForTimeout(300);
