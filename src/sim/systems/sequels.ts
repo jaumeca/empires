@@ -65,7 +65,8 @@ export function sequelVerdict(state: GameState, p: Project, base: number): { amo
   const orig = state.projects.find((q) => q.id === p.sequelOf);
   if (!orig?.result) return { amount: 0, key: null };
   const bar = orig.result.averageScore;
-  if (base < bar - K().margin) return { amount: -Math.min(K().letdownMax, (bar - K().margin - base) * K().letdown), key: 'factor.sequel_letdown' };
+  // Fans expect at least as much as the original: anything below it is a letdown.
+  if (base < bar) return { amount: -Math.min(K().letdownMax, (bar - base) * K().letdown), key: 'factor.sequel_letdown' };
   if (base >= bar + K().margin) return { amount: K().surpass, key: 'factor.sequel_better' };
   return { amount: 0, key: null };
 }

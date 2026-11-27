@@ -906,7 +906,7 @@ export class GameUI {
     };
     drawIdeas();
     // Sequels (0.23.0, D-073): continue a game people liked, in its world. Optional.
-    const sequelBox = h('div.sequels', { id: 'np-sequels' });
+    const sequelBox = h('div.ideas.sequels', { id: 'np-sequels' });
     const sequelable = s.projects.filter((q) => !sequelBlock(s, q)).sort((a, b) => b.result!.averageScore - a.result!.averageScore).slice(0, 4);
     const drawSequels = () => {
       clear(sequelBox);
@@ -925,7 +925,7 @@ export class GameUI {
           drawTopics(); drawFeatures(); drawIdeas(); drawSequels(); refresh();
         } }, icon('box', 18), h('span', null, t('np.sequel_of', { game: q.name, score: q.result!.averageScore })),
           h(`span.chip${fans >= 0.5 ? '.good' : ''}`, null, t(fans >= 0.5 ? 'np.sequel_fans_many' : fans >= 0.2 ? 'np.sequel_fans_some' : 'np.sequel_fans_few')),
-          h('span.chip', null, t(on ? 'np.idea_on' : 'np.idea_use'))));
+          h('span.chip', null, t(on ? 'np.sequel_on' : 'np.sequel_use'))));
       }
       sequelBox.append(h('div.hint', null, t('np.sequel_hint')));
     };

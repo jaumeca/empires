@@ -411,15 +411,15 @@ export const SIM_CONFIG = {
     hype: 1.2,
     /** Work reused from the original (engine, world, characters). */
     reuse: 0.1,
-    /** Reviewers compare with the original: within ±margin it is "as good". */
-    margin: 0.3,
+    /** Reviewers compare with the original: below it, a letdown; this much above it, it surpasses it. */
+    margin: 0.5,
     /** Letdown per point below the original (capped). */
-    letdown: 0.5,
-    letdownMax: 0.8,
+    letdown: 0.6,
+    letdownMax: 1,
     /** Surpassing the original. */
     surpass: 0.2,
     /** Extra reach in the launch weeks with all the fans. */
-    audience: 0.25,
+    audience: 0.15,
     /** From the third entry on, each one brings this share of the previous one's fans. */
     fatigue: 0.65,
   },

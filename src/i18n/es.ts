@@ -1210,6 +1210,8 @@ export const es: Record<string, string> = {
   "np.sequel_fans_many": "muchos fans esperando",
   "np.sequel_fans_some": "algunos fans",
   "np.sequel_fans_few": "pocos fans",
+  "np.sequel_use": "Hacer la secuela",
+  "np.sequel_on": "Secuela elegida",
   "np.sequel_hint": "Una secuela empieza con fans y algo de trabajo hecho, pero la crítica la comparará con el original. Cada entrega nueva atrae a menos gente si no mejora.",
   "np.ideas": "Ideas del equipo",
   "np.ideas_hint": "Opcionales: un juego que sigue una idea parte con un poco más de ambición.",

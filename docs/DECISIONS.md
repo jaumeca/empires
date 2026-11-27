@@ -524,7 +524,15 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Catálogo:** el límite de objetos de la prueba sube de 40 a 48 (sigue siendo un catálogo pequeño y cuidado).
 - **Descartado por ahora:** sentarse en la mesa de reuniones (las sillas integradas no admiten la postura sentada sin atravesar la mesa: se charla de pie a su lado).
 
-> **Pendientes de confirmar por el propietario tras jugar:** D-053, D-054 y D-055 (provisionales). D-056 (relaciones), D-057 (deuda técnica), D-058 (alcance; corrige D-054), D-059 (reputación), D-060 (tipos de proyecto), D-061 (conexiones), D-062 (progresión), D-063 (objetivo, lanzamientos, pantallas), D-064 (productos), D-065 (Empirians y oficina vivos), D-066 (sonido), D-067 (recuerdos físicos), D-068 (ideas del equipo), D-069 (acontecimientos contextuales), D-070 (decisiones nuevas), D-071 (calidad de vida) y D-072 (oficina funcional) también son provisionales.
+### D-073 — Secuelas y sagas
+- **Fecha:** 2026-11-27 · **Estado:** Aplicada (provisional)
+- **Cuándo:** de un juego publicado con nota ≥ 6,5, una sola secuela directa por juego (la saga continúa con la secuela de la secuela), en el mismo mundo (misma temática). Se elige en el diálogo de nuevo juego («O una secuela»); el nombre se numera solo y se puede cambiar.
+- **Qué da:** fans esperando (más interés inicial y +15 % de alcance en las semanas de lanzamiento con todos los fans; los fans dependen de la nota y las ventas del original) y un 10 % menos de trabajo (motor, mundo y personajes reutilizados).
+- **Qué arriesga:** la crítica la compara con el original: por debajo de su nota, decepción (−0,6 por punto, hasta −1); medio punto por encima, la supera (+0,2). Desde la tercera entrega, cada una atrae al 65 % de los fans de la anterior.
+- **Medido** (`tools/sim-runner/sequels.report.ts`, estrategia «S»): primera versión dominante (+9,5 % a dos años frente a repetir temática sin secuela, mejor que todas las estrategias). Tras endurecer la comparación y bajar el alcance: +1,7 % a un año, +3,3 % a dos; **peor en 6 de 16 semillas** (hasta −16,6 %). Prueba de no-dominancia en `tests/sim/sequels.test.ts`.
+- **Futuro:** identidad del estudio ligada a sus sagas, recopilatorios, «remasterizar».
+
+> **Pendientes de confirmar por el propietario tras jugar:** D-053, D-054 y D-055 (provisionales). D-056 (relaciones), D-057 (deuda técnica), D-058 (alcance; corrige D-054), D-059 (reputación), D-060 (tipos de proyecto), D-061 (conexiones), D-062 (progresión), D-063 (objetivo, lanzamientos, pantallas), D-064 (productos), D-065 (Empirians y oficina vivos), D-066 (sonido), D-067 (recuerdos físicos), D-068 (ideas del equipo), D-069 (acontecimientos contextuales), D-070 (decisiones nuevas), D-071 (calidad de vida) D-072 (oficina funcional) y D-073 (secuelas) también son provisionales.
 
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 

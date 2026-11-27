@@ -646,6 +646,9 @@ Cámara con zoom suave, desplazamiento, órbita suave, «ver de cerca», «segui
 - **Estilo de la oficina, combinable:** industrial, acogedor, retro, moderno, minimalista o creativo, a partir de los muebles, las paredes y el suelo («acogedor e industrial»). **Descriptivo, sin efecto económico** (D-072: un «bonus de estilo» se convertiría en la única forma correcta de decorar).
 - `[FUTURO]` Iluminación por zonas, muebles especializados por papel (banco de pruebas, escritorios de arte), estilos con sonido ambiente propio.
 
+### 27.4 Secuelas y sagas `[IMPLEMENTADO]` (0.23.0, D-073)
+Un juego que gustó puede tener secuela: empieza con fans y algo de trabajo hecho, pero la crítica la compara con el original; cada entrega nueva atrae a menos gente si no mejora. La saga queda en la historia del estudio. `[FUTURO]` Identidad del estudio por sus sagas, recopilatorios y remasterizaciones; estudios rivales con sus propias sagas (bloque 6).
+
 ## 22. Contradicciones y tensiones identificadas
 
 | # | Tensión | Propuesta de resolución |

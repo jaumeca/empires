@@ -4,6 +4,22 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-27 — Decimocuarta sesión (3.ª parte): secuelas y sagas (0.23.0)
+
+Bloque 7 de «Build Your Own Empire» (D-073).
+
+### Hecho
+- `src/sim/systems/sequels.ts`: secuela de un juego con nota ≥ 6,5 (una por juego, misma temática): fans según nota y ventas del original (interés inicial, alcance en el lanzamiento), 10 % menos de trabajo, comparación de la crítica con el original (decepción o superación, explicada en los resultados), cansancio de la saga desde la tercera entrega, recuerdo de cada entrega.
+- Diálogo de nuevo juego: «O una secuela» con los juegos que pueden tenerla, sus fans en palabras y el nombre numerado.
+- Simulador: estrategia «S» e informe `tools/sim-runner/sequels.report.ts`.
+
+### Problemas encontrados
+- **La primera versión era dominante** (+9,5 % a dos años, mejor en casi todas las semillas): la decepción solo llegaba por debajo de «original − 0,3» y el alcance extra era del 25 %. Ahora los fans esperan al menos lo mismo que el original y el alcance es del 15 %: +3,3 % de media, peor en 6 de 16 semillas.
+- La e2e no encontraba el botón: la ventana de resultados pendiente sustituía al diálogo (comportamiento existente de la cola de ventanas); la prueba cierra antes los resultados.
+- El botón de secuela salía sin estilo (el CSS de las ideas cuelga de `.ideas`).
+
+---
+
 ## 2026-11-27 — Decimocuarta sesión (2.ª parte): la oficina funcional (0.22.0)
 
 Bloques 2 y 3 de «Build Your Own Empire» (D-072).

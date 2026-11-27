@@ -31,8 +31,8 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
     };
     play('Turbo', 'kart', 8.1); play('Gris', 'robots', 5.2);
   });
-  await page.waitForTimeout(800);
-  await closeAll();
+  // Results waiting in the queue open as windows close: close them all first.
+  for (let k = 0; k < 3; k++) { await page.waitForTimeout(800); await closeAll(); }
   await page.evaluate(() => { window.__empires.ui.setSpeed(0); window.__empires.ui.showNewProject(); });
   await page.waitForTimeout(400);
   const offered = await page.evaluate(() => [...document.querySelectorAll('[data-sequel]')].map((b) => b.textContent));

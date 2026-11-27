@@ -109,3 +109,16 @@ describe('expectations and sagas', () => {
     expect(p.sequelFans).toBeGreaterThan(0);
   });
 });
+
+describe('a bet, not a dominant strategy (career simulator)', () => {
+  it('always making sequels is not always better than repeating the topic without one', async () => {
+    const { career, STRATEGIES } = await import('../../tools/sim-runner/careers');
+    const A = STRATEGIES.find((s) => s.name.startsWith('A'))!, S = STRATEGIES.find((s) => s.name.startsWith('S'))!;
+    const rel: number[] = [];
+    for (let sd = 900; sd < 910; sd++) rel.push(career(sd, S, 730).money / career(sd, A, 730).money - 1);
+    const mean = rel.reduce((a, b) => a + b, 0) / rel.length;
+    expect(rel.filter((r) => r < 0).length).toBeGreaterThanOrEqual(2); // it can go wrong
+    expect(mean).toBeLessThan(0.1); // and it is no money machine
+    expect(rel.some((r) => r > 0.03)).toBe(true); // but it is not hollow either
+  }, 300000);
+});

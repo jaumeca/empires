@@ -464,8 +464,18 @@ const VARIANTS = [
   await page.keyboard.press('d');
   await page.waitForTimeout(500);
   if (await page.isVisible('[data-cat="style"]')) await page.click('[data-cat="style"]');
+  await page.evaluate(() => document.getElementById('office-identity')?.scrollIntoView());
   await shot('g58-office-identity', 600);
   await page.keyboard.press('Escape');
+
+  // 59 (0.23.0): a sequel of a game people liked, from the new-game dialog.
+  await page.waitForTimeout(300);
+  for (let i = 0; i < 4 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(250); }
+  await ev(() => { const E = window.__empires, s = E.game.state; const best = s.projects.filter((p) => p.result).sort((a, b) => b.result.averageScore - a.result.averageScore)[0]; if (best && best.result.averageScore < 7) best.result.averageScore = 7.8; if (s.activeProjectId) E.game.dispatch({ type: 'release' }); });
+  for (let k = 0; k < 3; k++) { await page.waitForTimeout(600); for (let i = 0; i < 6 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(250); } }
+  await ev(() => { window.__empires.ui.setSpeed(0); window.__empires.ui.showNewProject(); });
+  await page.waitForTimeout(400);
+  if (await page.isVisible('[data-sequel]')) { await page.click('[data-sequel]'); await page.evaluate(() => document.getElementById('np-sequels').scrollIntoView()); await shot('g59-sequel', 300); }
 
 
   await browser.close();
