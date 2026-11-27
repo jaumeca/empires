@@ -450,6 +450,23 @@ const VARIANTS = [
   await ev(() => window.__empires.ui.setSpeed(0));
   await shot('g57-camera-closer', 400);
 
+  // 58 (0.22.0): decoration mode — new finishes, functional furniture, the zones it makes and the office's style.
+  await ev(() => {
+    const E = window.__empires, g = E.game, s = g.state;
+    E.scene.rig.overview(); s.company.money += 20000;
+    g.dispatch({ type: 'set_office_style', wall: 'brick', floor: 'parquet' });
+    const fit = (defId, near) => { for (let z = 0; z < s.office.d; z++) for (let x = 0; x < s.office.w; x++) for (const rot of [0, 1, 2, 3]) { if (near && Math.abs(x - near.x) + Math.abs(z - near.z) > 5) continue; if (g.dispatch({ type: 'buy_item', defId, x, z, rot }).ok) return { x, z }; } return null; };
+    const tv = fit('tv_corner'); if (tv) fit('retro_console', tv);
+    fit('lamp_arc'); fit('tall_cabinet');
+  });
+  await page.waitForTimeout(600);
+  for (let i = 0; i < 4 && (await page.isVisible('.backdrop')); i++) { if (await page.isVisible('.card .close')) await page.click('.card .close'); else await page.keyboard.press('1'); await page.waitForTimeout(250); }
+  await page.keyboard.press('d');
+  await page.waitForTimeout(500);
+  if (await page.isVisible('[data-cat="style"]')) await page.click('[data-cat="style"]');
+  await shot('g58-office-identity', 600);
+  await page.keyboard.press('Escape');
+
 
   await browser.close();
 })().catch((e) => { console.error(e); process.exit(1); });

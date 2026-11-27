@@ -154,7 +154,7 @@ Objetivo: que el jugador gestione un estudio que evoluciona (dinero con usos, of
 | BYE.1 | Calidad de vida, cámara, mobiliario (deshacer) | ✅ 0.21.0 |
 | BYE.9 | Decisiones pendientes: oficina o proyecto; juego antiguo de moda | ✅ 0.21.0 (D-070) |
 | BYE.11 | Móvil (emulación): HUD vertical corregido; menús y diálogos revisados | 🟦 0.21.0 — falta dispositivo real |
-| BYE.2/3 | Oficina funcional, muebles con uso, estilos, interacciones físicas | ⬜ |
+| BYE.2/3 | Oficina funcional, muebles con uso, estilos, interacciones físicas | ✅ 0.22.0 (D-072) `sim/systems/officeZones.ts`, e2e `interactions.cjs` — falta: muebles especializados por papel, iluminación por zonas |
 | BYE.4/5 | Identidad creativa, géneros, momentos, portadas, mercado y tendencias | ⬜ |
 | BYE.6/7 | Competidores, secuelas, sagas, identidad del estudio | ⬜ |
 | BYE.8/10 | Trayectorias, especializaciones, mentoría, hitos, sueño del fundador | ⬜ |

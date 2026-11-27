@@ -623,12 +623,28 @@ Más decisiones durante el desarrollo (funcionalidades, prototipo, alcance, deud
 - **Tipos de proyecto `[IMPLEMENTADO]` (D.4, D-060):** sin modos separados. Un juego pequeño de un equipo pequeño es **indie**: poco riesgo, y si la idea está redonda destaca. Un juego mediano con varias funcionalidades es **ambicioso**: más expectación y más exigencia (fenómeno o decepción). Los **encargos** dan ingresos previsibles, y los clientes bien atendidos vuelven y pagan más; uno defraudado tarda en volver.
 - **Decisiones conectadas `[IMPLEMENTADO]` (D-061):** la experiencia reduce el riesgo oculto, un prototipo validado convence, la deuda trae bugs que pesan en la fama, las relaciones mejoran la coordinación y reducen la deuda.
 - **Fama del estudio `[IMPLEMENTADO]` (F3.8, D-059):** además del prestigio, jugadores y clientes recuerdan la **calidad**, el **cumplimiento** y la **innovación** del estudio, contados con palabras en la Historia. Pesa lo reciente, se olvida poco a poco y siempre se puede recuperar. Cambia un poco la paciencia de la crítica con los fallos, el interés inicial de un juego nuevo y las condiciones de los clientes.
-- `[FUTURO]` Un juego antiguo vuelve a estar de moda (con productos persistentes, GT.6); comentarios de usuarios y recortar funcionalidades por decisión propia (D.3).
+- `[IMPLEMENTADO]` (0.21.0, D-070) Un juego antiguo vuelve a estar de moda. `[FUTURO]` comentarios de usuarios y recortar funcionalidades por decisión propia (D.3).
 
 ### 26.6 Pequeñas satisfacciones `[CONFIRMADO]`
 Animaciones discretas para los hitos; audio opcional y silenciable.
 
 `[IMPLEMENTADO]` (0.18.0, D-066) Primera identidad sonora procedural (Web Audio, sin archivos): interfaz, compras, colocación, desbloqueos, publicaciones, celebraciones, teclados y ambiente; volumen general, efectos, ambiente y silencio.
+
+## 27. "Build Your Own Empire": la oficina como identidad (14.ª sesión)
+
+### 27.1 Calidad de vida `[IMPLEMENTADO]` (0.21.0, D-071)
+Cámara con zoom suave, desplazamiento, órbita suave, «ver de cerca», «seguir» y «vista general» (también táctil y en pausa); deshacer el último cambio de decoración; avisos agrupados.
+
+### 27.2 Decisiones pendientes `[IMPLEMENTADO]` (0.21.0, D-070)
+«Oficina o proyecto» y «un juego antiguo vuelve a estar de moda».
+
+### 27.3 Oficina funcional e identidad `[IMPLEMENTADO]` (0.22.0, D-072)
+- **Acabados nuevos:** paredes de ladrillo, hormigón, blanco, bosque y coral; suelos de hormigón pulido, espiga, baldosa blanca, madera oscura y ajedrez. Solo estéticos.
+- **Muebles con uso:** mesa de reuniones (las charlas del equipo se hacen a su alrededor, frente a frente), rincón de la tele (descansar viendo algo), lámpara de arco, armario alto. La recreativa y la consola se **juegan**, la estantería se **lee**, la vitrina se **mira**.
+- **Interacciones reales:** cada objeto con uso tiene su punto de interacción, con la postura de ese uso (jugar, leer, ver la tele) y orientado al objeto; comprobado con geometría real que ni la cabeza ni el cuerpo atraviesan el mueble. **Reservas:** un punto lo usa una sola persona a la vez.
+- **Zonas que surgen de los muebles:** rincón de juegos, zona de reuniones, biblioteca, zona de descanso, office de café, jardín interior, zona de trabajo: aparecen cuando hay cosas relacionadas juntas, con su nombre flotando sobre la oficina en el modo decoración.
+- **Estilo de la oficina, combinable:** industrial, acogedor, retro, moderno, minimalista o creativo, a partir de los muebles, las paredes y el suelo («acogedor e industrial»). **Descriptivo, sin efecto económico** (D-072: un «bonus de estilo» se convertiría en la única forma correcta de decorar).
+- `[FUTURO]` Iluminación por zonas, muebles especializados por papel (banco de pruebas, escritorios de arte), estilos con sonido ambiente propio.
 
 ## 22. Contradicciones y tensiones identificadas
 

@@ -516,7 +516,15 @@ Autorizadas por el propietario como "decisiones pequeñas, reversibles y coheren
 - **Avisos:** los idénticos se agrupan con un contador; un toque los cierra.
 - **Móvil (emulación):** en vertical la barra superior no cabía (la velocidad 1x quedaba fuera): ahora la velocidad va en su propia línea. Menú de sonido, diálogo de nuevo juego con ideas y «Tus juegos» caben y se desplazan en horizontal y vertical. **No probado en dispositivo real.**
 
-> **Pendientes de confirmar por el propietario tras jugar:** D-053, D-054 y D-055 (provisionales). D-056 (relaciones), D-057 (deuda técnica), D-058 (alcance; corrige D-054), D-059 (reputación), D-060 (tipos de proyecto), D-061 (conexiones), D-062 (progresión), D-063 (objetivo, lanzamientos, pantallas), D-064 (productos), D-065 (Empirians y oficina vivos), D-066 (sonido), D-067 (recuerdos físicos), D-068 (ideas del equipo), D-069 (acontecimientos contextuales), D-070 (decisiones nuevas) y D-071 (calidad de vida) también son provisionales.
+### D-072 — Oficina funcional: acabados, muebles con uso, interacciones, zonas y estilo
+- **Fecha:** 2026-11-27 · **Estado:** Aplicada (provisional)
+- **Acabados** nuevos (5 paredes, 5 suelos), solo estéticos y al mismo precio que los anteriores.
+- **Muebles con uso** (`use` en `ItemDef`: jugar, leer, mirar, pizarra, reunión, ver la tele): la representación crea un punto de interacción por uso; los Empirians van en su tiempo libre según su carácter y su energía, con la postura del uso. **Reservas** en la representación (no en la simulación): si alguien ya va o está, el punto no está libre. Con mesa de reuniones, las charlas se hacen en sus extremos, frente a frente. Efectos de los muebles nuevos moderados y sin acumulación (el mejor cuenta), como los demás.
+- **Zonas y estilo** (`src/sim/systems/officeZones.ts`): funciones puras y deterministas sobre la oficina; **descriptivas, sin efecto en la economía** (los muebles ya tienen sus efectos; un bono por estilo crearía una estrategia dominante de decoración). Se ven en el modo decoración.
+- **Catálogo:** el límite de objetos de la prueba sube de 40 a 48 (sigue siendo un catálogo pequeño y cuidado).
+- **Descartado por ahora:** sentarse en la mesa de reuniones (las sillas integradas no admiten la postura sentada sin atravesar la mesa: se charla de pie a su lado).
+
+> **Pendientes de confirmar por el propietario tras jugar:** D-053, D-054 y D-055 (provisionales). D-056 (relaciones), D-057 (deuda técnica), D-058 (alcance; corrige D-054), D-059 (reputación), D-060 (tipos de proyecto), D-061 (conexiones), D-062 (progresión), D-063 (objetivo, lanzamientos, pantallas), D-064 (productos), D-065 (Empirians y oficina vivos), D-066 (sonido), D-067 (recuerdos físicos), D-068 (ideas del equipo), D-069 (acontecimientos contextuales), D-070 (decisiones nuevas), D-071 (calidad de vida) y D-072 (oficina funcional) también son provisionales.
 
 ## Respuestas del propietario a preguntas abiertas (2026-11-14)
 

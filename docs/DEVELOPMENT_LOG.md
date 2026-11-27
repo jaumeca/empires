@@ -4,6 +4,25 @@ Registro cronológico de bloques de trabajo. Lo más reciente, arriba.
 
 ---
 
+## 2026-11-27 — Decimocuarta sesión (2.ª parte): la oficina funcional (0.22.0)
+
+Bloques 2 y 3 de «Build Your Own Empire» (D-072).
+
+### Hecho
+- **Acabados nuevos:** 5 paredes (ladrillo con patrón de juntas, hormigón, blanco, bosque, coral) y 5 suelos (hormigón moteado, espiga en diagonal, baldosa blanca, madera oscura, ajedrez); muestras con su textura en el panel.
+- **Muebles con uso:** mesa de reuniones, rincón de la tele, lámpara de arco, armario alto (modelos voxel originales, A-026). `use` en el catálogo: jugar (recreativa, consola), leer (estantería), mirar (vitrina), pizarra, reunión, ver la tele.
+- **Interacciones:** puntos de interacción por uso con su postura (nuevas poses `play`, `read`, `watch` en `EmpirianView`), orientados al objeto; **reservas** (un punto, una persona); con mesa de reuniones, las charlas se hacen en sus extremos, frente a frente; el puf o el sofá siguen siendo el sitio para descansar (la tele no les quita el sitio).
+- **Zonas y estilo de oficina** (`src/sim/systems/officeZones.ts`): zonas que surgen de muebles relacionados y cercanos (con su nombre flotando en el modo decoración) y un estilo combinable (industrial, acogedor, retro, moderno, minimalista, creativo). Descriptivos, sin efecto económico.
+
+### Problemas encontrados
+- Posiciones de interacción de la recreativa y la estantería dentro del mueble (la cabeza atravesaba): corregidas con la prueba de geometría real (`tests/render/interactions.test.ts`).
+- La tele «robaba» el sitio de descanso al puf (el mejor descanso se elegía por número, sin mirar la postura): ahora el descanso es solo para asientos de tipo sofá.
+- La capa de etiquetas de zonas tapaba los botones del panel (regla `#ui > *` con `pointer-events: auto`): ahora va debajo del panel y sin eventos. Lo detectó la verificación visual, no las pruebas: añadido a la e2e.
+- Faltaban textos de los objetos nuevos y ninguna prueba lo detectaba: `i18n.test.ts` comprueba ahora nombre y descripción de **todos** los objetos del catálogo.
+- La e2e de reservas se comprobó **contra código defectuoso** (reservas desactivadas): falla (28 muestras compartidas) y pasa con el código correcto.
+
+---
+
 ## 2026-11-27 — Decimocuarta sesión: Build Your Own Empire — 1.ª parte (0.21.0)
 
 ### Estado verificado al empezar

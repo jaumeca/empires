@@ -69,6 +69,18 @@ const check = (name, ok, detail = '') => { checks.push(ok); console.log(`${ok ? 
     return { ok: !!pa && !!pb && pa.x === ma.x && pa.z === ma.z && pb.x === mb.x && pb.z === mb.z, facing: pa && pb ? Math.cos(pa.heading - pb.heading) : null };
   });
   check('with a meeting table, a chat happens at both ends of it, face to face', chat.ok && chat.facing !== null && chat.facing < -0.5, JSON.stringify(chat));
+  // Zones and style, described in decoration mode (and the labels never block the panel).
+  await page.keyboard.press('d');
+  await page.waitForTimeout(500);
+  const labels = await page.evaluate(() => [...document.querySelectorAll('.zone-label')].map((e) => e.dataset.zone));
+  check('decoration mode names the zones the furniture makes (games corner here)', labels.includes('games'), labels.join(','));
+  await page.click('[data-cat="style"]', { timeout: 3000 }).catch(() => {});
+  const ident = await page.evaluate(() => document.querySelector('#office-identity')?.dataset ?? null);
+  check('…the panel stays usable over the labels, and describes the office style', !!ident && ident.vibes.length > 0 && (await page.isVisible('[data-cat="style"].on')), JSON.stringify(ident));
+  await page.screenshot({ path: path.join(out, 'zones.png') });
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  check('…and the labels go away with it', (await page.locator('.zone-label').count()) === 0);
   check('no page errors', errors.length === 0, errors.join(' | '));
   console.log(`\n${checks.filter(Boolean).length}/${checks.length} checks passed`);
   await browser.close();
